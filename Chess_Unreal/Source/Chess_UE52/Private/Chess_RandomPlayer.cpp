@@ -143,7 +143,7 @@ void AChess_RandomPlayer::OnTurn()
 				AChess_PlayerController* PlayerController = Cast<AChess_PlayerController>(GetWorld()->GetFirstPlayerController());
 				if (IsValid(PlayerController))
 				{
-					PlayerController->HUDChess->Storyboard->AddMoveWidget(RandomMove);
+					PlayerController->HUDChess->AddMoveWidget(RandomMove);
 				}
 				/*
 				//GameMode->SetCellSign(PlayerNumber, Location);

@@ -17,12 +17,27 @@ class CHESS_UE52_API UHUD_Chess : public UUserWidget
 	GENERATED_BODY()
 	
 public:
-	UPROPERTY(EditAnywhere, Category = "Child Widgets")
-	TSubclassOf<UUserWidget> StoryboardWidgetClass;
-
-	UCanvasPanel* CanvasHUD;
-
-	UStoryboard* Storyboard;
+	UFUNCTION(BlueprintCallable)
+	void AddMoveWidget(UMove* MoveNotation);
 
 	virtual void NativeConstruct() override;
+
+	UPROPERTY(BlueprintReadWrite,/* meta = (BindWidget),*/ Category = "Widgets Components")
+	UScrollBox* ScrollBox;
+
+	UPROPERTY(BlueprintReadWrite,/* meta = (BindWidget),*/ Category = "Widgets Components")
+	UCanvasPanel* Canvas;
+
+	TArray<UUI_MoveBox*> AllMoves = {};
+
+private:
+	UPROPERTY(EditAnywhere, Category = "Child Widgets")
+	TSubclassOf<UUserWidget> ChildMoveWidget;
+
 };
+
+
+
+
+
+

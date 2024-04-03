@@ -8,22 +8,39 @@ void UHUD_Chess::NativeConstruct()
 {
 	Super::NativeConstruct();
 
-	if (StoryboardWidgetClass)
-	{
-		UUserWidget* StoryboardUserWidget = CreateWidget<UUserWidget>(GetWorld(), StoryboardWidgetClass);
-		if (StoryboardUserWidget)
-		{
-			Storyboard = Cast<UStoryboard>(StoryboardUserWidget);
-			CanvasHUD = Cast<UCanvasPanel>(GetWidgetFromName(TEXT("Visible")));
+	ScrollBox = Cast<UScrollBox>(GetWidgetFromName(TEXT("ScrollBox")));
+	Canvas = Cast<UCanvasPanel>(GetWidgetFromName(TEXT("CanvasPanel")));
 
-			if (IsValid(Storyboard) && IsValid(CanvasHUD))
+}
+
+void UHUD_Chess::AddMoveWidget(UMove* MoveReference)
+{
+	if (ChildMoveWidget)
+	{
+		UUserWidget* ChildWidget = CreateWidget<UUserWidget>(GetWorld(), ChildMoveWidget);
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Widget Creato"));
+		if (ChildWidget)
+		{
+			UUI_MoveBox* MoveBox = Cast<UUI_MoveBox>(ChildWidget);
+			if (IsValid(MoveBox))
 			{
-				CanvasHUD->AddChildToCanvas(Storyboard);
-				UCanvasPanelSlot* ScrollBoxSlot = Cast<UCanvasPanelSlot>(Storyboard->ScrollBox->Slot);
-				if (IsValid(ScrollBoxSlot))
+				UCanvasPanelSlot* CanvasSlot = Cast<UCanvasPanelSlot>(Canvas->AddChildToCanvas(MoveBox));
+				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Altezza e larghezza"));
+				if (IsValid(CanvasSlot))
 				{
-					ScrollBoxSlot->SetSize(FVector2D(2500.0f, 5000.0f));
-				}
+					float Yposition = MoveReference->MoveNumber * 50.0f + 50.0f;
+					float Xposition = 0.0f;
+					if (MoveReference->PieceMoving->PieceColor == EColor::BLACK)
+					{
+						Xposition = 200.0f;
+					}
+					CanvasSlot->SetPosition(FVector2D(Xposition, Yposition));
+					CanvasSlot->SetSize(FVector2D(200.0f, 50.0f));
+					GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Posizione"));
+				}			
+				FString MoveString = MoveReference->AlgebricMoveNotation();
+				MoveBox->MoveNotation->SetText(FText::FromString(MoveString));
+				AllMoves.Add(MoveBox);
 			}
 		}
 	};

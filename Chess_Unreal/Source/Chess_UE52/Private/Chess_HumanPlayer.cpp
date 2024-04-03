@@ -69,7 +69,7 @@ void AChess_HumanPlayer::OnPawnPromotion()
 		AChess_PlayerController* PlayerController = Cast<AChess_PlayerController>(GetWorld()->GetFirstPlayerController());
 		if (IsValid(PlayerController))
 		{
-			PlayerController->HUDChess->Storyboard->AddMoveWidget(GameMode->ChessBoard->MoveStack.Last());
+			PlayerController->HUDChess->AddMoveWidget(GameMode->ChessBoard->MoveStack.Last());
 		}
 
 		if (!MoveResult)
@@ -234,7 +234,7 @@ void AChess_HumanPlayer::OnClick()
 						AChess_PlayerController* PlayerController = Cast<AChess_PlayerController>(GetWorld()->GetFirstPlayerController());
 						if (IsValid(PlayerController))
 						{
-							PlayerController->HUDChess->Storyboard->AddMoveWidget(GameMode->ChessBoard->MoveStack.Last());
+							PlayerController->HUDChess->AddMoveWidget(GameMode->ChessBoard->MoveStack.Last());
 						}
 
 						if (!MoveResult)
@@ -284,7 +284,7 @@ void AChess_HumanPlayer::OnClick()
 							AChess_PlayerController* PlayerController = Cast<AChess_PlayerController>(GetWorld()->GetFirstPlayerController());
 							if (IsValid(PlayerController))
 							{
-								PlayerController->HUDChess->Storyboard->AddMoveWidget(GameMode->ChessBoard->MoveStack.Last());
+								PlayerController->HUDChess->AddMoveWidget(GameMode->ChessBoard->MoveStack.Last());
 							}
 
 							if (!MoveResult)
