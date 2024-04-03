@@ -29,6 +29,36 @@ AChess_HumanPlayer::AChess_HumanPlayer()
 
 }
 
+void ResolveAmbiguityNotation(UMove* Move, AChessPiece* PieceMoving, TArray<AChessPiece*>& MyPieces, ATile* Square, AGameField* ChessBoard)
+{
+	APawnPiece* Pawn = Cast<APawnPiece>(PieceMoving);
+	if (IsValid(Pawn)) 
+	{
+		for (AChessPiece* Piece : MyPieces)
+		{
+			APawnPiece* OtherPawn = Cast<APawnPiece>(Piece);
+			if (IsValid(OtherPawn) && OtherPawn != Pawn)
+			{
+				TArray<ATile*> candidateMoves = OtherPawn->validMoves();
+				for (ATile* candidateSquare : candidateMoves)
+				{
+					if (OtherPawn->IsLegal(candidateSquare) && candidateSquare == Square)
+					{
+						if (candidateSquare->GetGridPosition().Y == Square->GetGridPosition().Y)
+						{
+							Move->brankAmbiguity = true;
+						}
+						else
+						{
+							Move->bfileAmbiguity = true;
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
 // Called when the game starts or when spawned
 void AChess_HumanPlayer::BeginPlay()
 {
@@ -206,6 +236,8 @@ void AChess_HumanPlayer::OnClick()
 			{
 				if (CurrTile->GetTileStatus() == ETileStatus::EMPTY && actualMoves.Contains(CurrTile))
 				{
+					//ResolveAmbiguitiNotation!!!!(CurrTile)
+
 					GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("clicked tile"));
 					FVector2D MoveCurrPieceTo = CurrTile->GetGridPosition();
 					FVector Location = CurrPiece->ChessBoard->GetRelativeLocationByXYPosition(MoveCurrPieceTo.X, MoveCurrPieceTo.Y);
@@ -258,6 +290,9 @@ void AChess_HumanPlayer::OnClick()
 					/*CATTURA DI UN PEZZO*/
 					if (actualMoves.Contains(CurrTile))
 					{
+
+						//ResolveAmbiguitiNotation!!!!(CurrTile)
+
 						GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("clicked enemy piece"));
 						GameMode->ChessBoard->BlackPieceOnChessBoard.Remove(DestinationPiece);
 						//DestinationPiece->SetActorHiddenInGame(true);

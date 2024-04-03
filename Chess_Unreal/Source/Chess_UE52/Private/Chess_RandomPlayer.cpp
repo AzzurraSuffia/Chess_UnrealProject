@@ -104,6 +104,9 @@ void AChess_RandomPlayer::OnTurn()
 				RandomMove->To = actualMoves[RandTileIdx];
 				RandomMove->PieceMoving = RandomPlayerPiece[RandPieceIdx];
 
+				//ResolveAmbiguitiNotation!!!! (actualMoves[randTileIdx])
+
+
 				if (actualMoves[RandTileIdx]->GetTileStatus() == ETileStatus::WHITEPIECE)
 				{
 					/*C'E' UNA CATTURA*/

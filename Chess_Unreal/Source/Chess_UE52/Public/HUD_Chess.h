@@ -4,7 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
-#include "Storyboard.h"
+#include "Components/ScrollBox.h"
+#include "UI_MoveBox.h"
+#include "Move.h"
 #include "Components/CanvasPanel.h"
 #include "HUD_Chess.generated.h"
 
