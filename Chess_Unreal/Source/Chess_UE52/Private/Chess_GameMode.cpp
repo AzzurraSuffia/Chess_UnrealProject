@@ -1,0 +1,388 @@
+// Fill out your copyright notice in the Description page of Project Settings.
+
+
+#include "Chess_GameMode.h"
+#include "Chess_PlayerController.h"
+#include "Chess_HumanPlayer.h"
+#include "Chess_RandomPlayer.h"
+//#include "Chess_MinimaxPlayer.h"
+#include "EngineUtils.h"
+
+bool AChess_GameMode::GetPromotionFlag() const
+{
+	return bpromotionFlag;
+}
+
+int32 AChess_GameMode::GetMoveCounter() const
+{
+	return MoveCounter;
+}
+
+bool AChess_GameMode::IsGameEnded(UMove* Move, AKingPiece* King)
+{
+	int32 NextPlayer = GetNextPlayer(CurrentPlayer);
+	
+	if (PlayerCanMove(NextPlayer))
+	{
+		if (IsKingInCheck(NextPlayer))
+		{
+			Move->bisCheck = true;
+			ChessBoard->TileMap[King->PlaceAt]->SetTileColor(4);
+		}
+		return false;
+	}
+	else
+	{
+		//la partita è finita patta o ha vinto l'avversario
+		if (IsKingInCheck(NextPlayer))
+		{
+			Move->bisCheckmate = true;
+			ChessBoard->TileMap[King->PlaceAt]->SetTileColor(4);
+			ManageEndOfGame(NextPlayer, EResult::CHECKMATE);
+		}
+		else
+		{
+				ManageEndOfGame(NextPlayer, EResult::STALEMATE);
+		}
+		return true;
+	}
+}
+
+bool AChess_GameMode::IsKingInCheck(int32 Player)
+{
+	AKingPiece* MyKing = nullptr;
+	TArray<AChessPiece*> OpponentPieces = {};
+	if (Player == 0)
+	{
+		/*WHITE KING*/
+		MyKing = ChessBoard->WhiteKing;
+		OpponentPieces = ChessBoard->BlackPieceOnChessBoard;
+		
+	}
+	else if (Player == 1)
+	{
+		/*BLACK KING*/
+		MyKing = ChessBoard->BlackKing;
+		OpponentPieces = ChessBoard->WhitePieceOnChessBoard;
+	}
+
+	/*ECCEZIONE LANCIATA: o con piece o con Myking si sta provando ad accedere a un puntatore nullo probabilmente*/
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("IsKingInCheck"));
+	if (!OpponentPieces.IsEmpty())
+	{
+		for (AChessPiece* Piece : OpponentPieces)
+		{
+			if (Piece != nullptr)
+			{
+				if (Piece->CanCaptureOpponentPiece(MyKing))
+				{
+					return true;
+				}
+			}
+			else
+			{
+				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("GameMode.cpp: PIECE VUOTO NELL'ARRAY"));
+			}
+		}
+	}
+	
+	return false;
+}
+
+void AChess_GameMode::ManageEndOfGame(int32 Player, EResult GameResult)
+{
+	bisGameOver = true;
+	if (GameResult == EResult::CHECKMATE)
+	{
+		Players[Player]->OnLose();
+		for (int32 i = 0; i < Players.Num(); i++)
+		{
+			if (i != Player)
+			{
+				Players[i]->OnWin();
+			}
+		}
+	}
+	else if (GameResult == EResult::STALEMATE)
+	{
+		for (int32 i = 0; i < Players.Num(); i++)
+		{
+			Players[i]->OnDraw(EResult::STALEMATE);
+		}
+		
+		// add a timer (3 seconds)
+		FTimerHandle TimerHandle;
+
+		GetWorld()->GetTimerManager().SetTimer(TimerHandle, [&]()
+			{
+				// function to delay
+				ChessBoard->ResetField();
+
+			}, 3, false);
+	}
+}
+
+bool AChess_GameMode::PlayerCanMove(int32 Player)
+{
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("PlayerCanMove"));
+	TArray<AChessPiece*> PiecesOnChessBoard = {};
+	if (Player == 0)
+	{
+		PiecesOnChessBoard = ChessBoard->WhitePieceOnChessBoard;
+	}
+	else if (Player == 1)
+	{
+		PiecesOnChessBoard = ChessBoard->BlackPieceOnChessBoard;
+	}
+
+	for (AChessPiece* Piece : PiecesOnChessBoard)
+	{
+		TArray<ATile*> candidateMoves = {};
+		if (APawnPiece* Pawn = Cast<APawnPiece>(Piece))
+		{
+			bool mantainValue = Pawn->bfirstMove;
+			candidateMoves = Pawn->validMoves();
+			Pawn->bfirstMove = mantainValue;
+		}
+		else
+		{
+			candidateMoves = Piece->validMoves();
+		}
+		TArray<ATile*> actualMoves = {};
+
+		for (ATile* validTile : candidateMoves)
+		{
+			if (Piece->IsLegal(validTile))
+			{
+				actualMoves.Add(validTile);
+			}
+		}
+
+		if (!actualMoves.IsEmpty())
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
+bool AChess_GameMode::CheckForPawnPromotion(AChessPiece* CurrPiece)
+{
+		int32 XChessBoardEdge = (CurrPiece->PieceColor == EColor::WHITE) ? CurrPiece->ChessBoard->Size - 1 : 0;
+
+		if (CurrPiece->PlaceAt.X == XChessBoardEdge)
+		{
+			APawnPiece* Pawn = Cast<APawnPiece>(CurrPiece);
+			if (IsValid(Pawn))
+			{
+				ChessBoard->MoveStack.Last()->bisPromotion = true;
+				/*PROMOZIONE DEL PEDONE*/
+				Players[CurrentPlayer]->OnPawnPromotion();
+				return true;
+			}
+		}
+		return false;
+}
+
+/*
+TArray<TArray<ATile*>>& AChess_GameMode::FindAllLegalMoves(int32 Player)
+{
+	//L'inizializzazione non va bene
+	TArray<TArray<ATile*>>& AllLegalMoves = {};
+	TArray<AChessPiece*> PiecesOnChessBoard = {};
+
+	if (Player == 0)
+	{
+		PiecesOnChessBoard = this->WhitePieceOnChessBoard;
+	}
+	else if (Player == 1)
+	{
+		PiecesOnChessBoard = this->BlackPieceOnChessBoard;
+	}
+
+	for (AChessPiece* Piece : PiecesOnChessBoard)
+	{
+		TArray<ATile*> candidateMoves = Piece->validMoves();
+		TArray<ATile*> actualMoves = {};
+		for (ATile* validTile : candidateMoves)
+		{
+			if (Piece->IsLegal(validTile))
+			{
+				actualMoves.Add(validTile);
+			}
+		}
+		AllLegalMoves.Add(actualMoves);
+	}
+
+	return AllLegalMoves;
+}
+*/
+
+AChess_GameMode::AChess_GameMode()
+{
+	PlayerControllerClass = AChess_PlayerController::StaticClass();
+	DefaultPawnClass = AChess_HumanPlayer::StaticClass();
+	FieldSize = 8;
+}
+
+//quello che accade appena parte il gioco, quello che inizia il gioco
+void AChess_GameMode::BeginPlay()
+{
+	Super::BeginPlay();
+
+	bisGameOver = false;
+
+	bpromotionFlag = false;
+
+	MoveCounter = 0;
+
+	AChess_HumanPlayer* HumanPlayer = Cast<AChess_HumanPlayer>(*TActorIterator<AChess_HumanPlayer>(GetWorld()));
+	if (IsValid(HumanPlayer))
+	{
+		if (GameFieldClass != nullptr)
+		{
+			ChessBoard = GetWorld()->SpawnActor<AGameField>(GameFieldClass);
+			//poichè la generate field viene chiamata nella BeginPlay di GameField conil valore size settato nel costruttore di GameField
+			// questo assegnamento è inutile, o si commenta questo o si toglie la generatefield dalla BeginPlay della GameField e la si mette qui 
+			// in quest'ultimo modo genera un campo con dimensione FieldSize e non Size
+			//GField->Size = FieldSize;
+			//GField->GenerateField();
+		}
+		else
+		{
+			UE_LOG(LogTemp, Error, TEXT("Game Field is null"));
+			return;
+		}
+
+		
+		//float CameraPosX = ((GField->TileSize * (FieldSize + ((FieldSize - 1) * GField->NormalizedCellPadding) - (FieldSize - 1))) / 2) - (GField->TileSize / 2);
+		float CameraPosX = ((ChessBoard->TileSize * (FieldSize)) / 2) - (ChessBoard->TileSize / 2);
+		FVector CameraPos(CameraPosX, CameraPosX, 1500.0f);
+		HumanPlayer->SetActorLocationAndRotation(CameraPos, FRotationMatrix::MakeFromX(FVector(0, 0, -1)).Rotator());
+		
+
+		// Human player = 0
+		Players.Add(HumanPlayer);
+		// Random Player
+		auto* AI = GetWorld()->SpawnActor<AChess_RandomPlayer>(FVector(), FRotator());
+
+		// MiniMax Player
+		//auto* AI = GetWorld()->SpawnActor<ATTT_MinimaxPlayer>(FVector(), FRotator());
+		
+		// AI player = 1
+		Players.Add(AI);
+
+		ChoosePlayerAndStartGame();
+
+	}
+	//Va segnalato il fallimento di un cast?
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("Cast failed"));
+	}
+}
+
+void AChess_GameMode::ChoosePlayerAndStartGame()
+{
+	//seleziona il giocatore casualmente tra l'array di Player (funzione generale, indipendente dal particolare numero di giocatori, ci piace)
+	//CurrentPlayer = FMath::RandRange(0, Players.Num() - 1);
+	
+	//Nelle specifiche viene richiesto che ad iniziare sia sempre l'umano
+	CurrentPlayer = 0;
+
+	//assegnazone di un numero a ogni giocatore e di un colore delle pedine
+	for (int32 i = 0; i < Players.Num(); i++)
+	{
+		Players[i]->PlayerNumber = i;
+		Players[i]->Set = i == CurrentPlayer ? ESet::WHITE : ESet::BLACK;
+	}
+
+	MoveCounter += 1;
+
+	//inizia il turno del giocatore estratto casualmente
+	Players[CurrentPlayer]->OnTurn();
+
+}
+
+//ottengo il prossimo giocatore
+int32 AChess_GameMode::GetNextPlayer(int32 Player)
+{
+	Player++;
+	if (!Players.IsValidIndex(Player))
+	{
+		Player = 0;
+	}
+	return Player;
+
+}
+
+//assegno il turno al prossimo giocatore
+void AChess_GameMode::TurnNextPlayer()
+{
+	CurrentPlayer = GetNextPlayer(CurrentPlayer);
+	if (CurrentPlayer == 0)
+	{
+		MoveCounter += 1;
+	}
+	Players[CurrentPlayer]->OnTurn();
+}
+
+/*
+void AChess_GameMode::SetCellSign(const int32 PlayerNumber, const FVector& SpawnPosition)
+{
+	//facciamo un controllo per sicurezza: se è gameover o è il turno dell'altro non si può inserire nulla
+	//ci mettiamo a avento di fronte a umani che cliccano a caso o l'ai che clicca quando non deve
+	if (IsGameOver || PlayerNumber != CurrentPlayer)
+	{
+		return;
+	}
+
+	//creazione del simbolo da giocare a seconda del current player (se è l'umano è 0, se èl'AI è 1)
+	UClass* SignActor = Players[CurrentPlayer]->Sign == ESet::BLACK ? SignXActor : SignOActor;
+
+	
+	//setto la posizione in cui spawnare il simbolo
+	//La location è determinata come:
+	//-	prendo la posizione del campo con GetActorLocation
+	//-	la spawn position è la coppia delle coordinate dentro il campo,
+	//-	FVector(0, 0, 10) lo fa spawnare rialzato rispetto al gamefield (asse z)
+	FVector Location = GField->GetActorLocation() + SpawnPosition + FVector(0, 0, 10);
+	//lo spawno
+	GetWorld()->SpawnActor(SignActor, &Location);
+
+	//HO VINTO: se è una posizione vincente quella in cui ho messo il simbolo, ho vinto
+	if (GField->IsWinPosition(GField->GetXYPositionByRelativeLocation(SpawnPosition)))
+	{
+		IsGameOver = true;
+
+		//il giocatore che ha fatto il turnoo ha vinto
+		Players[CurrentPlayer]->OnWin();
+		for (int32 i = 0; i < Players.Num(); i++)
+		{
+			//l'altro giocatore o gli altri giocatori hanno perso
+			if (i != CurrentPlayer)
+			{
+				Players[i]->OnLose();
+			}
+		}
+	}
+	//LA PARTITA TERMINA PATTA: il campo viene resettato dopo 3 secondi grazie al TimerManager
+	else if (MoveCounter == (FieldSize * FieldSize))
+	{
+		// add a timer (3 seconds)
+		FTimerHandle TimerHandle;
+
+		GetWorld()->GetTimerManager().SetTimer(TimerHandle, [&]()
+			{
+				// function to delay
+				GField->ResetField();
+			}, 3, false);
+	}
+	//HO FATTO UNA MOSSA CHE NON CONCLUDE IL GIOCO: è il turno dell'altro giocatore
+	else
+	{
+		TurnNextPlayer();
+	}
+}
+*/
