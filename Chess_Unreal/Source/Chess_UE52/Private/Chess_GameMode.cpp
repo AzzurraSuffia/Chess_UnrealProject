@@ -206,6 +206,17 @@ bool AChess_GameMode::CheckForPawnPromotion(AChessPiece* CurrPiece)
 		return false;
 }
 
+void AChess_GameMode::MovePiece(AChessPiece* Piece, ATile* From, ATile* To)
+{
+	FVector2D MoveCurrPieceTo = To->GetGridPosition();
+	FVector Location = ChessBoard->GetRelativeLocationByXYPosition(MoveCurrPieceTo.X, MoveCurrPieceTo.Y);
+	FVector NewLocation = Location + FVector(6, 6, 20);
+	Piece->SetActorLocation(NewLocation);
+	Piece->PlaceAt = MoveCurrPieceTo;
+	(Piece->PieceColor == EColor::WHITE) ? To->SetTileStatus(ETileStatus::WHITEPIECE) : To->SetTileStatus(ETileStatus::BLACKPIECE);
+	From->SetTileStatus(ETileStatus::EMPTY);
+}
+
 /*
 TArray<TArray<ATile*>>& AChess_GameMode::FindAllLegalMoves(int32 Player)
 {
@@ -348,62 +359,3 @@ void AChess_GameMode::TurnNextPlayer()
 	}
 	Players[CurrentPlayer]->OnTurn();
 }
-
-/*
-void AChess_GameMode::SetCellSign(const int32 PlayerNumber, const FVector& SpawnPosition)
-{
-	//facciamo un controllo per sicurezza: se è gameover o è il turno dell'altro non si può inserire nulla
-	//ci mettiamo a avento di fronte a umani che cliccano a caso o l'ai che clicca quando non deve
-	if (IsGameOver || PlayerNumber != CurrentPlayer)
-	{
-		return;
-	}
-
-	//creazione del simbolo da giocare a seconda del current player (se è l'umano è 0, se èl'AI è 1)
-	UClass* SignActor = Players[CurrentPlayer]->Sign == ESet::BLACK ? SignXActor : SignOActor;
-
-	
-	//setto la posizione in cui spawnare il simbolo
-	//La location è determinata come:
-	//-	prendo la posizione del campo con GetActorLocation
-	//-	la spawn position è la coppia delle coordinate dentro il campo,
-	//-	FVector(0, 0, 10) lo fa spawnare rialzato rispetto al gamefield (asse z)
-	FVector Location = GField->GetActorLocation() + SpawnPosition + FVector(0, 0, 10);
-	//lo spawno
-	GetWorld()->SpawnActor(SignActor, &Location);
-
-	//HO VINTO: se è una posizione vincente quella in cui ho messo il simbolo, ho vinto
-	if (GField->IsWinPosition(GField->GetXYPositionByRelativeLocation(SpawnPosition)))
-	{
-		IsGameOver = true;
-
-		//il giocatore che ha fatto il turnoo ha vinto
-		Players[CurrentPlayer]->OnWin();
-		for (int32 i = 0; i < Players.Num(); i++)
-		{
-			//l'altro giocatore o gli altri giocatori hanno perso
-			if (i != CurrentPlayer)
-			{
-				Players[i]->OnLose();
-			}
-		}
-	}
-	//LA PARTITA TERMINA PATTA: il campo viene resettato dopo 3 secondi grazie al TimerManager
-	else if (MoveCounter == (FieldSize * FieldSize))
-	{
-		// add a timer (3 seconds)
-		FTimerHandle TimerHandle;
-
-		GetWorld()->GetTimerManager().SetTimer(TimerHandle, [&]()
-			{
-				// function to delay
-				GField->ResetField();
-			}, 3, false);
-	}
-	//HO FATTO UNA MOSSA CHE NON CONCLUDE IL GIOCO: è il turno dell'altro giocatore
-	else
-	{
-		TurnNextPlayer();
-	}
-}
-*/

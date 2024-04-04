@@ -99,7 +99,8 @@ void AChess_HumanPlayer::OnPawnPromotion()
 		AChess_PlayerController* PlayerController = Cast<AChess_PlayerController>(GetWorld()->GetFirstPlayerController());
 		if (IsValid(PlayerController))
 		{
-			PlayerController->HUDChess->AddMoveWidget(GameMode->ChessBoard->MoveStack.Last());
+			UUI_MoveBox* MoveBox = PlayerController->HUDChess->AddMoveWidget(GameMode->ChessBoard->MoveStack.Last());
+			MoveBox->Move = GameMode->ChessBoard->MoveStack.Last();
 		}
 
 		if (!MoveResult)
@@ -145,22 +146,6 @@ void AChess_HumanPlayer::OnDraw(EResult DrawOrigin)
 	}
 }
 
-void RestoreSquareColor(TArray<ATile*> actualMoves) {
-	for (ATile* validTile : actualMoves)
-	{
-		int32 x = validTile->GetGridPosition().X;
-		int32 y = validTile->GetGridPosition().Y;
-		if (((x + y) % 2) == 0)
-		{
-			validTile->SetTileColor(0);
-		}
-		else
-		{
-			validTile->SetTileColor(1);
-		}
-	}
-}
-
 
 void AChess_HumanPlayer::OnClick()
 {
@@ -171,7 +156,7 @@ void AChess_HumanPlayer::OnClick()
 	// GetHitResultUnderCursor function sends a ray from the mouse position and gives the corresponding hit results
 	GetWorld()->GetFirstPlayerController()->GetHitResultUnderCursor(ECollisionChannel::ECC_Pawn, true, Hit);
 
-	if (Hit.bBlockingHit && !Hit.GetActor()->IsHidden() && bisMyTurn && !GameMode->bisGameOver)
+	if (IsValid(GameMode) && Hit.bBlockingHit && !Hit.GetActor()->IsHidden() && bisMyTurn && !GameMode->bisGameOver)
 	{
 		if (bFirstClick)
 		{
@@ -221,12 +206,6 @@ void AChess_HumanPlayer::OnClick()
 				{
 					GameInstance->SetTurnMessage(TEXT("No Moves Available for this Piece"));
 				}
-				/*
-				if (IsValid(GameMode))
-				{
-				//		GameMode->SetCellSign(PlayerNumber, SpawnPosition);
-				}
-				*/
 			}
 		}
 		else
@@ -239,22 +218,10 @@ void AChess_HumanPlayer::OnClick()
 					//ResolveAmbiguitiNotation!!!!(CurrTile)
 
 					GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("clicked tile"));
-					FVector2D MoveCurrPieceTo = CurrTile->GetGridPosition();
-					FVector Location = CurrPiece->ChessBoard->GetRelativeLocationByXYPosition(MoveCurrPieceTo.X, MoveCurrPieceTo.Y);
-					FVector NewLocation = Location + FVector(6, 6, 20);
-					CurrPiece->SetActorLocation(NewLocation);
-					CurrPiece->PlaceAt = MoveCurrPieceTo;
-					CurrTile->SetTileStatus(ETileStatus::WHITEPIECE);
-					SelectedTile->SetTileStatus(ETileStatus::EMPTY);
-					/*
-					AChess_GameMode* GameMode = Cast<AChess_GameMode>(GetWorld()->GetAuthGameMode());
-					if (IsValid(GameMode))
-					{
-					//		GameMode->SetCellSign(PlayerNumber, SpawnPosition);
-					}
-					*/
+					GameMode->MovePiece(CurrPiece, SelectedTile, CurrTile);
+					
 					actualMoves.Add(SelectedTile);
-					RestoreSquareColor(actualMoves);
+					GameMode->ChessBoard->RestoreSquareColor(actualMoves);
 
 					GameMode->ChessBoard->MoveStack.Last()->To = CurrTile;
 
@@ -266,7 +233,8 @@ void AChess_HumanPlayer::OnClick()
 						AChess_PlayerController* PlayerController = Cast<AChess_PlayerController>(GetWorld()->GetFirstPlayerController());
 						if (IsValid(PlayerController))
 						{
-							PlayerController->HUDChess->AddMoveWidget(GameMode->ChessBoard->MoveStack.Last());
+							UUI_MoveBox* MoveBox = PlayerController->HUDChess->AddMoveWidget(GameMode->ChessBoard->MoveStack.Last());
+							MoveBox->Move = GameMode->ChessBoard->MoveStack.Last();
 						}
 
 						if (!MoveResult)
@@ -297,15 +265,10 @@ void AChess_HumanPlayer::OnClick()
 						GameMode->ChessBoard->BlackPieceOnChessBoard.Remove(DestinationPiece);
 						//DestinationPiece->SetActorHiddenInGame(true);
 						GameMode->ChessBoard->MoveOutOfChessBoard(DestinationPiece, false);
-						FVector2D MoveCurrPieceTo = CurrTile->GetGridPosition();
-						FVector Location = CurrPiece->ChessBoard->GetRelativeLocationByXYPosition(MoveCurrPieceTo.X, MoveCurrPieceTo.Y);
-						FVector NewLocation = Location + FVector(6, 6, 20);
-						CurrPiece->SetActorLocation(NewLocation);
-						CurrPiece->PlaceAt = MoveCurrPieceTo;
-						CurrTile->SetTileStatus(ETileStatus::WHITEPIECE);
-						SelectedTile->SetTileStatus(ETileStatus::EMPTY);
+						GameMode->MovePiece(CurrPiece, SelectedTile, CurrTile);
+
 						actualMoves.Add(SelectedTile);
-						RestoreSquareColor(actualMoves);
+						GameMode->ChessBoard->RestoreSquareColor(actualMoves);
 
 						GameMode->ChessBoard->MoveStack.Last()->To = CurrTile;
 						GameMode->ChessBoard->MoveStack.Last()->bisCapture = true;
@@ -319,7 +282,8 @@ void AChess_HumanPlayer::OnClick()
 							AChess_PlayerController* PlayerController = Cast<AChess_PlayerController>(GetWorld()->GetFirstPlayerController());
 							if (IsValid(PlayerController))
 							{
-								PlayerController->HUDChess->AddMoveWidget(GameMode->ChessBoard->MoveStack.Last());
+								UUI_MoveBox* MoveBox = PlayerController->HUDChess->AddMoveWidget(GameMode->ChessBoard->MoveStack.Last());
+								MoveBox->Move = GameMode->ChessBoard->MoveStack.Last();
 							}
 
 							if (!MoveResult)

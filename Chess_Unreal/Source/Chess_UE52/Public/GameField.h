@@ -146,6 +146,8 @@ public:
 
 	void MoveOutOfChessBoard(AChessPiece* HiddenPiece, bool flag);
 
+	void RestoreSquareColor(TArray<ATile*> Squares);
+
 	// return a (x,y) position given a hit (click) on a field tile
 	FVector2D GetPosition(const FHitResult& Hit);
 

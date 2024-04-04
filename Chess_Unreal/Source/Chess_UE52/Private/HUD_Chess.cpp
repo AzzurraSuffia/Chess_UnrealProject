@@ -13,7 +13,7 @@ void UHUD_Chess::NativeConstruct()
 
 }
 
-void UHUD_Chess::AddMoveWidget(UMove* MoveReference)
+UUI_MoveBox* UHUD_Chess::AddMoveWidget(UMove* MoveReference)
 {
 	if (MoveReference->PieceMoving->PieceColor == EColor::WHITE)
 	{
@@ -47,9 +47,11 @@ void UHUD_Chess::AddMoveWidget(UMove* MoveReference)
 				FString MoveString = MoveReference->AlgebricMoveNotation();
 				MoveBox->MoveNotation->SetText(FText::FromString(MoveString));
 				AllMoves.Add(MoveBox);
+				return MoveBox;
 			}
 		}
 	};
+	return nullptr;
 }
 
 void UHUD_Chess::AddTextWidget(FString& StringName, FVector2D Position, FVector2D Size)

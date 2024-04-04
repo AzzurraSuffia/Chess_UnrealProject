@@ -219,19 +219,7 @@ void AGameField::ResetField()
 	//non solo al checkmate le caselle dei re cambiano colore,
 	//ma se clicco su reset dopo aver selezionato una tile è difficile risalire a quale fosse
 	//finchè non istanzio la classe mossa
-	for (ATile* Tile : TileArray)
-	{
-		int32 x = Tile->GetGridPosition().X;
-		int32 y = Tile->GetGridPosition().Y;
-		if (((x + y) % 2) == 0)
-		{
-			Tile->SetTileColor(0);
-		}
-		else
-		{
-			Tile->SetTileColor(1);
-		}
-	}
+	RestoreSquareColor(TileArray);
 
 	if (WhitePieceOnChessBoard.IsEmpty() && BlackPieceOnChessBoard.IsEmpty())
 	{
@@ -247,6 +235,15 @@ void AGameField::ResetField()
 	{
 		for (UUI_MoveBox* MoveBox : PlayerController->HUDChess->AllMoves)
 		{
+			if (MoveBox->Move->PieceCaptured != nullptr)
+			{
+				MoveBox->Move->PieceCaptured->Destroy();
+			}
+			if (MoveBox->Move->OriginalPawn != nullptr)
+			{
+				MoveBox->Move->OriginalPawn->Destroy();
+			}
+
 			MoveBox->ConditionalBeginDestroy();
 		}
 		PlayerController->HUDChess->AllMoves.Empty();
@@ -256,14 +253,12 @@ void AGameField::ResetField()
 			TextBox->ConditionalBeginDestroy();
 		}
 		PlayerController->HUDChess->OtherNotationComponents.Empty();
-
 	}
 
 	AChess_GameMode* GameMode = Cast<AChess_GameMode>(GetWorld()->GetAuthGameMode());
 	GameMode->bisGameOver = false;
 	GameMode->MoveCounter = 0;
 	GameMode->ChoosePlayerAndStartGame();
-
 }
 
 FString AGameField::GetLastMoveAlgebricNotation()
@@ -363,6 +358,7 @@ void AGameField::PromotePawn(EPieceNotation ToPromote)
 	FVector2D SpawnPosition = Pawn->PlaceAt;
 	const float TileScale = TileSize / 100;
 	//Pawn->SetActorHiddenInGame(true);
+	MoveStack.Last()->OriginalPawn = Pawn;
 	
 	MoveOutOfChessBoard(Pawn, true);
 
@@ -435,16 +431,33 @@ void AGameField::MoveOutOfChessBoard(AChessPiece* HiddenPiece, bool flag)
 		}
 	}
 	
+	int32 Yposition = CellPosition % Size;
+
 	if (flag)
 	{
-		CellPosition++;
+		Yposition++;
 	}
-
-	int32 Yposition = CellPosition % Size;
 
 	FVector Location = GetRelativeLocationByXYPosition(Xposition, Yposition);
 	FVector NewLocation = Location + FVector(6, 6, 20);
 	HiddenPiece->SetActorLocation(NewLocation);
 	HiddenPiece->PlaceAt = FVector2D(Xposition, Yposition);
+}
 
+void AGameField::RestoreSquareColor(TArray<ATile*> Squares)
+{
+	for (ATile* Tile : Squares)
+	{
+		int32 x = Tile->GetGridPosition().X;
+		int32 y = Tile->GetGridPosition().Y;
+		if(((x + y) % 2) == 0)
+		{
+			Tile->SetTileColor(0);
+		}
+		else
+		{
+			Tile->SetTileColor(1);
+		}
+	}
+	
 }

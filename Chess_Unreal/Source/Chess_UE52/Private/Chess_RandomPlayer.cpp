@@ -78,7 +78,7 @@ void AChess_RandomPlayer::OnTurn()
 			AGameField* ChessBoard = GameMode->ChessBoard;
 			UMove* RandomMove = NewObject<UMove>();
 			
-			if (RandomMove)
+			if (RandomMove && IsValid(GameMode))
 			{
 				
 				do
@@ -106,7 +106,6 @@ void AChess_RandomPlayer::OnTurn()
 
 				//ResolveAmbiguitiNotation!!!! (actualMoves[randTileIdx])
 
-
 				if (actualMoves[RandTileIdx]->GetTileStatus() == ETileStatus::WHITEPIECE)
 				{
 					/*C'E' UNA CATTURA*/
@@ -124,12 +123,8 @@ void AChess_RandomPlayer::OnTurn()
 					}
 				}
 
-				ChessBoard->TileMap[RandomPlayerPiece[RandPieceIdx]->PlaceAt]->SetTileStatus(ETileStatus::EMPTY);
-				FVector Location = ChessBoard->GetRelativeLocationByXYPosition(MoveCurrPieceTo.X, MoveCurrPieceTo.Y);
-				FVector NewLocation = Location + FVector(6, 6, 20);
-				RandomPlayerPiece[RandPieceIdx]->SetActorLocation(NewLocation);
-				RandomPlayerPiece[RandPieceIdx]->PlaceAt = MoveCurrPieceTo;
-				actualMoves[RandTileIdx]->SetTileStatus(ETileStatus::BLACKPIECE);
+				ATile* From = ChessBoard->TileMap[RandomPlayerPiece[RandPieceIdx]->PlaceAt];
+				GameMode->MovePiece(RandomPlayerPiece[RandPieceIdx], From, actualMoves[RandTileIdx]);
 
 
 				if (GameMode->CheckForPawnPromotion(RandomPlayerPiece[RandPieceIdx]))
@@ -137,26 +132,25 @@ void AChess_RandomPlayer::OnTurn()
 				}
 
 				bool MoveResult = GameMode->IsGameEnded(RandomMove, ChessBoard->WhiteKing);
-				GameMode->OnNewMove.Broadcast();
+
+				AChess_PlayerController* PlayerController = Cast<AChess_PlayerController>(GetWorld()->GetFirstPlayerController());
+				if (IsValid(PlayerController))
+				{
+					UUI_MoveBox* MoveBox = PlayerController->HUDChess->AddMoveWidget(RandomMove);
+					MoveBox->Move = RandomMove;
+				}
+
 				if (!MoveResult)
 				{
 					GameMode->TurnNextPlayer();
 				}
 				
-				AChess_PlayerController* PlayerController = Cast<AChess_PlayerController>(GetWorld()->GetFirstPlayerController());
-				if (IsValid(PlayerController))
-				{
-					PlayerController->HUDChess->AddMoveWidget(RandomMove);
-				}
-				/*
-				//GameMode->SetCellSign(PlayerNumber, Location);
-				*/
-
+				
 			}
 			else
 			{
 				// Pointer to the UMove object is not valid
-				UE_LOG(LogTemp, Warning, TEXT("RandomMove pointer not valid."));
+				UE_LOG(LogTemp, Warning, TEXT("RandomMove or GameMode pointer not valid."));
 			}
 
 			//Il timer è di 1 secondi (aspetta 1 secondi prima di mettere il simbolo)

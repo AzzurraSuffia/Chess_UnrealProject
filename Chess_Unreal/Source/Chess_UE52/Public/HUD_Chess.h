@@ -22,7 +22,7 @@ class CHESS_UE52_API UHUD_Chess : public UUserWidget
 	
 public:
 	UFUNCTION(BlueprintCallable)
-	void AddMoveWidget(UMove* MoveNotation);
+	UUI_MoveBox* AddMoveWidget(UMove* MoveNotation);
 
 	UFUNCTION(BlueprintCallable)
 	void AddTextWidget(FString& String, FVector2D Position, FVector2D Size);

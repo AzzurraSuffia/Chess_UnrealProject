@@ -15,5 +15,17 @@ void UUI_MoveBox::NativeConstruct()
 		ExternalBox->SetWidthOverride(700.0f);
 		ExternalBox->SetHeightOverride(100.0f);
 		MoveNotation->SetText(FText::FromString("Move"));
+		Button->OnClicked.AddDynamic(this, &UUI_MoveBox::OnButtonClicked);
 	}
+}
+
+void UUI_MoveBox::OnButtonClicked()
+{
+
+	AChess_GameMode* GameMode = Cast<AChess_GameMode>(GetWorld()->GetAuthGameMode());
+	GameMode->ChessBoard->RestoreSquareColor(GameMode->ChessBoard->TileArray);
+
+	Move->To->SetTileColor(3);
+	Move->From->SetTileColor(3);
+
 }

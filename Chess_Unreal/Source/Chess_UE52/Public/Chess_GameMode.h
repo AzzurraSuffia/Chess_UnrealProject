@@ -50,10 +50,7 @@ public:
 	// tracks if the game is over
 	bool bisGameOver;
 
-	bool IsGameEnded(UMove* Move, AKingPiece* King);
-
-	UPROPERTY(BlueprintAssignable)
-	FOnNewMove OnNewMove;
+	UMove* CurrentChessboardState;
 
 	// array of player interfaces
 	TArray<IChess_PlayerInterface*> Players;
@@ -65,6 +62,10 @@ public:
 	bool PlayerCanMove(int32 Player);
 
 	bool CheckForPawnPromotion(AChessPiece* CurrPiece);
+
+	void MovePiece(AChessPiece* Piece, ATile* From, ATile* To);
+
+	bool IsGameEnded(UMove* Move, AKingPiece* King);
 
 	//potrebbe essere una mappa
 	//TArray<TArray<ATile*>>& FindAllLegalMoves(int32 Player);

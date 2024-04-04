@@ -19,7 +19,7 @@ class CHESS_UE52_API UMove : public UObject
 public:
 
     UMove();
-    UMove(int32 Number, ATile* A, ATile* B, AChessPiece* Piece, bool file, bool rank, bool isCapture, AChessPiece* Captured, bool isPromotion, AChessPiece* Promoted, bool Check, bool Checkmate);
+    UMove(int32 Number, ATile* A, ATile* B, AChessPiece* Piece, bool file, bool rank, bool isCapture, AChessPiece* Captured, bool isPromotion, AChessPiece* Promoted, AChessPiece* Pawn, bool Check, bool Checkmate);
 
     int32 MoveNumber;
     ATile* From;
@@ -35,9 +35,12 @@ public:
 
     bool bisPromotion;
     AChessPiece* PiecePromoted;
+    AChessPiece* OriginalPawn;
 
     bool bisCheck;
     bool bisCheckmate;
-   
+
     FString AlgebricMoveNotation();
+
+    void UndoLastMove();
 };

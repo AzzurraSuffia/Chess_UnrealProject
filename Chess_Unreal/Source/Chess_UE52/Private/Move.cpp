@@ -50,11 +50,12 @@ UMove::UMove()
 	PieceCaptured = nullptr;
 	bisPromotion = false;
 	PiecePromoted = nullptr;
+	OriginalPawn = nullptr;
 	bisCheck = false;
 	bisCheckmate = false;
 }
 
-UMove::UMove(int32 Number, ATile* A, ATile* B, AChessPiece* Piece, bool file, bool rank, bool isCapture, AChessPiece* Captured, bool isPromotion, AChessPiece* Promoted, bool Check, bool Checkmate)
+UMove::UMove(int32 Number, ATile* A, ATile* B, AChessPiece* Piece, bool file, bool rank, bool isCapture, AChessPiece* Captured, bool isPromotion, AChessPiece* Promoted, AChessPiece* Pawn, bool Check, bool Checkmate)
 {
 	MoveNumber = Number;
 	From = A;
@@ -66,6 +67,7 @@ UMove::UMove(int32 Number, ATile* A, ATile* B, AChessPiece* Piece, bool file, bo
 	PieceCaptured = Captured;
 	bisPromotion = isPromotion;
 	PiecePromoted = Promoted; 
+	OriginalPawn = Pawn;
 	bisCheck = Check;
 	bisCheckmate = Checkmate;
 }
@@ -140,4 +142,48 @@ FString UMove::AlgebricMoveNotation()
 	}
 
 	return MoveNotation;
+}
+
+void UMove::UndoLastMove()
+{
+	/*
+	AChess_GameMode* GameMode = Cast<AChess_GameMode>(GetWorld()->GetAuthGameMode());
+
+	ETileStatus MyType = ETileStatus::EMPTY;
+	ETileStatus OpponentType = ETileStatus::EMPTY;
+
+	if (PieceMoving->PieceColor == EColor::BLACK)
+	{
+		MyType = ETileStatus::BLACKPIECE; OpponentType = ETileStatus::WHITEPIECE;
+	}
+	else if (PieceMoving->PieceColor == EColor::WHITE)
+	{
+		MyType = ETileStatus::WHITEPIECE; OpponentType = ETileStatus::BLACKPIECE;
+	}
+
+	To->SetTileStatus(MyType);
+	PieceMoving->PlaceAt = To->GetGridPosition();
+
+	if (PieceCaptured != nullptr)
+	{
+		//DEVO RIPRISTINARE IL PEZZO CATTURATO
+		From->SetTileStatus(OpponentType);
+		PieceCaptured->PlaceAt = From->GetGridPosition();
+		if (PieceMoving->PieceColor == EColor::BLACK)
+		{
+			GameMode->ChessBoard->WhitePieceOnChessBoard.Add(PieceCaptured);
+		}
+		else if (PieceMoving->PieceColor == EColor::WHITE)
+		{
+			GameMode->ChessBoard->BlackPieceOnChessBoard.Add(PieceCaptured);
+		}
+	}
+	else
+	{
+		From->SetTileStatus(ETileStatus::EMPTY);
+	}
+	*/
+
+	PieceMoving->undoVirtualMove(PieceMoving, To, From, PieceCaptured);
+
 }

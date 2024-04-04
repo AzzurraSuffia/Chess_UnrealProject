@@ -6,6 +6,8 @@
 #include "Blueprint/UserWidget.h"
 #include "Components/SizeBox.h"
 #include "Components/Button.h"
+#include "Move.h"
+#include "Chess_GameMode.h"
 #include "Components/TextBlock.h"
 #include "UI_MoveBox.generated.h"
 
@@ -26,6 +28,11 @@ public:
 
 	UPROPERTY(BlueprintReadWrite,/* meta = (BindWidget),*/ Category = "Widgets Components")
 	UTextBlock* MoveNotation;
+
+	UMove* Move;
+
+	UFUNCTION()
+	void OnButtonClicked();
 
 	virtual void NativeConstruct() override;
 };
