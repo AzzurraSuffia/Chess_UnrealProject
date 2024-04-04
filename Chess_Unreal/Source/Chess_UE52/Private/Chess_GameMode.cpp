@@ -38,11 +38,11 @@ bool AChess_GameMode::IsGameEnded(UMove* Move, AKingPiece* King)
 		{
 			Move->bisCheckmate = true;
 			ChessBoard->TileMap[King->PlaceAt]->SetTileColor(4);
-			ManageEndOfGame(NextPlayer, EResult::CHECKMATE);
+			ManageEndOfGame(CurrentPlayer, EResult::CHECKMATE);
 		}
 		else
 		{
-				ManageEndOfGame(NextPlayer, EResult::STALEMATE);
+			ManageEndOfGame(CurrentPlayer, EResult::STALEMATE);
 		}
 		return true;
 	}
@@ -94,13 +94,24 @@ void AChess_GameMode::ManageEndOfGame(int32 Player, EResult GameResult)
 	bisGameOver = true;
 	if (GameResult == EResult::CHECKMATE)
 	{
-		Players[Player]->OnLose();
+		Players[Player]->OnWin();
 		for (int32 i = 0; i < Players.Num(); i++)
 		{
 			if (i != Player)
 			{
-				Players[i]->OnWin();
+				Players[i]->OnLose();
 			}
+		}
+
+		FString WinningString = FString();
+		(Player == 0) ? WinningString = FString("1-0") : WinningString = FString("0-1");
+		AChess_PlayerController* PlayerController = Cast<AChess_PlayerController>(GetWorld()->GetFirstPlayerController());
+		if (IsValid(PlayerController))
+		{
+			int32 NumberOfMoves = PlayerController->HUDChess->AllMoves.Num();
+			float Xposition = 0.0f;
+			float Yposition = (NumberOfMoves / 2) * 50.0f + 50.0f;
+			PlayerController->HUDChess->AddTextWidget(WinningString,FVector2D(Xposition, Yposition), FVector2D(200.0f, 50.0f));
 		}
 	}
 	else if (GameResult == EResult::STALEMATE)
@@ -108,6 +119,16 @@ void AChess_GameMode::ManageEndOfGame(int32 Player, EResult GameResult)
 		for (int32 i = 0; i < Players.Num(); i++)
 		{
 			Players[i]->OnDraw(EResult::STALEMATE);
+		}
+
+		AChess_PlayerController* PlayerController = Cast<AChess_PlayerController>(GetWorld()->GetFirstPlayerController());
+		if (IsValid(PlayerController))
+		{
+			int32 NumberOfMoves = PlayerController->HUDChess->AllMoves.Num();
+			float Xposition = 0.0f;
+			float Yposition = (NumberOfMoves / 2) * 50.0f + 50.0f;
+			FString DrawString = FString("1/2-1/2");
+			PlayerController->HUDChess->AddTextWidget(DrawString, FVector2D(Xposition, Yposition), FVector2D(200.0f, 50.0f));
 		}
 		
 		// add a timer (3 seconds)

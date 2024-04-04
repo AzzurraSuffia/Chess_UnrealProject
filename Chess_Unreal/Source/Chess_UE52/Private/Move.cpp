@@ -76,11 +76,6 @@ FString UMove::AlgebricMoveNotation()
 
 	if (PieceMoving != nullptr && From != nullptr && To != nullptr && MoveNumber != 0)
 	{
-		if (PieceMoving->PieceColor == EColor::WHITE)
-		{
-			MoveNotation.Append(FString::FromInt(MoveNumber));
-			MoveNotation.Append(". ");
-		}
 
 		EPieceNotation Letter = PieceToNotation(PieceMoving);
 		switch (Letter)

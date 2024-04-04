@@ -250,6 +250,13 @@ void AGameField::ResetField()
 			MoveBox->ConditionalBeginDestroy();
 		}
 		PlayerController->HUDChess->AllMoves.Empty();
+
+		for (UUI_EndNotation* TextBox : PlayerController->HUDChess->OtherNotationComponents)
+		{
+			TextBox->ConditionalBeginDestroy();
+		}
+		PlayerController->HUDChess->OtherNotationComponents.Empty();
+
 	}
 
 	AChess_GameMode* GameMode = Cast<AChess_GameMode>(GetWorld()->GetAuthGameMode());
@@ -356,7 +363,7 @@ void AGameField::PromotePawn(EPieceNotation ToPromote)
 	FVector2D SpawnPosition = Pawn->PlaceAt;
 	const float TileScale = TileSize / 100;
 	//Pawn->SetActorHiddenInGame(true);
-	MoveStack.Last()->PiecePromoted = Pawn;
+	
 	MoveOutOfChessBoard(Pawn, true);
 
 	if (ToPromote != EPieceNotation::EMPTY && Pawn != nullptr)
@@ -379,6 +386,8 @@ void AGameField::PromotePawn(EPieceNotation ToPromote)
 		default:
 			PiecePromoted = SpawnPieceQueen(PColor, SpawnPosition.X, SpawnPosition.Y, TileScale);
 		}
+
+		MoveStack.Last()->PiecePromoted = PiecePromoted;
 
 		if (GameMode->CurrentPlayer == 0)
 		{

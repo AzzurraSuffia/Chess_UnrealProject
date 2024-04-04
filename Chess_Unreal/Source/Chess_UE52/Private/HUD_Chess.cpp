@@ -17,7 +17,11 @@ void UHUD_Chess::AddMoveWidget(UMove* MoveReference)
 {
 	if (MoveReference->PieceMoving->PieceColor == EColor::WHITE)
 	{
-		//aggiungi il numero prima
+		FString NumberOfMove = FString::FromInt(MoveReference->MoveNumber);
+		NumberOfMove.Append(". ");
+		float Xposition = 0.0f;
+		float Yposition = (MoveReference->MoveNumber - 1) * 50.0f;
+		AddTextWidget(NumberOfMove, FVector2D(Xposition, Yposition), FVector2D(50.0f, 50.0f));
 	}
 
 	if (ChildMoveWidget)
@@ -31,7 +35,7 @@ void UHUD_Chess::AddMoveWidget(UMove* MoveReference)
 				UCanvasPanelSlot* CanvasSlot = Cast<UCanvasPanelSlot>(Canvas->AddChildToCanvas(MoveBox));
 				if (IsValid(CanvasSlot))
 				{
-					float Yposition = MoveReference->MoveNumber * 50.0f;
+					float Yposition = (MoveReference->MoveNumber-1) * 50.0f;
 					float Xposition = 50.0f;
 					if (MoveReference->PieceMoving->PieceColor == EColor::BLACK)
 					{
@@ -46,4 +50,32 @@ void UHUD_Chess::AddMoveWidget(UMove* MoveReference)
 			}
 		}
 	};
+}
+
+void UHUD_Chess::AddTextWidget(FString& StringName, FVector2D Position, FVector2D Size)
+{
+	if (ChildTextWidget)
+	{
+		UUserWidget* TextWidget = CreateWidget<UUserWidget>(GetWorld(), ChildTextWidget);
+		if (TextWidget)
+		{
+			UUI_EndNotation* TextBox = Cast<UUI_EndNotation>(TextWidget);
+			if (IsValid(TextBox))
+			{
+				UCanvasPanelSlot* CanvasTextSlot = Cast<UCanvasPanelSlot>(Canvas->AddChildToCanvas(TextBox));
+				if (IsValid(CanvasTextSlot))
+				{
+					CanvasTextSlot->SetPosition(Position);
+					CanvasTextSlot->SetSize(Size);
+				}
+
+				if (TextBox->Text != nullptr)
+				{
+					TextBox->Text->SetText(FText::FromString(StringName));
+				} 
+
+				OtherNotationComponents.Add(TextBox);
+			}
+		}
+	}
 }
