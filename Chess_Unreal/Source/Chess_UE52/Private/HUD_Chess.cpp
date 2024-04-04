@@ -59,7 +59,7 @@ void UHUD_Chess::AddTextWidget(FString& StringName, FVector2D Position, FVector2
 		UUserWidget* TextWidget = CreateWidget<UUserWidget>(GetWorld(), ChildTextWidget);
 		if (TextWidget)
 		{
-			UUI_EndNotation* TextBox = Cast<UUI_EndNotation>(TextWidget);
+			UUI_TextBox* TextBox = Cast<UUI_TextBox>(TextWidget);
 			if (IsValid(TextBox))
 			{
 				UCanvasPanelSlot* CanvasTextSlot = Cast<UCanvasPanelSlot>(Canvas->AddChildToCanvas(TextBox));

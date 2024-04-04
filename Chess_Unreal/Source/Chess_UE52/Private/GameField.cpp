@@ -251,7 +251,7 @@ void AGameField::ResetField()
 		}
 		PlayerController->HUDChess->AllMoves.Empty();
 
-		for (UUI_EndNotation* TextBox : PlayerController->HUDChess->OtherNotationComponents)
+		for (UUI_TextBox* TextBox : PlayerController->HUDChess->OtherNotationComponents)
 		{
 			TextBox->ConditionalBeginDestroy();
 		}
