@@ -215,7 +215,7 @@ void AGameField::ResetField()
 		BlackPiece->Destroy();
 	}
 	BlackPieceOnChessBoard.Empty();
-	TArray<AChessPiece*> prova = BlackPieceOnChessBoard;
+	
 	//non solo al checkmate le caselle dei re cambiano colore,
 	//ma se clicco su reset dopo aver selezionato una tile è difficile risalire a quale fosse
 	//finchè non istanzio la classe mossa
@@ -249,11 +249,13 @@ void AGameField::ResetField()
 		PlayerController->HUDChess->OtherNotationComponents.Empty();
 	}
 
-	//for (UMove* Move : MoveStack)
-	//{
-	//	Move->ConditionalBeginDestroy();
-	//}
-	//MoveStack.Empty();
+	CurrentChessboardState = nullptr;
+
+	for (UMove* Move : MoveStack)
+	{
+		Move->ConditionalBeginDestroy();
+	}
+	MoveStack.Empty();
 
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("ChessBoardEmpty"));
 	DisplayPiecesStartConfiguration(this);
