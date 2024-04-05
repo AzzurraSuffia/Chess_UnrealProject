@@ -144,11 +144,9 @@ FString UMove::AlgebricMoveNotation()
 	return MoveNotation;
 }
 
-void UMove::UndoLastMove()
+void UMove::UndoMove(AChess_GameMode* GameMode)
 {
 	/*
-	AChess_GameMode* GameMode = Cast<AChess_GameMode>(GetWorld()->GetAuthGameMode());
-
 	ETileStatus MyType = ETileStatus::EMPTY;
 	ETileStatus OpponentType = ETileStatus::EMPTY;
 
@@ -184,6 +182,129 @@ void UMove::UndoLastMove()
 	}
 	*/
 
+	/*funzione che aggiorna tutte le strutture dati, devo solo spostare gli attori */
 	PieceMoving->undoVirtualMove(PieceMoving, To, From, PieceCaptured);
 
+	FVector Location = GameMode->ChessBoard->GetRelativeLocationByXYPosition(PieceMoving->PlaceAt.X, PieceMoving->PlaceAt.Y);
+	FVector NewLocation = Location + FVector(6, 6, 20);
+	PieceMoving->SetActorLocation(NewLocation);
+
+	if (bisCapture)
+	{
+		Location = GameMode->ChessBoard->GetRelativeLocationByXYPosition(PieceCaptured->PlaceAt.X, PieceCaptured->PlaceAt.Y);
+		NewLocation = Location + FVector(6, 6, 20);
+		PieceCaptured->SetActorLocation(NewLocation);
+		PieceCaptured->SetActorHiddenInGame(false);
+	}
+
+	if (bisPromotion)
+	{
+		if (PiecePromoted->PieceColor == EColor::WHITE)
+		{
+			GameMode->ChessBoard->WhitePieceOnChessBoard.Remove(PiecePromoted);
+			GameMode->ChessBoard->WhitePieceOnChessBoard.Add(OriginalPawn);
+		}
+		else
+		{
+			GameMode->ChessBoard->BlackPieceOnChessBoard.Remove(PiecePromoted);
+			GameMode->ChessBoard->BlackPieceOnChessBoard.Add(OriginalPawn);
+		}
+
+		PiecePromoted->SetActorHiddenInGame(true);
+		OriginalPawn->PlaceAt = PiecePromoted->PlaceAt;
+		GameMode->ChessBoard->MoveOutOfChessBoard(PiecePromoted, true);
+		Location = GameMode->ChessBoard->GetRelativeLocationByXYPosition(OriginalPawn->PlaceAt.X, OriginalPawn->PlaceAt.Y);
+		NewLocation = Location + FVector(6, 6, 20);
+		OriginalPawn->SetActorLocation(NewLocation);
+		OriginalPawn->SetActorHiddenInGame(false);
+	}
+}
+
+void UMove::doMove(AChess_GameMode* GameMode)
+{
+	/*
+	AChessPiece* AChessPiece::doVirtualMove(AChessPiece * Piece, ATile * from, ATile * to)
+	{
+		AChess_GameMode* GameMode = Cast<AChess_GameMode>(GetWorld()->GetAuthGameMode());
+
+		ETileStatus MyType = ETileStatus::EMPTY;
+		ETileStatus OpponentType = ETileStatus::EMPTY;
+		FVector2D MoveCurrPieceTo = to->GetGridPosition();
+		AChessPiece* CapturedPiece = nullptr;
+		TArray<AChessPiece*> OpponentPieceOnBoard = {};
+
+		if (Piece->PieceColor == EColor::BLACK)
+		{
+			MyType = ETileStatus::BLACKPIECE; OpponentType = ETileStatus::WHITEPIECE; OpponentPieceOnBoard = GameMode->ChessBoard->WhitePieceOnChessBoard;
+		}
+		else if (Piece->PieceColor == EColor::WHITE)
+		{
+			MyType = ETileStatus::WHITEPIECE; OpponentType = ETileStatus::BLACKPIECE; OpponentPieceOnBoard = GameMode->ChessBoard->BlackPieceOnChessBoard;
+		}
+
+		if (to->GetTileStatus() == OpponentType)
+		{
+			//CATTURA DI UN PEZZO
+			int32 Size = OpponentPieceOnBoard.Num();
+			for (int32 i = 0; i < Size; i++)
+			{
+				if (OpponentPieceOnBoard[i]->PlaceAt == MoveCurrPieceTo)
+				{
+					CapturedPiece = OpponentPieceOnBoard[i];
+					break;
+				}
+			}
+			if (CapturedPiece != nullptr)
+			{
+				if (Piece->PieceColor == EColor::BLACK)
+				{
+					GameMode->ChessBoard->WhitePieceOnChessBoard.Remove(CapturedPiece);
+				}
+				else if (Piece->PieceColor == EColor::WHITE)
+				{
+					GameMode->ChessBoard->BlackPieceOnChessBoard.Remove(CapturedPiece);
+				}
+			}
+		}
+
+		from->SetTileStatus(ETileStatus::EMPTY);
+		to->SetTileStatus(MyType);
+		Piece->PlaceAt = MoveCurrPieceTo;
+
+		return CapturedPiece;
+	}
+	*/
+	AChessPiece* Captured = PieceMoving->doVirtualMove(PieceMoving, From, To);
+
+	FVector Location = GameMode->ChessBoard->GetRelativeLocationByXYPosition(PieceMoving->PlaceAt.X, PieceMoving->PlaceAt.Y);
+	FVector NewLocation = Location + FVector(6, 6, 20);
+	PieceMoving->SetActorLocation(NewLocation);
+
+	if (bisCapture && Captured == PieceCaptured)
+	{
+		GameMode->ChessBoard->MoveOutOfChessBoard(PieceCaptured, false);
+		PieceCaptured->SetActorHiddenInGame(true);
+	}
+
+	if (bisPromotion)
+	{
+		if (PiecePromoted->PieceColor == EColor::WHITE)
+		{
+			GameMode->ChessBoard->WhitePieceOnChessBoard.Remove(OriginalPawn);
+			GameMode->ChessBoard->WhitePieceOnChessBoard.Add(PiecePromoted);
+		}
+		else
+		{
+			GameMode->ChessBoard->BlackPieceOnChessBoard.Remove(OriginalPawn);
+			GameMode->ChessBoard->BlackPieceOnChessBoard.Add(PiecePromoted);
+		}
+
+		PiecePromoted->PlaceAt = OriginalPawn->PlaceAt;
+		GameMode->ChessBoard->MoveOutOfChessBoard(OriginalPawn, true);
+		OriginalPawn->SetActorHiddenInGame(true);
+		Location = GameMode->ChessBoard->GetRelativeLocationByXYPosition(PiecePromoted->PlaceAt.X, PiecePromoted->PlaceAt.Y);
+		NewLocation = Location + FVector(6, 6, 20);
+		PieceMoving->SetActorLocation(NewLocation);
+		PiecePromoted->SetActorHiddenInGame(false);
+	}
 }

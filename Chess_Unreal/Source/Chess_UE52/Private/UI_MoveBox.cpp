@@ -23,9 +23,52 @@ void UUI_MoveBox::OnButtonClicked()
 {
 
 	AChess_GameMode* GameMode = Cast<AChess_GameMode>(GetWorld()->GetAuthGameMode());
-	GameMode->ChessBoard->RestoreSquareColor(GameMode->ChessBoard->TileArray);
 
-	Move->To->SetTileColor(3);
-	Move->From->SetTileColor(3);
+    int32 ClickedMoveIdx = GameMode->ChessBoard->MoveStack.Find(Move);
+    int32 CurrentMoveIdx = -1;
+    TArray<ATile*> PreviousColoredTiles = {};
+   
+    if (GameMode->ChessBoard->CurrentChessboardState != nullptr)
+    {
+        CurrentMoveIdx = GameMode->ChessBoard->MoveStack.Find(GameMode->ChessBoard->CurrentChessboardState);
+        PreviousColoredTiles = { GameMode->ChessBoard->CurrentChessboardState->To,  GameMode->ChessBoard->CurrentChessboardState->From };
+    }
+    else
+    {
+        CurrentMoveIdx = GameMode->ChessBoard->MoveStack.Find(GameMode->ChessBoard->MoveStack.Last());
+        PreviousColoredTiles = { GameMode->ChessBoard->MoveStack.Last()->To,  GameMode->ChessBoard->MoveStack.Last()->From };
+    }
 
+    if (ClickedMoveIdx != INDEX_NONE && CurrentMoveIdx != INDEX_NONE)
+    {
+        GameMode->ChessBoard->RestoreSquareColor(PreviousColoredTiles);
+
+        Move->To->SetTileColor(3);
+        Move->From->SetTileColor(3);
+
+        if (ClickedMoveIdx < CurrentMoveIdx)
+        {
+            // ClickedMove is placed before CurrentMove in the stack
+            GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("Cliccata Mossa Precedente"));
+            for (int32 i = CurrentMoveIdx; i > ClickedMoveIdx; i--)
+            {
+                GameMode->ChessBoard->MoveStack[i]->UndoMove(GameMode);
+            }
+        }
+        else
+        {
+            // ClickedMove is placed after CurrentMove in the stack
+            UE_LOG(LogTemp, Warning, TEXT("3 is not before 2 in the stack"));
+            for (int32 i = CurrentMoveIdx + 1; i < ClickedMoveIdx + 1; i++)
+            {
+                GameMode->ChessBoard->MoveStack[i]->doMove(GameMode);
+            }
+        }
+
+        GameMode->ChessBoard->CurrentChessboardState = Move;
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("One of the moves is not in the MoveStack"));
+    }
 }

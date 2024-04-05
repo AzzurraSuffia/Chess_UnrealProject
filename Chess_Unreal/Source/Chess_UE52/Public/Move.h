@@ -8,6 +8,8 @@
 #include "ChessPiece.h"
 #include "Move.generated.h"
 
+class AChess_GameMode;
+
 /**
  * 
  */
@@ -42,5 +44,6 @@ public:
 
     FString AlgebricMoveNotation();
 
-    void UndoLastMove();
+    void UndoMove(AChess_GameMode* GameMode);
+    void doMove(AChess_GameMode* GameMode);
 };

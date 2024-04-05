@@ -50,8 +50,6 @@ public:
 	// tracks if the game is over
 	bool bisGameOver;
 
-	UMove* CurrentChessboardState;
-
 	// array of player interfaces
 	TArray<IChess_PlayerInterface*> Players;
 

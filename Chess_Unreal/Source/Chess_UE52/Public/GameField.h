@@ -57,8 +57,14 @@ public:
 
 	AKingPiece* BlackKing;
 
+	UMove* CurrentChessboardState = nullptr;
+
 	//UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	// float NormalizedCellPadding;
+	//float NormalizedCellPadding;
+
+	//tile padding dimension
+	//UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	//float CellPadding
 
 	static const int32 NOT_ASSIGNED = -1;
 
@@ -98,10 +104,6 @@ public:
 
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<APawnPiece> PawnClass;
-
-	// tile padding dimension
-	// 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	// 	float CellPadding;
 
 	// tile size
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)

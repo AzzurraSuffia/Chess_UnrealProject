@@ -80,7 +80,6 @@ void AChess_RandomPlayer::OnTurn()
 			
 			if (RandomMove && IsValid(GameMode))
 			{
-				
 				do
 				{
 					RandPieceIdx = FMath::Rand() % RandomPlayerPiece.Num();
@@ -153,7 +152,7 @@ void AChess_RandomPlayer::OnTurn()
 				UE_LOG(LogTemp, Warning, TEXT("RandomMove or GameMode pointer not valid."));
 			}
 
-			//Il timer è di 1 secondi (aspetta 1 secondi prima di mettere il simbolo)
+		//Il timer è di 1 secondo (aspetta 1 secondo prima di mettere il simbolo)
 		}, 1, false);
 
 }
