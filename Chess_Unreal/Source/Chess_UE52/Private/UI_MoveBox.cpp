@@ -58,8 +58,7 @@ void UUI_MoveBox::OnButtonClicked()
         else
         {
             // ClickedMove is placed after CurrentMove in the stack
-            UE_LOG(LogTemp, Warning, TEXT("3 is not before 2 in the stack"));
-            for (int32 i = CurrentMoveIdx + 1; i < ClickedMoveIdx + 1; i++)
+            for (int32 i = CurrentMoveIdx + 1; i <= ClickedMoveIdx; i++)
             {
                 GameMode->ChessBoard->MoveStack[i]->doMove(GameMode);
             }

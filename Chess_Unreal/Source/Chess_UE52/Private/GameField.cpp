@@ -215,17 +215,11 @@ void AGameField::ResetField()
 		BlackPiece->Destroy();
 	}
 	BlackPieceOnChessBoard.Empty();
-	
+	TArray<AChessPiece*> prova = BlackPieceOnChessBoard;
 	//non solo al checkmate le caselle dei re cambiano colore,
 	//ma se clicco su reset dopo aver selezionato una tile è difficile risalire a quale fosse
 	//finchè non istanzio la classe mossa
 	RestoreSquareColor(TileArray);
-
-	if (WhitePieceOnChessBoard.IsEmpty() && BlackPieceOnChessBoard.IsEmpty())
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("ChessBoardEmpty"));
-		DisplayPiecesStartConfiguration(this);
-	}
 
 	// send broadcast event to registered objects 
 	OnResetEvent.Broadcast();
@@ -235,13 +229,13 @@ void AGameField::ResetField()
 	{
 		for (UUI_MoveBox* MoveBox : PlayerController->HUDChess->AllMoves)
 		{
-			if (MoveBox->Move->PieceCaptured != nullptr)
+			if (MoveBox->Move->bisCapture && MoveBox->Move->PieceCaptured != nullptr)
 			{
 				MoveBox->Move->PieceCaptured->Destroy();
 			}
-			if (MoveBox->Move->OriginalPawn != nullptr)
+			if (MoveBox->Move->bisPromotion)
 			{
-				MoveBox->Move->OriginalPawn->Destroy();
+				MoveBox->Move->PieceMoving->Destroy();
 			}
 
 			MoveBox->ConditionalBeginDestroy();
@@ -254,6 +248,15 @@ void AGameField::ResetField()
 		}
 		PlayerController->HUDChess->OtherNotationComponents.Empty();
 	}
+
+	//for (UMove* Move : MoveStack)
+	//{
+	//	Move->ConditionalBeginDestroy();
+	//}
+	//MoveStack.Empty();
+
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("ChessBoardEmpty"));
+	DisplayPiecesStartConfiguration(this);
 
 	AChess_GameMode* GameMode = Cast<AChess_GameMode>(GetWorld()->GetAuthGameMode());
 	GameMode->bisGameOver = false;
@@ -358,7 +361,6 @@ void AGameField::PromotePawn(EPieceNotation ToPromote)
 	FVector2D SpawnPosition = Pawn->PlaceAt;
 	const float TileScale = TileSize / 100;
 	//Pawn->SetActorHiddenInGame(true);
-	MoveStack.Last()->OriginalPawn = Pawn;
 	
 	MoveOutOfChessBoard(Pawn, true);
 

@@ -50,12 +50,11 @@ UMove::UMove()
 	PieceCaptured = nullptr;
 	bisPromotion = false;
 	PiecePromoted = nullptr;
-	OriginalPawn = nullptr;
 	bisCheck = false;
 	bisCheckmate = false;
 }
 
-UMove::UMove(int32 Number, ATile* A, ATile* B, AChessPiece* Piece, bool file, bool rank, bool isCapture, AChessPiece* Captured, bool isPromotion, AChessPiece* Promoted, AChessPiece* Pawn, bool Check, bool Checkmate)
+UMove::UMove(int32 Number, ATile* A, ATile* B, AChessPiece* Piece, bool file, bool rank, bool isCapture, AChessPiece* Captured, bool isPromotion, AChessPiece* Promoted, bool Check, bool Checkmate)
 {
 	MoveNumber = Number;
 	From = A;
@@ -67,7 +66,6 @@ UMove::UMove(int32 Number, ATile* A, ATile* B, AChessPiece* Piece, bool file, bo
 	PieceCaptured = Captured;
 	bisPromotion = isPromotion;
 	PiecePromoted = Promoted; 
-	OriginalPawn = Pawn;
 	bisCheck = Check;
 	bisCheckmate = Checkmate;
 }
@@ -202,21 +200,17 @@ void UMove::UndoMove(AChess_GameMode* GameMode)
 		if (PiecePromoted->PieceColor == EColor::WHITE)
 		{
 			GameMode->ChessBoard->WhitePieceOnChessBoard.Remove(PiecePromoted);
-			GameMode->ChessBoard->WhitePieceOnChessBoard.Add(OriginalPawn);
+			GameMode->ChessBoard->WhitePieceOnChessBoard.Add(PieceMoving);
 		}
 		else
 		{
 			GameMode->ChessBoard->BlackPieceOnChessBoard.Remove(PiecePromoted);
-			GameMode->ChessBoard->BlackPieceOnChessBoard.Add(OriginalPawn);
+			GameMode->ChessBoard->BlackPieceOnChessBoard.Add(PieceMoving);
 		}
 
 		PiecePromoted->SetActorHiddenInGame(true);
-		OriginalPawn->PlaceAt = PiecePromoted->PlaceAt;
 		GameMode->ChessBoard->MoveOutOfChessBoard(PiecePromoted, true);
-		Location = GameMode->ChessBoard->GetRelativeLocationByXYPosition(OriginalPawn->PlaceAt.X, OriginalPawn->PlaceAt.Y);
-		NewLocation = Location + FVector(6, 6, 20);
-		OriginalPawn->SetActorLocation(NewLocation);
-		OriginalPawn->SetActorHiddenInGame(false);
+		PieceMoving->SetActorHiddenInGame(false);
 	}
 }
 
@@ -283,28 +277,33 @@ void UMove::doMove(AChess_GameMode* GameMode)
 	if (bisCapture && Captured == PieceCaptured)
 	{
 		GameMode->ChessBoard->MoveOutOfChessBoard(PieceCaptured, false);
-		PieceCaptured->SetActorHiddenInGame(true);
+		//PieceCaptured->SetActorHiddenInGame(true);
+	}
+	else
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Sono nell'else"));
 	}
 
 	if (bisPromotion)
 	{
 		if (PiecePromoted->PieceColor == EColor::WHITE)
 		{
-			GameMode->ChessBoard->WhitePieceOnChessBoard.Remove(OriginalPawn);
+			GameMode->ChessBoard->WhitePieceOnChessBoard.Remove(PieceMoving);
 			GameMode->ChessBoard->WhitePieceOnChessBoard.Add(PiecePromoted);
 		}
 		else
 		{
-			GameMode->ChessBoard->BlackPieceOnChessBoard.Remove(OriginalPawn);
+			GameMode->ChessBoard->BlackPieceOnChessBoard.Remove(PieceMoving);
 			GameMode->ChessBoard->BlackPieceOnChessBoard.Add(PiecePromoted);
 		}
 
-		PiecePromoted->PlaceAt = OriginalPawn->PlaceAt;
-		GameMode->ChessBoard->MoveOutOfChessBoard(OriginalPawn, true);
-		OriginalPawn->SetActorHiddenInGame(true);
+		PiecePromoted->PlaceAt = PieceMoving->PlaceAt;
+		GameMode->ChessBoard->MoveOutOfChessBoard(PieceMoving, true);
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("WE"));
+		//OriginalPawn->SetActorHiddenInGame(true);
 		Location = GameMode->ChessBoard->GetRelativeLocationByXYPosition(PiecePromoted->PlaceAt.X, PiecePromoted->PlaceAt.Y);
 		NewLocation = Location + FVector(6, 6, 20);
-		PieceMoving->SetActorLocation(NewLocation);
+		PiecePromoted->SetActorLocation(NewLocation);
 		PiecePromoted->SetActorHiddenInGame(false);
 	}
 }
