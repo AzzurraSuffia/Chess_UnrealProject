@@ -11,6 +11,8 @@
 #include "Kismet/GameplayStatics.h"
 #include "Chess_HumanPlayer.generated.h"
 
+class UMove;
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPromotionFlagTrue);
 
 UCLASS()
@@ -58,4 +60,6 @@ public:
 	// Called on left mouse click (binding)
 	UFUNCTION()
 	void OnClick();
+
+	void TentativodiReplay(UMove* FirstReplayMove);
 };

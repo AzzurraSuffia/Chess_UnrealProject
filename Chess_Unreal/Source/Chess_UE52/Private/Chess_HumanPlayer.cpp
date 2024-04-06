@@ -4,6 +4,7 @@
 #include "Chess_HumanPlayer.h"
 #include "GameField.h"
 #include "Chess_GameMode.h"
+#include "Move.h"
 #include "Components/InputComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
@@ -27,6 +28,73 @@ AChess_HumanPlayer::AChess_HumanPlayer()
 	PlayerNumber = -1;
 	Set = ESet::EMPTY;
 
+}
+
+void AChess_HumanPlayer::TentativodiReplay(UMove* FirstReplayMove)
+{
+	/*
+	* problema: quando la mossa nuova viene creata deve avere il numero seguente all'ultima mossa cliccata nello storyboard.
+	* Ne si deve aggiornare il move counter e quello della GameMode
+	* problema: quando si vuole fare una nuova mossa l'ultima mossa cliccata nello storyboard deve essere del random player.
+	* problema: se una pedina viene cliccata ma poi non mossa nulla deve cambiare, va distrutta la mossa creata.
+	* posso fare un attribtuo di HumanPlayer contenente l'ultima mossa e aggiungerla solo alla fine oppure aggiornare il movecounter prima di aggiungere il widget
+	*/
+	AChess_GameMode* GameMode = Cast<AChess_GameMode>(GetWorld()->GetAuthGameMode());
+	if (GameMode->ChessBoard->CurrentChessboardState->PieceMoving->PieceColor == EColor::BLACK)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("Ultima mossa nera: PROCEDO"));
+		/*
+		int32 ClickedMoveIdx = GameMode->ChessBoard->MoveStack.Find(GameMode->ChessBoard->MoveStack.Last());
+		int32 CurrentMoveIdx = -1;
+		TArray<ATile*> PreviousColoredTiles = {};
+
+		//se currentchessboardstate é diverso da nullptr ho toccato lo storyboard
+		if (GameMode->ChessBoard->CurrentChessboardState != nullptr)
+		{
+			CurrentMoveIdx = GameMode->ChessBoard->MoveStack.Find(GameMode->ChessBoard->CurrentChessboardState);
+			PreviousColoredTiles = { GameMode->ChessBoard->CurrentChessboardState->To,  GameMode->ChessBoard->CurrentChessboardState->From };
+		}
+
+		if (ClickedMoveIdx != INDEX_NONE && CurrentMoveIdx != INDEX_NONE)
+		{
+
+			AChess_PlayerController* PlayerController = Cast<AChess_PlayerController>(GetWorld()->GetFirstPlayerController());
+			if (IsValid(PlayerController))
+			{
+				if (PlayerController->HUDChess->AllMoves.Num() / 2)
+					GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("Riprendo la partita da un nuovo punto."));
+				for (int32 i = CurrentMoveIdx + 1; i < ClickedMoveIdx; i++)
+				{
+					UMove* Move = GameMode->ChessBoard->MoveStack[i];
+					if (Move->bisCapture && Move->PieceCaptured != nullptr)
+					{
+						Move->PieceCaptured->Destroy();
+					}
+					if (Move->bisPromotion)
+					{
+						Move->PieceMoving->Destroy();
+					}
+					Move->ConditionalBeginDestroy();
+					GameMode->ChessBoard->MoveStack.Remove(Move);
+
+					PlayerController->HUDChess->AllMoves[i]->ConditionalBeginDestroy();
+					PlayerController->HUDChess->AllMoves.Remove(PlayerController->HUDChess->AllMoves[i]);
+					PlayerController->HUDChess->OtherNotationComponents[i]->ConditionalBeginDestroy();
+					PlayerController->HUDChess->OtherNotationComponents.Remove(PlayerController->HUDChess->OtherNotationComponents[i]);
+
+				}
+			}
+		}
+		*/
+	}
+	else
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("Ultima mossa bianca: NON PROCEDO"));
+		/*devo annullare la mossa*/
+		FirstReplayMove->UndoMove(GameMode);
+		GameMode->ChessBoard->MoveStack.Remove(FirstReplayMove);
+		/*mossa annullata, ma ha mosso il random player, va bloccato TurnNextPlayer*/
+	}
 }
 
 void ResolveAmbiguityNotation(UMove* Move, AChessPiece* PieceMoving, TArray<AChessPiece*>& MyPieces, ATile* Square, AGameField* ChessBoard)
@@ -230,6 +298,14 @@ void AChess_HumanPlayer::OnClick()
 						bisMyTurn = false;
 						bool MoveResult = GameMode->IsGameEnded(GameMode->ChessBoard->MoveStack.Last(), GameMode->ChessBoard->BlackKing);
 
+						//Da questo momento in poi la mossa senza promozione e senza cattura é completa
+						if (GameMode->ChessBoard->CurrentChessboardState != nullptr && GameMode->ChessBoard->CurrentChessboardState != GameMode->ChessBoard->MoveStack[GameMode->ChessBoard->MoveStack.Num() - 2])
+						{
+							//gestione replay
+							GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Black, TEXT("REPLAY"));
+							TentativodiReplay(GameMode->ChessBoard->MoveStack.Last());
+						}
+
 						AChess_PlayerController* PlayerController = Cast<AChess_PlayerController>(GetWorld()->GetFirstPlayerController());
 						if (IsValid(PlayerController))
 						{
@@ -279,6 +355,14 @@ void AChess_HumanPlayer::OnClick()
 							bisMyTurn = false;
 							bool MoveResult = GameMode->IsGameEnded(GameMode->ChessBoard->MoveStack.Last(), GameMode->ChessBoard->BlackKing);
 							
+							//Da questo momento in poi la mossa senza promozione e con cattura é completa
+							if (GameMode->ChessBoard->CurrentChessboardState != nullptr && GameMode->ChessBoard->CurrentChessboardState != GameMode->ChessBoard->MoveStack[GameMode->ChessBoard->MoveStack.Num() - 2])
+							{
+								//gestione replay
+								GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Black, TEXT("REPLAY"));
+								TentativodiReplay(GameMode->ChessBoard->MoveStack.Last());
+							}
+
 							AChess_PlayerController* PlayerController = Cast<AChess_PlayerController>(GetWorld()->GetFirstPlayerController());
 							if (IsValid(PlayerController))
 							{

@@ -66,8 +66,7 @@ bool AChess_GameMode::IsKingInCheck(int32 Player)
 		OpponentPieces = ChessBoard->WhitePieceOnChessBoard;
 	}
 
-	/*ECCEZIONE LANCIATA: o con piece o con Myking si sta provando ad accedere a un puntatore nullo probabilmente*/
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("IsKingInCheck"));
+	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("IsKingInCheck"));
 	if (!OpponentPieces.IsEmpty())
 	{
 		for (AChessPiece* Piece : OpponentPieces)

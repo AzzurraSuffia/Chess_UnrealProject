@@ -184,24 +184,6 @@ void DisplayPiecesStartConfiguration(AGameField* GField)
 
 void AGameField::ResetField()
 {
-	/*DEVO RIPORTARE IL CAMPO DA GIOCO ALLO STATO ORIGINALE*/
-	/*PER INIZIALIZZARLO E RESETTERARLO POSSO CREARE UNA FUNZIONE DISPLAYSTARTPIECES()*/
-	/*
-	int32 NumWhitePieces = WhitePieceOnChessBoard.Num();
-	for (int32 i = 0; i < NumWhitePieces; i++)
-	{
-		WhitePieceOnChessBoard[i]->Destroy();
-		WhitePieceOnChessBoard.Remove(WhitePieceOnChessBoard[i]);
-	}
-
-	int32 NumBlackPieces = BlackPieceOnChessBoard.Num();
-	for (int32 i = 0; i < NumBlackPieces; i++)
-	{
-		BlackPieceOnChessBoard[i]->Destroy();
-		BlackPieceOnChessBoard.Remove(BlackPieceOnChessBoard[i]);
-	}
-	*/
-	
 	for (AChessPiece* WhitePiece : WhitePieceOnChessBoard)
 	{
 		TileMap[WhitePiece->PlaceAt]->SetTileStatus(ETileStatus::EMPTY);

@@ -163,7 +163,7 @@ bool AChessPiece::IsLegal(ATile* to)
 	/*DEVO SIMULARE LA MOSSA AGGIORNANDO LE STRUTTURE DATI MA SENZA MUOVERE L'ATTORE*/
 	AChessPiece* CapturedPiece = doVirtualMove(this, from, to);
 	
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("IsLegal"));
+	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("IsLegal"));
 	if (this->PieceColor == EColor::WHITE)
 	{
 		//devo controllare se la mia mossa mette in scacco il mio re
