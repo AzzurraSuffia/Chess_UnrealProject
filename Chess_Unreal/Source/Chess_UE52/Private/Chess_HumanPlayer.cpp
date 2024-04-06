@@ -30,7 +30,7 @@ AChess_HumanPlayer::AChess_HumanPlayer()
 
 }
 
-void AChess_HumanPlayer::TentativodiReplay(UMove* FirstReplayMove)
+bool AChess_HumanPlayer::TentativodiReplay(UMove* FirstReplayMove)
 {
 	/*
 	* problema: quando la mossa nuova viene creata deve avere il numero seguente all'ultima mossa cliccata nello storyboard.
@@ -86,14 +86,17 @@ void AChess_HumanPlayer::TentativodiReplay(UMove* FirstReplayMove)
 			}
 		}
 		*/
+		return true;
 	}
 	else
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("Ultima mossa bianca: NON PROCEDO"));
 		/*devo annullare la mossa*/
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("Ultima mossa bianca: NON PROCEDO"));
 		FirstReplayMove->UndoMove(GameMode);
 		GameMode->ChessBoard->MoveStack.Remove(FirstReplayMove);
+		FirstReplayMove->ConditionalBeginDestroy();
 		/*mossa annullata, ma ha mosso il random player, va bloccato TurnNextPlayer*/
+		return false;
 	}
 }
 
@@ -217,6 +220,7 @@ void AChess_HumanPlayer::OnDraw(EResult DrawOrigin)
 
 void AChess_HumanPlayer::OnClick()
 {
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("OnClick"));
 	//Structure containing information about one hit of a trace, such as point of impact and surface normal at that point
 	FHitResult Hit = FHitResult(ForceInit);
 	/*VA CONTROLLATO SE IL SEGUENTE CAST VA A BUON FINE*/
@@ -243,7 +247,7 @@ void AChess_HumanPlayer::OnClick()
 					{
 						SelectedTile->SetTileColor(1);
 					}
-				}
+				}				
 
 				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("clicked piece"));
 				SelectedTile = CurrPiece->ChessBoard->TileMap[CurrPiece->PlaceAt];
@@ -303,7 +307,12 @@ void AChess_HumanPlayer::OnClick()
 						{
 							//gestione replay
 							GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Black, TEXT("REPLAY"));
-							TentativodiReplay(GameMode->ChessBoard->MoveStack.Last());
+							if (!TentativodiReplay(GameMode->ChessBoard->MoveStack.Last()))
+							{
+								bFirstClick = true;
+								bisMyTurn = true;
+								return;
+							}
 						}
 
 						AChess_PlayerController* PlayerController = Cast<AChess_PlayerController>(GetWorld()->GetFirstPlayerController());
@@ -360,7 +369,12 @@ void AChess_HumanPlayer::OnClick()
 							{
 								//gestione replay
 								GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Black, TEXT("REPLAY"));
-								TentativodiReplay(GameMode->ChessBoard->MoveStack.Last());
+								if (!TentativodiReplay(GameMode->ChessBoard->MoveStack.Last()))
+								{
+									bFirstClick = true;
+									bisMyTurn = true;
+									return;
+								}
 							}
 
 							AChess_PlayerController* PlayerController = Cast<AChess_PlayerController>(GetWorld()->GetFirstPlayerController());

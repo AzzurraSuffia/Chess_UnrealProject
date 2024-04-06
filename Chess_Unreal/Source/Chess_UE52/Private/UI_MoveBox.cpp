@@ -21,7 +21,6 @@ void UUI_MoveBox::NativeConstruct()
 
 void UUI_MoveBox::OnButtonClicked()
 {
-
 	AChess_GameMode* GameMode = Cast<AChess_GameMode>(GetWorld()->GetAuthGameMode());
 
     int32 ClickedMoveIdx = GameMode->ChessBoard->MoveStack.Find(Move);

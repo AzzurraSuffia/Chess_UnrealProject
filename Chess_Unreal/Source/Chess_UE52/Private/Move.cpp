@@ -183,6 +183,25 @@ void UMove::UndoMove(AChess_GameMode* GameMode)
 	/*funzione che aggiorna tutte le strutture dati, devo solo spostare gli attori */
 	PieceMoving->undoVirtualMove(PieceMoving, To, From, PieceCaptured);
 
+	APawnPiece* Pawn = Cast<APawnPiece>(PieceMoving);
+	if (IsValid(Pawn))
+	{
+		int32 PawnStartPosition = -1;
+		if (PieceMoving->PieceColor == EColor::WHITE)
+		{
+			PawnStartPosition = 1;
+		}
+		else
+		{
+			PawnStartPosition = (GameMode->ChessBoard->Size - 2);
+		}
+
+		if (From->GetGridPosition().X == PawnStartPosition)
+		{
+			Pawn->bfirstMove = true;
+		}
+	}
+
 	FVector Location = GameMode->ChessBoard->GetRelativeLocationByXYPosition(PieceMoving->PlaceAt.X, PieceMoving->PlaceAt.Y);
 	FVector NewLocation = Location + FVector(6, 6, 20);
 	PieceMoving->SetActorLocation(NewLocation);
@@ -269,6 +288,25 @@ void UMove::doMove(AChess_GameMode* GameMode)
 	}
 	*/
 	AChessPiece* Captured = PieceMoving->doVirtualMove(PieceMoving, From, To);
+
+	APawnPiece* Pawn = Cast<APawnPiece>(PieceMoving);
+	if (IsValid(Pawn))
+	{
+		int32 PawnStartPosition = -1;
+		if (PieceMoving->PieceColor == EColor::WHITE)
+		{
+			PawnStartPosition = 1;
+		}
+		else
+		{
+			PawnStartPosition = (GameMode->ChessBoard->Size - 2);
+		}
+
+		if (From->GetGridPosition().X == PawnStartPosition)
+		{
+			Pawn->bfirstMove = false;
+		}
+	}
 
 	FVector Location = GameMode->ChessBoard->GetRelativeLocationByXYPosition(PieceMoving->PlaceAt.X, PieceMoving->PlaceAt.Y);
 	FVector NewLocation = Location + FVector(6, 6, 20);
