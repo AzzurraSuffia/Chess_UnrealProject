@@ -372,7 +372,7 @@ void AGameField::PromotePawn(EPieceNotation ToPromote)
 		MoveStack.Last()->PiecePromoted = PiecePromoted;
 
 		if (GameMode->CurrentPlayer == 0)
-		{
+		{	
 			WhitePieceOnChessBoard.Remove(Pawn);
 			WhitePieceOnChessBoard.Add(PiecePromoted);
 			GameMode->Players[GameMode->CurrentPlayer]->OnPawnPromotion();

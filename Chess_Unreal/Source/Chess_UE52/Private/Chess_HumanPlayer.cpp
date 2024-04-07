@@ -163,9 +163,23 @@ void AChess_HumanPlayer::OnPawnPromotion()
 	}
 	else
 	{
+
 		GameMode->bpromotionFlag = false;
 		bisMyTurn = false;
 		bool MoveResult = GameMode->IsGameEnded(GameMode->ChessBoard->MoveStack.Last(), GameMode->ChessBoard->BlackKing);
+
+		//Da questo momento in poi la mossa con promozione é completa
+		if (GameMode->ChessBoard->CurrentChessboardState != nullptr && GameMode->ChessBoard->CurrentChessboardState != GameMode->ChessBoard->MoveStack[GameMode->ChessBoard->MoveStack.Num() - 2])
+		{
+			//gestione replay
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Black, TEXT("REPLAY"));
+			if (!TentativodiReplay(GameMode->ChessBoard->MoveStack.Last()))
+			{
+				bFirstClick = true;
+				bisMyTurn = true;
+				return;
+			}
+		}
 
 		AChess_PlayerController* PlayerController = Cast<AChess_PlayerController>(GetWorld()->GetFirstPlayerController());
 		if (IsValid(PlayerController))
