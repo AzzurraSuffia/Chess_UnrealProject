@@ -116,7 +116,7 @@ void AChess_RandomPlayer::OnTurn()
 							RandomMove->bisCapture = true;
 							RandomMove->PieceCaptured = whitePiece;
 							//whitePiece->SetActorHiddenInGame(true);
-							ChessBoard->MoveOutOfChessBoard(whitePiece, false);
+							ChessBoard->MoveOutOfChessBoard(whitePiece);
 							break;
 						}
 					}

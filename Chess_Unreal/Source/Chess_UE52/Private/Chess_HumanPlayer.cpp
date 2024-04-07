@@ -400,7 +400,7 @@ void AChess_HumanPlayer::OnClick()
 						GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("clicked enemy piece"));
 						GameMode->ChessBoard->BlackPieceOnChessBoard.Remove(DestinationPiece);
 						//DestinationPiece->SetActorHiddenInGame(true);
-						GameMode->ChessBoard->MoveOutOfChessBoard(DestinationPiece, false);
+						GameMode->ChessBoard->MoveOutOfChessBoard(DestinationPiece);
 						GameMode->MovePiece(CurrPiece, SelectedTile, CurrTile);
 
 						actualMoves.Add(SelectedTile);

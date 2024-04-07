@@ -346,7 +346,7 @@ void AGameField::PromotePawn(EPieceNotation ToPromote)
 	const float TileScale = TileSize / 100;
 	//Pawn->SetActorHiddenInGame(true);
 	
-	MoveOutOfChessBoard(Pawn, true);
+	MoveOutOfChessBoard(Pawn);
 
 	if (ToPromote != EPieceNotation::EMPTY && Pawn != nullptr)
 	{
@@ -385,14 +385,14 @@ void AGameField::PromotePawn(EPieceNotation ToPromote)
 	}
 }
 
-void AGameField::MoveOutOfChessBoard(AChessPiece* HiddenPiece, bool flag)
+void AGameField::MoveOutOfChessBoard(AChessPiece* HiddenPiece)
 {
 	int32 CellPosition = 0;
 	int32 Xposition = 0;
 
 	if (HiddenPiece->PieceColor == EColor::WHITE)
 	{
-		CellPosition = 16 - WhitePieceOnChessBoard.Num() - 1;
+		CellPosition = 15 - WhitePieceOnChessBoard.Num();
 		Xposition = -1;
 		if (CellPosition > 8)
 		{
@@ -402,10 +402,11 @@ void AGameField::MoveOutOfChessBoard(AChessPiece* HiddenPiece, bool flag)
 		{
 			Xposition = -3;
 		}
+		
 	}
 	else if (HiddenPiece->PieceColor == EColor::BLACK)
 	{
-		CellPosition = 16 - BlackPieceOnChessBoard.Num() - 1;
+		CellPosition = 15 - BlackPieceOnChessBoard.Num();
 		Xposition = 8;
 		if (CellPosition > 8)
 		{
@@ -418,11 +419,6 @@ void AGameField::MoveOutOfChessBoard(AChessPiece* HiddenPiece, bool flag)
 	}
 	
 	int32 Yposition = CellPosition % Size;
-
-	if (flag)
-	{
-		Yposition++;
-	}
 
 	FVector Location = GetRelativeLocationByXYPosition(Xposition, Yposition);
 	FVector NewLocation = Location + FVector(6, 6, 20);

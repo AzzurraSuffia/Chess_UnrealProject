@@ -228,7 +228,7 @@ void UMove::UndoMove(AChess_GameMode* GameMode)
 		}
 
 		PiecePromoted->SetActorHiddenInGame(true);
-		GameMode->ChessBoard->MoveOutOfChessBoard(PiecePromoted, true);
+		GameMode->ChessBoard->MoveOutOfChessBoard(PiecePromoted);
 		PieceMoving->SetActorHiddenInGame(false);
 	}
 }
@@ -314,7 +314,7 @@ void UMove::doMove(AChess_GameMode* GameMode)
 
 	if (bisCapture && Captured == PieceCaptured)
 	{
-		GameMode->ChessBoard->MoveOutOfChessBoard(PieceCaptured, false);
+		GameMode->ChessBoard->MoveOutOfChessBoard(PieceCaptured);
 		//PieceCaptured->SetActorHiddenInGame(true);
 	}
 	else
@@ -336,7 +336,7 @@ void UMove::doMove(AChess_GameMode* GameMode)
 		}
 
 		PiecePromoted->PlaceAt = PieceMoving->PlaceAt;
-		GameMode->ChessBoard->MoveOutOfChessBoard(PieceMoving, true);
+		GameMode->ChessBoard->MoveOutOfChessBoard(PieceMoving);
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("WE"));
 		//OriginalPawn->SetActorHiddenInGame(true);
 		Location = GameMode->ChessBoard->GetRelativeLocationByXYPosition(PiecePromoted->PlaceAt.X, PiecePromoted->PlaceAt.Y);

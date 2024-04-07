@@ -146,7 +146,7 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void PromotePawn(EPieceNotation ToPromote);
 
-	void MoveOutOfChessBoard(AChessPiece* HiddenPiece, bool flag);
+	void MoveOutOfChessBoard(AChessPiece* HiddenPiece);
 
 	void RestoreSquareColor(TArray<ATile*> Squares);
 
