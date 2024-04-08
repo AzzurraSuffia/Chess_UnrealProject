@@ -6,6 +6,8 @@
 #include "GameFramework/Pawn.h"
 #include "Chess_PlayerInterface.h"
 #include "Chess_GameInstance.h"
+#include "Chess_GameMode.h"
+#include "Kismet/GameplayStatics.h"
 #include "Chess_MinimaxPlayer.generated.h"
 
 UCLASS()
@@ -35,4 +37,7 @@ public:
 	virtual void OnWin() override;
 	virtual void OnLose() override;
 	virtual void OnDraw(EResult DrawOrigin) override;
+
+	int32 EvaluateChessboard(TArray<AChessPiece*>& WhitePieces, TArray<AChessPiece*>& BlackPieces, bool bisMax);
+	int32 MinMax(int32 Depth, bool IsMax);
 };
