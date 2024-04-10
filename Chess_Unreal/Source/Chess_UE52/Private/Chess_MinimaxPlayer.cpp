@@ -3,6 +3,8 @@
 
 #include "Chess_MinimaxPlayer.h"
 #include "Chess_GameMode.h"
+#include "Chess_PlayerController.h"
+#include "Kismet/KismetMathLibrary.h"
 
 // Sets default values
 AChess_MinimaxPlayer::AChess_MinimaxPlayer()
@@ -51,10 +53,35 @@ void AChess_MinimaxPlayer::OnTurn()
 		{
 			AChess_GameMode* GameMode = (AChess_GameMode*)(GetWorld()->GetAuthGameMode());
 
-			//FVector2D BestMove = FindBestMove(GameMode->GField->TileMap);
-			//FVector Location = GameMode->GField->GetRelativeLocationByXYPosition(BestMove.X, BestMove.Y);
-			//GameMode->GField->TileMap[BestMove]->SetTileStatus(PlayerNumber, ETileStatus::OCCUPIED);
-			//GameMode->SetCellSign(PlayerNumber, Location);
+			UMove* BestMove = FindBestMove(GameMode->ChessBoard);
+
+			if (BestMove->bisCapture)
+			{
+				/*CODICE QUI*/
+			}
+
+			GameMode->MovePiece(BestMove->PieceMoving, BestMove->From, BestMove->To);
+
+			if (BestMove->bisPromotion)
+			{
+				/*CODICE QUI*/
+			}
+
+			GameMode->ChessBoard->MoveStack.Add(BestMove);
+
+			//bool MoveResult = GameMode->IsGameEnded(RandomMove, ChessBoard->WhiteKing);
+
+			AChess_PlayerController* PlayerController = Cast<AChess_PlayerController>(GetWorld()->GetFirstPlayerController());
+			if (IsValid(PlayerController))
+			{
+				UUI_MoveBox* MoveBox = PlayerController->HUDChess->AddMoveWidget(BestMove);
+				MoveBox->Move = BestMove;
+			}
+
+			//if (!MoveResult)
+			//{
+				//GameMode->TurnNextPlayer();
+			//}
 
 		}, 3, false);
 }
@@ -84,101 +111,118 @@ void AChess_MinimaxPlayer::OnDraw(EResult DrawOrigin)
 //devo controllare e tenere conto delle vittorie ancora prima
 
 
-int32 AChess_MinimaxPlayer::EvaluateChessboard(TArray<AChessPiece*>& WhitePieces, TArray<AChessPiece*>& BlackPieces, bool bisMax)
+int32 AChess_MinimaxPlayer::EvaluateChessboard(TArray<AChessPiece*>& WhitePieces, TArray<AChessPiece*>& BlackPieces)
+{
+	return BlackPieces.Num() - WhitePieces.Num();
+}
+
+int32 AChess_MinimaxPlayer::Utility(int32 Player)
+{
+	AChess_GameMode* GameMode = (AChess_GameMode*)(GetWorld()->GetAuthGameMode());
+	if (GameMode->IsKingInCheck(Player))
+	{
+		//CHECKMATE
+		return (Player) ? 10000 : -10000;
+	}
+	else
+	{
+		//STALEMATE
+		return 0;
+	}
+}
+
+//posso generalizzare eliminando gli elementi specifici??
+int32 AChess_MinimaxPlayer::MiniMax(int32 Depth, bool bisMax, int32 alpha, int32 beta)
 {
 	AChess_GameMode* GameMode = (AChess_GameMode*)(GetWorld()->GetAuthGameMode());
 	int32 NextPlayer = (bisMax) ? 0 : 1;
 
-	if (GameMode->PlayerCanMove(NextPlayer))
+	if (Depth == 0)
 	{
-		/*
-		if (GameMode->IsKingInCheck(NextPlayer))
-		{
+		return EvaluateChessboard(GameMode->ChessBoard->WhitePieceOnChessBoard, GameMode->ChessBoard->BlackPieceOnChessBoard);
+	}
+	else if (!GameMode->PlayerCanMove(NextPlayer))
+	{
+		return Utility(NextPlayer);
+	}
 
-		}
-		else
+	if (bisMax)
+	{
+		int32 best = -1000;
+		for (AChessPiece* MaxPiece : GameMode->ChessBoard->BlackPieceOnChessBoard)
 		{
-
+			TArray<ATile*> MaxCandidateMoves = MaxPiece->validMoves();
+			for (ATile* MaxCandidateTile : MaxCandidateMoves)
+			{
+				if (MaxPiece->IsLegal(MaxCandidateTile))
+				{
+					/*CODICE QUI DELLA MOSSA*/
+					best = FMath::Max(best, MiniMax(Depth - 1, !bisMax, alpha, beta));
+					if (best >= beta)
+					{
+						return best;
+					}
+					alpha = FMath::Max(alpha, best);
+				}
+			}
 		}
-		*/
-		return BlackPieces.Num() - WhitePieces.Num();
+		return best;
 	}
 	else
 	{
-		//la partita è finita patta o ha vinto l'avversario
-		if (GameMode->IsKingInCheck(NextPlayer))
+		int32 best = +1000;
+		for (AChessPiece* MinPiece : GameMode->ChessBoard->WhitePieceOnChessBoard)
 		{
-			//CHECKMATE
-			return (bisMax) ? 5000 : -5000;
+			TArray<ATile*> MinCandidateMoves = MinPiece->validMoves();
+			for (ATile* MinCandidateTile : MinCandidateMoves)
+			{
+				if (MinPiece->IsLegal(MinCandidateTile))
+				{
+					/*CODICE QUI DELLA MOSSA*/
+					best = FMath::Min(best, MiniMax(Depth - 1, !bisMax, alpha, beta));
+					if (best <= alpha)
+					{
+						return best;
+					}
+					beta = FMath::Min(beta, best);
+				}
+			}
 		}
-		else
-		{
-			//STALEMATE
-			return 0;
-		}
+		return best;
 	}
 }
 
-int32 AChess_MinimaxPlayer::MinMax(int32 Depth, bool IsMax)
+UMove* AChess_MinimaxPlayer::FindBestMove(AGameField* ChessBoard)
 {
-	AChess_GameMode* GameMode = (AChess_GameMode*)(GetWorld()->GetAuthGameMode());
+	int32 bestVal = -1000;
+	int32 alpha = -1000;
+	int32 beta = 1000;
+	UMove* BestMove = NewObject<UMove>();
 
-	int score = EvaluateChessboard(GameMode->ChessBoard->WhitePieceOnChessBoard, GameMode->ChessBoard->BlackPieceOnChessBoard, true);
-
-	//ha vinto Max
-	if (score == 5000)
+	if (BestMove)
 	{
-		return score;
-	}
-	//ha vinto Min
-	if (score == -5000)
-	{
-		return score;
-	}
-
-	if (Depth < 3)
-	{
-		if (IsMax)
+		for (AChessPiece* MaxPiece : ChessBoard->BlackPieceOnChessBoard)
 		{
-			int32 best = -1000;
-			/*LOGICA QUI*/
-			/*devo muovere ogni pedina in ogni possibile cella, */
-			for (AChessPiece* BlackPiece : GameMode->ChessBoard->BlackPieceOnChessBoard)
+			TArray<ATile*> MaxCandidateMoves = MaxPiece->validMoves();
+			for (ATile* MaxCandidateTile : MaxCandidateMoves)
 			{
-				TArray<ATile*> candidateMoves = BlackPiece->validMoves();
-				for (ATile* candidateTile : candidateMoves)
+				if (MaxPiece->IsLegal(MaxCandidateTile))
 				{
-					if (BlackPiece->IsLegal(candidateTile))
+					/*CODICE QUI DELLA MOSSA*/
+					int32 moveVal = MiniMax(3, false, alpha, beta);
+					if (moveVal > bestVal)
 					{
-						//sposta la pedina e computa il nuovo giro
-
+						/*AGGIORNA I CAMPI DELLA STRUTTURA MOSSA*/
+						bestVal = moveVal;
 					}
 				}
 			}
-			return best;
 		}
-		else
-		{
-			int32 best = 1000;
-			/*LOGICA QUI*/
-			for (AChessPiece* WhitePiece : GameMode->ChessBoard->WhitePieceOnChessBoard)
-			{
-				TArray<ATile*> candidateMoves = WhitePiece->validMoves();
-				for (ATile* candidateTile : candidateMoves)
-				{
-					if (WhitePiece->IsLegal(candidateTile))
-					{
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("AI (Minimax) bestVal = %d "), bestVal));
+		return BestMove;
+	}
 
-					}
-				}
-			}
-			return best;
-		}
-	}
-	else
-	{
-		return score;
-	}
+	return nullptr;
 }
 
 

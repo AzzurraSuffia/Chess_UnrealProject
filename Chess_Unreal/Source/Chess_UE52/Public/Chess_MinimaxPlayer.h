@@ -38,6 +38,8 @@ public:
 	virtual void OnLose() override;
 	virtual void OnDraw(EResult DrawOrigin) override;
 
-	int32 EvaluateChessboard(TArray<AChessPiece*>& WhitePieces, TArray<AChessPiece*>& BlackPieces, bool bisMax);
-	int32 MinMax(int32 Depth, bool IsMax);
+	int32 EvaluateChessboard(TArray<AChessPiece*>& WhitePieces, TArray<AChessPiece*>& BlackPieces);
+	int32 Utility(int32 Player);
+	int32 MiniMax(int32 Depth, bool bisMax, int32 alpha, int32 beta);
+	UMove* FindBestMove(AGameField* ChessBoard);
 };

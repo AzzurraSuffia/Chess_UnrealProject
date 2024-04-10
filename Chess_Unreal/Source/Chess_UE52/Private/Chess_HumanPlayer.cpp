@@ -69,22 +69,8 @@ bool AChess_HumanPlayer::TentativodiReplay(UMove* FirstReplayMove)
 				for (int32 i = LastTextBoxIdx; i > LastTextBoxToPreserve; i--)
 				{
 					PlayerController->HUDChess->OtherNotationComponents[i]->ConditionalBeginDestroy();
-					//PlayerController->HUDChess->OtherNotationComponents.Remove(PlayerController->HUDChess->OtherNotationComponents[i]);
 				}
 				PlayerController->HUDChess->OtherNotationComponents.SetNum(LastTextBoxToPreserve+1);
-
-				//rimuovo 1-0, 0-1, 1/2-1/2 se la partita era finita
-				//if(PlayerController->HUDChess->AllMoves.Num()/2 == PlayerController->HUDChess->OtherNotationComponents.Num()+1)
-				//{
-					//PlayerController->HUDChess->OtherNotationComponents.Remove(PlayerController->HUDChess->OtherNotationComponents.Last());
-				//}
-
-				//sono certa che clickedMoveidx sia dispari COME INDICE altrimenti non sarei qui
-				//for(int32 i = (ClickedMoveIdx/2 + 1); i < number + 1; i++)
-				//{
-					//PlayerController->HUDChess->OtherNotationComponents[i]->ConditionalBeginDestroy();
-					//PlayerController->HUDChess->OtherNotationComponents.Remove(PlayerController->HUDChess->OtherNotationComponents[i]);
-				//}
 
 				for (int32 i = MoveDoneIdx - 1; i > ClickedMoveIdx; i--)
 				{
@@ -103,8 +89,6 @@ bool AChess_HumanPlayer::TentativodiReplay(UMove* FirstReplayMove)
 					GameMode->ChessBoard->MoveStack.Remove(Move);
 
 					PlayerController->HUDChess->AllMoves[i]->ConditionalBeginDestroy();
-					//PlayerController->HUDChess->AllMoves.Remove(PlayerController->HUDChess->AllMoves[i]);
-
 				}
 				PlayerController->HUDChess->AllMoves.SetNum(ClickedMoveIdx+1);
 				GameMode->ChessBoard->CurrentChessboardState = nullptr;
