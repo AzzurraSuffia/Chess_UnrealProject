@@ -235,6 +235,7 @@ void UMove::UndoMove(AChess_GameMode* GameMode)
 
 void UMove::doMove(AChess_GameMode* GameMode)
 {
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("doMove"));
 	/*
 	AChessPiece* AChessPiece::doVirtualMove(AChessPiece * Piece, ATile * from, ATile * to)
 	{
@@ -319,7 +320,7 @@ void UMove::doMove(AChess_GameMode* GameMode)
 	}
 	else
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Sono nell'else"));
+		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Sono nell'else"));
 	}
 
 	if (bisPromotion)
@@ -337,7 +338,6 @@ void UMove::doMove(AChess_GameMode* GameMode)
 
 		PiecePromoted->PlaceAt = PieceMoving->PlaceAt;
 		GameMode->ChessBoard->MoveOutOfChessBoard(PieceMoving);
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("WE"));
 		//OriginalPawn->SetActorHiddenInGame(true);
 		Location = GameMode->ChessBoard->GetRelativeLocationByXYPosition(PiecePromoted->PlaceAt.X, PiecePromoted->PlaceAt.Y);
 		NewLocation = Location + FVector(6, 6, 20);

@@ -54,22 +54,10 @@ void AChess_MinimaxPlayer::OnTurn()
 			AChess_GameMode* GameMode = (AChess_GameMode*)(GetWorld()->GetAuthGameMode());
 
 			UMove* BestMove = FindBestMove(GameMode->ChessBoard);
-
-			if (BestMove->bisCapture)
-			{
-				/*CODICE QUI*/
-			}
-
-			GameMode->MovePiece(BestMove->PieceMoving, BestMove->From, BestMove->To);
-
-			if (BestMove->bisPromotion)
-			{
-				/*CODICE QUI*/
-			}
-
+			BestMove->doMove(GameMode);
 			GameMode->ChessBoard->MoveStack.Add(BestMove);
 
-			//bool MoveResult = GameMode->IsGameEnded(RandomMove, ChessBoard->WhiteKing);
+			bool MoveResult = GameMode->IsGameEnded(BestMove, GameMode->ChessBoard->WhiteKing);
 
 			AChess_PlayerController* PlayerController = Cast<AChess_PlayerController>(GetWorld()->GetFirstPlayerController());
 			if (IsValid(PlayerController))
@@ -78,10 +66,10 @@ void AChess_MinimaxPlayer::OnTurn()
 				MoveBox->Move = BestMove;
 			}
 
-			//if (!MoveResult)
-			//{
-				//GameMode->TurnNextPlayer();
-			//}
+			if (!MoveResult)
+			{
+				GameMode->TurnNextPlayer();
+			}
 
 		}, 3, false);
 }
@@ -107,9 +95,6 @@ void AChess_MinimaxPlayer::OnDraw(EResult DrawOrigin)
 		//GameInstance->SetTurnMessage(TEXT("It's a stalemate!"));
 	}
 }
-
-//devo controllare e tenere conto delle vittorie ancora prima
-
 
 int32 AChess_MinimaxPlayer::EvaluateChessboard(TArray<AChessPiece*>& WhitePieces, TArray<AChessPiece*>& BlackPieces)
 {
@@ -198,8 +183,10 @@ UMove* AChess_MinimaxPlayer::FindBestMove(AGameField* ChessBoard)
 	int32 alpha = -1000;
 	int32 beta = 1000;
 	UMove* BestMove = NewObject<UMove>();
+	UMove* Move = NewObject<UMove>();
+	AChess_GameMode* GameMode = Cast<AChess_GameMode>(GetWorld()->GetAuthGameMode());
 
-	if (BestMove)
+	if (BestMove && Move)
 	{
 		for (AChessPiece* MaxPiece : ChessBoard->BlackPieceOnChessBoard)
 		{
@@ -209,19 +196,102 @@ UMove* AChess_MinimaxPlayer::FindBestMove(AGameField* ChessBoard)
 				if (MaxPiece->IsLegal(MaxCandidateTile))
 				{
 					/*CODICE QUI DELLA MOSSA*/
+					//---------------------------------------------------------
+					ETileStatus MyType = ETileStatus::BLACKPIECE;
+					ETileStatus OpponentType = ETileStatus::WHITEPIECE;
+					FVector2D MoveCurrPieceTo = MaxCandidateTile->GetGridPosition();
+					AChessPiece* CapturedPiece = nullptr;
+					ATile* to = MaxCandidateTile;
+					ATile* from = ChessBoard->TileMap[MaxPiece->PlaceAt];
+					TArray<AChessPiece*> OpponentPieceOnBoard = GameMode->ChessBoard->WhitePieceOnChessBoard;
+		
+					Move->PieceMoving = MaxPiece;
+					Move->To = to;
+					Move->From = from;
+
+					if (to->GetTileStatus() == OpponentType)
+					{
+						/*CATTURA DI UN PEZZO*/
+						Move->bisCapture = true;
+
+						int32 Size = OpponentPieceOnBoard.Num();
+						for (int32 i = 0; i < Size; i++)
+						{
+							if (OpponentPieceOnBoard[i]->PlaceAt == MoveCurrPieceTo)
+							{
+								CapturedPiece = OpponentPieceOnBoard[i];
+								break;
+							}
+						}
+						if (CapturedPiece != nullptr)
+						{
+							GameMode->ChessBoard->WhitePieceOnChessBoard.Remove(CapturedPiece);
+							Move->PieceCaptured = CapturedPiece;
+						}
+					}
+					
+					from->SetTileStatus(ETileStatus::EMPTY);
+					to->SetTileStatus(MyType);
+					MaxPiece->PlaceAt = MoveCurrPieceTo;
+
+					/*PROMOZIONE*/
+					if (MaxPiece->PlaceAt.X == 0)
+					{
+						APawnPiece* Pawn = Cast<APawnPiece>(MaxPiece);
+						if (IsValid(Pawn))
+						{
+							int32 InX = 9;
+							int32 InY = -1;
+							/*PROMOZIONE DEL PEDONE IN REGINA*/
+							//il controllo TileMap.Contains mi garantisce che ChangeTileStatus non mi restituisca errore
+							AQueenPiece* Queen = ChessBoard->SpawnPieceQueen(EColor::BLACK, InX, InY, (ChessBoard->TileSize / 100));
+							//Queen->SetActorHiddenInGame(true);
+							
+							ChessBoard->BlackPieceOnChessBoard.Add(Queen);
+							ChessBoard->BlackPieceOnChessBoard.Remove(MaxPiece);
+							Move->bisPromotion = true;
+							Move->PiecePromoted = Queen;
+						}
+					}
+
+					//se il gioco è finito non chiamo ricorsivamente il minimax??
+
+					//---------------------------------------------------------
+
 					int32 moveVal = MiniMax(3, false, alpha, beta);
+
+					/*QUI CI VA L'UNDO??*/
+					
 					if (moveVal > bestVal)
 					{
-						/*AGGIORNA I CAMPI DELLA STRUTTURA MOSSA*/
+						/*MANTIENI I CAMPI DELLA STRUTTURA MOSSA SE E' LA MOSSA MIGLIORE*/
 						bestVal = moveVal;
+						BestMove = Move;
+					}
+					else
+					{
+						/*DISTRUGGI LA REGINA CREATA SE C'E' STATA UNA PROMOZIONE*/
+						if (Move->bisPromotion)
+						{
+							Move->PiecePromoted->Destroy();
+						}
+					}
+
+					/*RESETTA I CAMPI DELLA STRUTTURA MOSSA*/
+					Move->PieceMoving = nullptr;
+					Move->To = nullptr;
+					Move->From = nullptr;
+					Move->bisCapture = false;
+					Move->PieceCaptured = nullptr;
+					Move->bisPromotion = false;
+					Move->PiecePromoted = nullptr;
+					//vanno messi a false anche bisCheck e bisCheckmate se li contro sopra
 					}
 				}
 			}
-		}
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("AI (Minimax) bestVal = %d "), bestVal));
 		return BestMove;
 	}
-
 	return nullptr;
 }
 

@@ -11,11 +11,11 @@
 const FRotator RotationPiece = FRotator(0.0f, 90.0f, 0.0f);
 
 void ChangeTileStatus(EColor Color, const double InX, const double InY, AGameField* PlaySpace) {
-	if (Color == EColor::WHITE)
+	if (Color == EColor::WHITE && PlaySpace->TileMap.Contains(FVector2D(InX, InY)))
 	{
 		PlaySpace->TileMap[FVector2D(InX, InY)]->SetTileStatus(ETileStatus::WHITEPIECE);
 	}
-	else if (Color == EColor::BLACK)
+	else if (Color == EColor::BLACK && PlaySpace->TileMap.Contains(FVector2D(InX, InY)))
 	{
 		PlaySpace->TileMap[FVector2D(InX, InY)]->SetTileStatus(ETileStatus::BLACKPIECE);
 	}
