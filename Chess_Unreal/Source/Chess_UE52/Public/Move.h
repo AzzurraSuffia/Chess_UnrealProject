@@ -45,4 +45,7 @@ public:
 
     void UndoMove(AChess_GameMode* GameMode);
     void doMove(AChess_GameMode* GameMode);
+    void CopyFrom(const UMove* OtherMove);
+    static void CopyMove(UMove* DestinationMove, const UMove* SourceMove);
+    static void ClearMove(UMove* Move);
 };

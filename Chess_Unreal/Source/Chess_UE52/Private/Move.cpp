@@ -345,3 +345,45 @@ void UMove::doMove(AChess_GameMode* GameMode)
 		PiecePromoted->SetActorHiddenInGame(false);
 	}
 }
+
+void UMove::CopyFrom(const UMove* OtherMove)
+{
+	//Copy attributes one by one
+	MoveNumber = OtherMove->MoveNumber;
+	From = OtherMove->From;
+	To = OtherMove->To;
+	PieceMoving = OtherMove->PieceMoving;
+	bfileAmbiguity = OtherMove->bfileAmbiguity;
+	brankAmbiguity = OtherMove->brankAmbiguity;
+	bisCapture = OtherMove->bisCapture;
+	PieceCaptured = OtherMove->PieceCaptured;
+	bisPromotion = OtherMove->bisPromotion;
+	PiecePromoted = OtherMove->PiecePromoted;
+	bisCheck = OtherMove->bisCheck;
+	bisCheckmate = OtherMove->bisCheckmate;
+}
+
+void UMove::CopyMove(UMove* DestinationMove, const UMove* SourceMove)
+{
+	if (DestinationMove && SourceMove)
+	{
+		DestinationMove->CopyFrom(SourceMove);
+	}
+}
+
+void UMove::ClearMove(UMove* Move)
+{
+	//clear all the move fields
+	Move->MoveNumber = 0;
+	Move->PieceMoving = nullptr;
+	Move->To = nullptr;
+	Move->From = nullptr;
+	Move->bfileAmbiguity = false;
+	Move->brankAmbiguity = false;
+	Move->bisCapture = false;
+	Move->PieceCaptured = nullptr;
+	Move->bisPromotion = false;
+	Move->PiecePromoted = nullptr;
+	Move->bisCheck = false;
+	Move->bisCheckmate = false;
+}

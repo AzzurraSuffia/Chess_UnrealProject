@@ -121,15 +121,14 @@ void AChessPiece::undoVirtualMove(AChessPiece* Piece, ATile* from, ATile* to, AC
 
 	ETileStatus MyType = ETileStatus::EMPTY;
 	ETileStatus OpponentType = ETileStatus::EMPTY;
-	int32 MyPawnStartPosition = -1;
 
 	if (Piece->PieceColor == EColor::BLACK)
 	{
-		MyType = ETileStatus::BLACKPIECE; OpponentType = ETileStatus::WHITEPIECE; MyPawnStartPosition = GameMode->ChessBoard->Size - 2;
+		MyType = ETileStatus::BLACKPIECE; OpponentType = ETileStatus::WHITEPIECE; 
 	}
 	else if (Piece->PieceColor == EColor::WHITE)
 	{
-		MyType = ETileStatus::WHITEPIECE; OpponentType = ETileStatus::BLACKPIECE; MyPawnStartPosition = 1;
+		MyType = ETileStatus::WHITEPIECE; OpponentType = ETileStatus::BLACKPIECE;
 	}
 
 	to->SetTileStatus(MyType);
