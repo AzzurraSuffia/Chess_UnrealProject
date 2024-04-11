@@ -292,8 +292,6 @@ void AChess_HumanPlayer::OnClick()
 				}
 				if (!actualMoves.IsEmpty())
 				{
-					GameInstance->SetTurnMessage(TEXT("Human Turn"));
-					bFirstClick = false;
 					UMove* HumanMove = NewObject<UMove>();
 					if (HumanMove)
 					{
@@ -303,10 +301,7 @@ void AChess_HumanPlayer::OnClick()
 						HumanMove->PieceMoving = CurrPiece;
 					}
 				}
-				else
-				{
-					GameInstance->SetTurnMessage(TEXT("No Moves Available for this Piece"));
-				}
+				bFirstClick = false;
 			}
 		}
 		else
@@ -372,6 +367,12 @@ void AChess_HumanPlayer::OnClick()
 			}
 			if (AChessPiece* DestinationPiece = Cast<AChessPiece>(Hit.GetActor()))
 			{
+				if (DestinationPiece == CurrPiece)
+				{
+					actualMoves.Add(SelectedTile);
+					GameMode->ChessBoard->RestoreSquareColor(actualMoves);
+					bFirstClick = true;
+				}
 				if (DestinationPiece->PieceColor == EColor::BLACK)
 				{
 					ATile* CurrTile = DestinationPiece->ChessBoard->TileMap[DestinationPiece->PlaceAt];

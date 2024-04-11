@@ -10,7 +10,6 @@ void UHUD_Chess::NativeConstruct()
 
 	ScrollBox = Cast<UScrollBox>(GetWidgetFromName(TEXT("ScrollBox")));
 	Canvas = Cast<UCanvasPanel>(GetWidgetFromName(TEXT("CanvasPanel")));
-
 }
 
 UUI_MoveBox* UHUD_Chess::AddMoveWidget(UMove* MoveReference)

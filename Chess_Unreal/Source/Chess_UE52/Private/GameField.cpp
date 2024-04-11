@@ -206,6 +206,21 @@ void AGameField::ResetField()
 	// send broadcast event to registered objects 
 	OnResetEvent.Broadcast();
 
+	CurrentChessboardState = nullptr;
+
+	for (UMove* Move : MoveStack)
+	{
+		Move->ConditionalBeginDestroy();
+	}
+	MoveStack.Empty();
+
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("ChessBoardEmpty"));
+	DisplayPiecesStartConfiguration(this);
+
+	AChess_GameMode* GameMode = Cast<AChess_GameMode>(GetWorld()->GetAuthGameMode());
+	GameMode->bisGameOver = false;
+	GameMode->MoveCounter = 0;
+
 	AChess_PlayerController* PlayerController = Cast<AChess_PlayerController>(GetWorld()->GetFirstPlayerController());
 	if (IsValid(PlayerController))
 	{
@@ -231,21 +246,7 @@ void AGameField::ResetField()
 		PlayerController->HUDChess->OtherNotationComponents.Empty();
 	}
 
-	CurrentChessboardState = nullptr;
-
-	for (UMove* Move : MoveStack)
-	{
-		Move->ConditionalBeginDestroy();
-	}
-	MoveStack.Empty();
-
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("ChessBoardEmpty"));
-	DisplayPiecesStartConfiguration(this);
-
-	AChess_GameMode* GameMode = Cast<AChess_GameMode>(GetWorld()->GetAuthGameMode());
-	GameMode->bisGameOver = false;
-	GameMode->MoveCounter = 0;
-	GameMode->ChoosePlayerAndStartGame();
+	GameMode->OnStart.Broadcast();
 }
 
 FString AGameField::GetLastMoveAlgebricNotation()

@@ -19,7 +19,7 @@ class AActor;
 
 struct FPosition;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnNewMove);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnGameStart);
 
 UENUM()
 enum class EResult : uint8
@@ -52,6 +52,9 @@ public:
 
 	// array of player interfaces
 	TArray<IChess_PlayerInterface*> Players;
+
+	UPROPERTY(BlueprintAssignable)
+	FOnGameStart OnStart;
 
 	bool IsKingInCheck(int32 Player);
 
@@ -91,7 +94,8 @@ public:
 	virtual void BeginPlay() override;
 
 	// called at the start of the game
-	void ChoosePlayerAndStartGame();
+	UFUNCTION(BlueprintCallable)
+	void ChoosePlayerAndStartGame(bool difficult);
 
 	/*DA TRASFORMARE IN SETCELLPIECE*/
 	// set the cell sign and the position 

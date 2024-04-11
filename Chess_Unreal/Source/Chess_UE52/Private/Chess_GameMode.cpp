@@ -5,7 +5,7 @@
 #include "Chess_PlayerController.h"
 #include "Chess_HumanPlayer.h"
 #include "Chess_RandomPlayer.h"
-//#include "Chess_MinimaxPlayer.h"
+#include "Chess_MinimaxPlayer.h"
 #include "EngineUtils.h"
 
 bool AChess_GameMode::GetPromotionFlag() const
@@ -295,16 +295,8 @@ void AChess_GameMode::BeginPlay()
 
 		// Human player = 0
 		Players.Add(HumanPlayer);
-		// Random Player
-		auto* AI = GetWorld()->SpawnActor<AChess_RandomPlayer>(FVector(), FRotator());
 
-		// MiniMax Player
-		//auto* AI = GetWorld()->SpawnActor<ATTT_MinimaxPlayer>(FVector(), FRotator());
-		
-		// AI player = 1
-		Players.Add(AI);
-
-		ChoosePlayerAndStartGame();
+		//ChoosePlayerAndStartGame
 
 	}
 	//Va segnalato il fallimento di un cast?
@@ -314,13 +306,25 @@ void AChess_GameMode::BeginPlay()
 	}
 }
 
-void AChess_GameMode::ChoosePlayerAndStartGame()
+void AChess_GameMode::ChoosePlayerAndStartGame(bool difficult)
 {
 	//seleziona il giocatore casualmente tra l'array di Player (funzione generale, indipendente dal particolare numero di giocatori, ci piace)
 	//CurrentPlayer = FMath::RandRange(0, Players.Num() - 1);
 	
 	//Nelle specifiche viene richiesto che ad iniziare sia sempre l'umano
 	CurrentPlayer = 0;
+
+	// AI player = 1
+	if (difficult)
+	{
+		auto* AIMinimax = GetWorld()->SpawnActor<AChess_MinimaxPlayer>(FVector(), FRotator());
+		Players.Add(AIMinimax);
+	}
+	else
+	{
+		auto* AIRandom = GetWorld()->SpawnActor<AChess_RandomPlayer>(FVector(), FRotator());
+		Players.Add(AIRandom);
+	}
 
 	//assegnazone di un numero a ogni giocatore e di un colore delle pedine
 	for (int32 i = 0; i < Players.Num(); i++)
@@ -330,7 +334,6 @@ void AChess_GameMode::ChoosePlayerAndStartGame()
 	}
 
 	MoveCounter += 1;
-
 	//inizia il turno del giocatore estratto casualmente
 	Players[CurrentPlayer]->OnTurn();
 

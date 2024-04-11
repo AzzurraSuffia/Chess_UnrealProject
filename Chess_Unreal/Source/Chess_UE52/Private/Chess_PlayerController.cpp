@@ -26,6 +26,8 @@ void AChess_PlayerController::BeginPlay()
 {
 	Super::BeginPlay();
 
+	AChess_GameMode* GameMode = Cast<AChess_GameMode>(GetWorld()->GetAuthGameMode());
+
 	if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer()))
 	{
 		Subsystem->AddMappingContext(ChessContext, 0);
@@ -40,6 +42,7 @@ void AChess_PlayerController::BeginPlay()
 			if (IsValid(HUDChess))
 			{
 				HUDChess->AddToViewport();
+				GameMode->OnStart.Broadcast();
 			}
 		}
 	};
