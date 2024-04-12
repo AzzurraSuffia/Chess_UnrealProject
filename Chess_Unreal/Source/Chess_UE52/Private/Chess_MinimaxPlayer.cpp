@@ -49,11 +49,12 @@ void AChess_MinimaxPlayer::OnTurn()
 
 	FTimerHandle TimerHandle;
 
+	//Lambda function
 	GetWorld()->GetTimerManager().SetTimer(TimerHandle, [&]()
-		{
+	{
 			AChess_GameMode* GameMode = (AChess_GameMode*)(GetWorld()->GetAuthGameMode());
 
-			UMove* BestMove = FindBestMove(GameMode->ChessBoard, 2);
+			UMove* BestMove = FindBestMove(GameMode->ChessBoard, 3);
 			BestMove->MoveNumber = GameMode->MoveCounter;
 			BestMove->doMove(GameMode);
 			GameMode->ChessBoard->MoveStack.Add(BestMove);
@@ -71,8 +72,8 @@ void AChess_MinimaxPlayer::OnTurn()
 			{
 				GameMode->TurnNextPlayer();
 			}
-
-		}, 3, false);
+			//Il timer è di 1 secondo (aspetta 1 secondo prima di mettere il simbolo)
+	}, 3, false);
 }
 
 void AChess_MinimaxPlayer::OnWin()
@@ -231,6 +232,16 @@ int32 AChess_MinimaxPlayer::MiniMax(int32 Depth, bool bisMax, int32 alpha, int32
 							to->SetTileStatus(ETileStatus::EMPTY);
 						}
 
+						APawnPiece* Pawn = Cast<APawnPiece>(MaxPiece);
+						if (IsValid(Pawn))
+						{
+							int32 PawnStartPosition = (GameMode->ChessBoard->Size - 2);
+							if (from->GetGridPosition().X == PawnStartPosition)
+							{
+								Pawn->bfirstMove = true;
+							}
+						}
+
 						/******ERRORE******/
 						/*IL FATTO CHE LA REGINA SIA DALL'ALTRA PARTE DELLA SCACCHIERA NON BASTA PER DIMOSTRARE CHE C'E' STATA UNA PROMOZIONE*/
 						if (Queen != nullptr && Queen->PlaceAt.X == 0 && bPromotion)
@@ -355,6 +366,16 @@ int32 AChess_MinimaxPlayer::MiniMax(int32 Depth, bool bisMax, int32 alpha, int32
 						else
 						{
 							to->SetTileStatus(ETileStatus::EMPTY);
+						}
+
+						APawnPiece* Pawn = Cast<APawnPiece>(MinPiece);
+						if (IsValid(Pawn))
+						{
+							int32 PawnStartPosition = 1;
+							if (from->GetGridPosition().X == PawnStartPosition)
+							{
+								Pawn->bfirstMove = true;
+							}
 						}
 
 						/******ERRORE******/

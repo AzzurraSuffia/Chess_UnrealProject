@@ -50,6 +50,8 @@ public:
 	// tracks if the game is over
 	bool bisGameOver;
 
+	TArray<IChess_PlayerInterface*> AllPlayers;
+
 	// array of player interfaces
 	TArray<IChess_PlayerInterface*> Players;
 

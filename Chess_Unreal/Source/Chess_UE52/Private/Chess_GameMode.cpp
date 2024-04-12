@@ -292,11 +292,14 @@ void AChess_GameMode::BeginPlay()
 		FVector CameraPos(CameraPosX, CameraPosX, 1500.0f);
 		HumanPlayer->SetActorLocationAndRotation(CameraPos, FRotationMatrix::MakeFromX(FVector(0, 0, -1)).Rotator());
 		
-
-		// Human player = 0
+		AllPlayers.Add(HumanPlayer);
 		Players.Add(HumanPlayer);
 
-		//ChoosePlayerAndStartGame
+		auto* AIRandom = GetWorld()->SpawnActor<AChess_RandomPlayer>(FVector(), FRotator());
+		AllPlayers.Add(AIRandom);
+
+		auto* AIMinimax = GetWorld()->SpawnActor<AChess_MinimaxPlayer>(FVector(), FRotator());
+		AllPlayers.Add(AIMinimax);
 
 	}
 	//Va segnalato il fallimento di un cast?
@@ -316,14 +319,26 @@ void AChess_GameMode::ChoosePlayerAndStartGame(bool difficult)
 
 	// AI player = 1
 	if (difficult)
-	{
-		auto* AIMinimax = GetWorld()->SpawnActor<AChess_MinimaxPlayer>(FVector(), FRotator());
-		Players.Add(AIMinimax);
+	{ 
+		if (Players.Num() == 2)
+		{
+			Players[1] = AllPlayers[2];
+		}
+		else
+		{
+			Players.Add(AllPlayers[2]);
+		}
 	}
 	else
 	{
-		auto* AIRandom = GetWorld()->SpawnActor<AChess_RandomPlayer>(FVector(), FRotator());
-		Players.Add(AIRandom);
+		if (Players.Num() == 2)
+		{
+			Players[1] = AllPlayers[1];
+		}
+		else
+		{
+			Players.Add(AllPlayers[1]);
+		}
 	}
 
 	//assegnazone di un numero a ogni giocatore e di un colore delle pedine
