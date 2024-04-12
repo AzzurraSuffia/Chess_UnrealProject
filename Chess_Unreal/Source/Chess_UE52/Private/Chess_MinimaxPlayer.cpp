@@ -53,7 +53,7 @@ void AChess_MinimaxPlayer::OnTurn()
 		{
 			AChess_GameMode* GameMode = (AChess_GameMode*)(GetWorld()->GetAuthGameMode());
 
-			UMove* BestMove = FindBestMove(GameMode->ChessBoard);
+			UMove* BestMove = FindBestMove(GameMode->ChessBoard, 2);
 			BestMove->MoveNumber = GameMode->MoveCounter;
 			BestMove->doMove(GameMode);
 			GameMode->ChessBoard->MoveStack.Add(BestMove);
@@ -213,11 +213,6 @@ int32 AChess_MinimaxPlayer::MiniMax(int32 Depth, bool bisMax, int32 alpha, int32
 						//se il gioco è finito non chiamo ricorsivamente il minimax??
 						//-------------------------------------------------------------
 						best = FMath::Max(best, MiniMax(Depth - 1, !bisMax, alpha, beta));
-						if (best >= beta)
-						{
-							return best;
-						}
-						alpha = FMath::Max(alpha, best);
 
 						/*CODICE QUI DELL'UNDO DELLA MOSSA*/
 						// ------------------------------------------------------------
@@ -228,8 +223,8 @@ int32 AChess_MinimaxPlayer::MiniMax(int32 Depth, bool bisMax, int32 alpha, int32
 						{
 							/*DEVO RIPRISTINARE IL PEZZO CATTURATO*/
 							to->SetTileStatus(OpponentType);
-							CapturedPiece->PlaceAt = to->GetGridPosition();
 							GameMode->ChessBoard->WhitePieceOnChessBoard.Insert(CapturedPiece, CapturedPieceIdx);
+							CapturedPiece->PlaceAt = to->GetGridPosition();
 						}
 						else
 						{
@@ -251,6 +246,11 @@ int32 AChess_MinimaxPlayer::MiniMax(int32 Depth, bool bisMax, int32 alpha, int32
 							Queen->Destroy();
 						}
 						//-------------------------------------------------------------
+						if (best >= beta)
+						{
+							return best;
+						}
+						alpha = FMath::Max(alpha, best);
 					}
 				}
 			}
@@ -338,11 +338,6 @@ int32 AChess_MinimaxPlayer::MiniMax(int32 Depth, bool bisMax, int32 alpha, int32
 						//se il gioco è finito non chiamo ricorsivamente il minimax??
 						//-------------------------------------------------------------
 						best = FMath::Min(best, MiniMax(Depth - 1, !bisMax, alpha, beta));
-						if (best <= alpha)
-						{
-							return best;
-						}
-						beta = FMath::Min(beta, best);
 
 						/*CODICE QUI DELL'UNDO DELLA MOSSA*/
 						// ------------------------------------------------------------
@@ -377,6 +372,11 @@ int32 AChess_MinimaxPlayer::MiniMax(int32 Depth, bool bisMax, int32 alpha, int32
 							Queen->Destroy();
 						}
 						//-------------------------------------------------------------
+						if (best <= alpha)
+						{
+							return best;
+						}
+						beta = FMath::Min(beta, best);
 					}
 				}
 			}
@@ -385,7 +385,7 @@ int32 AChess_MinimaxPlayer::MiniMax(int32 Depth, bool bisMax, int32 alpha, int32
 	}
 }
 
-UMove* AChess_MinimaxPlayer::FindBestMove(AGameField* ChessBoard)
+UMove* AChess_MinimaxPlayer::FindBestMove(AGameField* ChessBoard, int32 Depth)
 {
 	int32 bestVal = -1000;
 	int32 alpha = -1000;
@@ -481,7 +481,7 @@ UMove* AChess_MinimaxPlayer::FindBestMove(AGameField* ChessBoard)
 
 					//---------------------------------------------------------
 
-					int32 moveVal = MiniMax(3, false, alpha, beta);
+					int32 moveVal = MiniMax(Depth, false, alpha, beta);
 
 					/*QUI CI VA L'UNDO*/
 					//---------------------------------------------------------
