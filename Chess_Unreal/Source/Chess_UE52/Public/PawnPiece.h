@@ -20,6 +20,8 @@ public:
 
 	virtual TArray<ATile*> validMoves() override;
 
+	virtual int32 PieceWeight() override;
+
 	bool bfirstMove;
 
 protected:

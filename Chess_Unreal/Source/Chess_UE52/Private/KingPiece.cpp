@@ -56,6 +56,11 @@ TArray<ATile*> AKingPiece::validMoves()
 	return validMovesChoices;
 }
 
+int32 AKingPiece::PieceWeight()
+{
+	return 200;
+}
+
 // Called when the game starts or when spawned
 void AKingPiece::BeginPlay()
 {

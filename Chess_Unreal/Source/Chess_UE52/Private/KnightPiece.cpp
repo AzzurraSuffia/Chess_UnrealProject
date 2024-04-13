@@ -118,6 +118,11 @@ TArray<ATile*> AKnightPiece::validMoves()
 	return validMovesChoices;
 }
 
+int32 AKnightPiece::PieceWeight()
+{
+	return 3;
+}
+
 // Called when the game starts or when spawned
 void AKnightPiece::BeginPlay()
 {

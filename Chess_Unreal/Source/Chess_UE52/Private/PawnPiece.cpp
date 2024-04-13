@@ -103,6 +103,11 @@ TArray<ATile*> APawnPiece::validMoves()
 	return validMovesChoices;
 }
 
+int32 APawnPiece::PieceWeight()
+{
+	return 1;
+}
+
 // Called when the game starts or when spawned
 void APawnPiece::BeginPlay()
 {

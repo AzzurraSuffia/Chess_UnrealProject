@@ -56,9 +56,13 @@ bool AChessPiece::CanCaptureOpponentPiece(AChessPiece* PieceCaptured)
 	return false;
 }
 
+int32 AChessPiece::PieceWeight()
+{
+	return int32();
+}
+
 TArray<ATile*> AChessPiece::validMoves()
 {
-
 	return TArray<ATile*>();
 }
 

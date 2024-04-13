@@ -135,6 +135,11 @@ TArray<ATile*> ABishopPiece::validMoves()
 	return validMovesChoices;
 }
 
+int32 ABishopPiece::PieceWeight()
+{
+	return 3;
+}
+
 // Called when the game starts or when spawned
 void ABishopPiece::BeginPlay()
 {

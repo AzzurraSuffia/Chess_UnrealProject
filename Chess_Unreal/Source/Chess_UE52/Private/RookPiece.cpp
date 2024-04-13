@@ -122,6 +122,11 @@ TArray<ATile*> ARookPiece::validMoves()
 	return validMovesChoices;
 }
 
+int32 ARookPiece::PieceWeight()
+{
+	return 5;
+}
+
 // Called when the game starts or when spawned
 void ARookPiece::BeginPlay()
 {

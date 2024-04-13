@@ -32,6 +32,8 @@ public:
 
 	virtual bool CanCaptureOpponentPiece(AChessPiece* PieceCaptured);
 
+	virtual int32 PieceWeight();
+
 	virtual TArray<ATile*> validMoves();
 
 	virtual bool IsLegal(ATile* to);

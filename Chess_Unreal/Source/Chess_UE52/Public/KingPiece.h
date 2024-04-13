@@ -16,13 +16,9 @@ public:
 	// Sets default values for this actor's properties
 	AKingPiece();
 
-	/*
-	bool isStaleMate(Square Cells[][8], int x, int y);
-    bool isCheck(Square Cells[][8], int x, int y);
-    bool isCheckmate(Square Cells[][8], int x, int y);
-	*/
-
 	virtual TArray<ATile*> validMoves() override;
+
+	virtual int32 PieceWeight() override;
 
 protected:
 	// Called when the game starts or when spawned

@@ -102,7 +102,19 @@ void AChess_MinimaxPlayer::OnDraw(EResult DrawOrigin)
 
 int32 AChess_MinimaxPlayer::EvaluateChessboard(TArray<AChessPiece*>& WhitePieces, TArray<AChessPiece*>& BlackPieces)
 {
-	return BlackPieces.Num() - WhitePieces.Num();
+	int BlackScore = 0;
+	int WhiteScore = 0;
+
+	for (AChessPiece* WhitePiece : WhitePieces)
+	{
+		WhiteScore += WhitePiece->PieceWeight();
+	}
+	for (AChessPiece* BlackPiece : BlackPieces)
+	{
+		BlackScore += BlackPiece->PieceWeight();
+	}
+
+	return BlackScore - WhiteScore;
 }
 
 int32 AChess_MinimaxPlayer::Utility(int32 Player)

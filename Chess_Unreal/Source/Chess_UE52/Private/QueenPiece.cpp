@@ -223,6 +223,11 @@ TArray<ATile*> AQueenPiece::validMoves()
 	return validMovesChoices;
 }
 
+int32 AQueenPiece::PieceWeight()
+{
+	return 9;
+}
+
 // Called when the game starts or when spawned
 void AQueenPiece::BeginPlay()
 {
