@@ -132,6 +132,8 @@ void AChess_RandomPlayer::OnTurn()
 
 				bool MoveResult = GameMode->IsGameEnded(RandomMove, ChessBoard->WhiteKing);
 
+				GameMode->ChessBoard->CurrentChessboardState = GameMode->ChessBoard->MoveStack.Last();
+
 				AChess_PlayerController* PlayerController = Cast<AChess_PlayerController>(GetWorld()->GetFirstPlayerController());
 				if (IsValid(PlayerController))
 				{

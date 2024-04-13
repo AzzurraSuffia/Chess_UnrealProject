@@ -61,6 +61,8 @@ void AChess_MinimaxPlayer::OnTurn()
 
 			bool MoveResult = GameMode->IsGameEnded(BestMove, GameMode->ChessBoard->WhiteKing);
 
+			GameMode->ChessBoard->CurrentChessboardState = BestMove;
+
 			AChess_PlayerController* PlayerController = Cast<AChess_PlayerController>(GetWorld()->GetFirstPlayerController());
 			if (IsValid(PlayerController))
 			{
@@ -147,9 +149,6 @@ int32 AChess_MinimaxPlayer::MiniMax(int32 Depth, bool bisMax, int32 alpha, int32
 				{
 					/*CODICE QUI DELLA MOSSA*/
 					// ------------------------------------------------------------
-					UMove* MaxMove = NewObject<UMove>();
-					if (MaxMove)
-					{
 						ETileStatus MyType = ETileStatus::BLACKPIECE;
 						ETileStatus OpponentType = ETileStatus::WHITEPIECE;
 						FVector2D MoveCurrPieceTo = MaxCandidateTile->GetGridPosition();
@@ -176,7 +175,6 @@ int32 AChess_MinimaxPlayer::MiniMax(int32 Depth, bool bisMax, int32 alpha, int32
 							}
 							if (CapturedPiece != nullptr)
 							{
-								MaxMove->bisCapture = true;
 								GameMode->ChessBoard->WhitePieceOnChessBoard.Remove(CapturedPiece);
 								CapturedPiece->PlaceAt = FVector2D(-1, -1);
 							}
@@ -220,7 +218,7 @@ int32 AChess_MinimaxPlayer::MiniMax(int32 Depth, bool bisMax, int32 alpha, int32
 						from->SetTileStatus(MyType);
 						MaxPiece->PlaceAt = from->GetGridPosition();
 
-						if (MaxMove->bisCapture)
+						if (CapturedPiece != nullptr)
 						{
 							/*DEVO RIPRISTINARE IL PEZZO CATTURATO*/
 							to->SetTileStatus(OpponentType);
@@ -262,7 +260,6 @@ int32 AChess_MinimaxPlayer::MiniMax(int32 Depth, bool bisMax, int32 alpha, int32
 							return best;
 						}
 						alpha = FMath::Max(alpha, best);
-					}
 				}
 			}
 		}
@@ -282,9 +279,6 @@ int32 AChess_MinimaxPlayer::MiniMax(int32 Depth, bool bisMax, int32 alpha, int32
 				{
 					/*CODICE QUI DELLA MOSSA*/
 					// ------------------------------------------------------------
-					UMove* MinMove = NewObject<UMove>();
-					if (MinMove)
-					{
 						ETileStatus MyType = ETileStatus::WHITEPIECE;
 						ETileStatus OpponentType = ETileStatus::BLACKPIECE;
 						FVector2D MoveCurrPieceTo = MinCandidateTile->GetGridPosition();
@@ -311,7 +305,6 @@ int32 AChess_MinimaxPlayer::MiniMax(int32 Depth, bool bisMax, int32 alpha, int32
 							}
 							if (CapturedPiece != nullptr)
 							{
-								MinMove->bisCapture = true;
 								GameMode->ChessBoard->BlackPieceOnChessBoard.Remove(CapturedPiece);
 								CapturedPiece->PlaceAt = FVector2D(9, 9);
 							}
@@ -356,7 +349,7 @@ int32 AChess_MinimaxPlayer::MiniMax(int32 Depth, bool bisMax, int32 alpha, int32
 						MinPiece->PlaceAt = from->GetGridPosition();
 						CapturedPiece = CapturedPiece;
 
-						if (MinMove->bisCapture)
+						if (CapturedPiece != nullptr)
 						{
 							/*DEVO RIPRISTINARE IL PEZZO CATTURATO*/
 							to->SetTileStatus(OpponentType);
@@ -398,7 +391,6 @@ int32 AChess_MinimaxPlayer::MiniMax(int32 Depth, bool bisMax, int32 alpha, int32
 							return best;
 						}
 						beta = FMath::Min(beta, best);
-					}
 				}
 			}
 		}

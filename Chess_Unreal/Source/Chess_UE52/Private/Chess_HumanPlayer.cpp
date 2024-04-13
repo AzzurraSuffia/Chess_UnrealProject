@@ -91,7 +91,6 @@ bool AChess_HumanPlayer::TentativodiReplay(UMove* FirstReplayMove)
 					PlayerController->HUDChess->AllMoves[i]->ConditionalBeginDestroy();
 				}
 				PlayerController->HUDChess->AllMoves.SetNum(ClickedMoveIdx+1);
-				GameMode->ChessBoard->CurrentChessboardState = nullptr;
 			}
 		}
 		return true;
@@ -195,6 +194,8 @@ void AChess_HumanPlayer::OnPawnPromotion()
 				}
 			}
 		}
+
+		GameMode->ChessBoard->CurrentChessboardState = GameMode->ChessBoard->MoveStack.Last();
 
 		AChess_PlayerController* PlayerController = Cast<AChess_PlayerController>(GetWorld()->GetFirstPlayerController());
 		if (IsValid(PlayerController))
@@ -345,6 +346,8 @@ void AChess_HumanPlayer::OnClick()
 							}
 						}
 
+						GameMode->ChessBoard->CurrentChessboardState = GameMode->ChessBoard->MoveStack.Last();
+
 						AChess_PlayerController* PlayerController = Cast<AChess_PlayerController>(GetWorld()->GetFirstPlayerController());
 						if (IsValid(PlayerController))
 						{
@@ -366,11 +369,24 @@ void AChess_HumanPlayer::OnClick()
 				}
 			}
 			if (AChessPiece* DestinationPiece = Cast<AChessPiece>(Hit.GetActor()))
-			{
+			{	
 				if (DestinationPiece == CurrPiece)
 				{
 					actualMoves.Add(SelectedTile);
 					GameMode->ChessBoard->RestoreSquareColor(actualMoves);
+					APawnPiece* PawnInStart = Cast<APawnPiece>(DestinationPiece);
+					if (IsValid(PawnInStart) && PawnInStart->PlaceAt.X == 1)
+					{
+						PawnInStart->bfirstMove = true;
+					}
+					UMove* MoveToDelete = GameMode->ChessBoard->MoveStack.Last();
+					GameMode->ChessBoard->MoveStack.Remove(MoveToDelete);
+
+					// Convert the integer variable to a string
+					GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("IL NUMERO DI MOSSE E':"));
+					FString MyIntString = FString::Printf(TEXT("%d"), GameMode->ChessBoard->MoveStack.Num());
+					GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, MyIntString);
+
 					bFirstClick = true;
 				}
 				if (DestinationPiece->PieceColor == EColor::BLACK)
@@ -418,6 +434,8 @@ void AChess_HumanPlayer::OnClick()
 								}
 							}
 							}
+
+							GameMode->ChessBoard->CurrentChessboardState = GameMode->ChessBoard->MoveStack.Last();
 
 							AChess_PlayerController* PlayerController = Cast<AChess_PlayerController>(GetWorld()->GetFirstPlayerController());
 							if (IsValid(PlayerController))
