@@ -198,21 +198,17 @@ void AChess_HumanPlayer::OnPawnPromotion()
 		bool MoveResult = GameMode->IsGameEnded(GameMode->ChessBoard->MoveStack.Last(), GameMode->ChessBoard->BlackKing);
 
 		//Da questo momento in poi la mossa con promozione é completa
-		if (GameMode->ChessBoard->CurrentChessboardState != nullptr)
+		if (GameMode->ChessBoard->MoveStack.Num() > 2 && GameMode->ChessBoard->CurrentChessboardState != GameMode->ChessBoard->MoveStack[GameMode->ChessBoard->MoveStack.Num() - 2])
 		{
 			TArray<ATile*> PreviousColoredTiles = { GameMode->ChessBoard->CurrentChessboardState->To,  GameMode->ChessBoard->CurrentChessboardState->From };
 			GameMode->ChessBoard->RestoreSquareColor(PreviousColoredTiles);
-
-			if (GameMode->ChessBoard->CurrentChessboardState != GameMode->ChessBoard->MoveStack[GameMode->ChessBoard->MoveStack.Num() - 2])
+			//gestione replay
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Black, TEXT("REPLAY"));
+			if (!TentativodiReplay(GameMode->ChessBoard->MoveStack.Last()))
 			{
-				//gestione replay
-				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Black, TEXT("REPLAY"));
-				if (!TentativodiReplay(GameMode->ChessBoard->MoveStack.Last()))
-				{
-					bFirstClick = true;
-					bisMyTurn = true;
-					return;
-				}
+				bFirstClick = true;
+				bisMyTurn = true;
+				return;
 			}
 		}
 
@@ -354,21 +350,17 @@ void AChess_HumanPlayer::OnClick()
 						bool MoveResult = GameMode->IsGameEnded(GameMode->ChessBoard->MoveStack.Last(), GameMode->ChessBoard->BlackKing);
 
 						//Da questo momento in poi la mossa senza promozione e senza cattura é completa
-						if (GameMode->ChessBoard->CurrentChessboardState != nullptr)
+						if (GameMode->ChessBoard->MoveStack.Num() > 2 && GameMode->ChessBoard->CurrentChessboardState != GameMode->ChessBoard->MoveStack[GameMode->ChessBoard->MoveStack.Num() - 2])
 						{
 							TArray<ATile*> PreviousColoredTiles = { GameMode->ChessBoard->CurrentChessboardState->To,  GameMode->ChessBoard->CurrentChessboardState->From };
 							GameMode->ChessBoard->RestoreSquareColor(PreviousColoredTiles);
-
-							if (GameMode->ChessBoard->CurrentChessboardState != GameMode->ChessBoard->MoveStack[GameMode->ChessBoard->MoveStack.Num() - 2])
+							//gestione replay
+							GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Black, TEXT("REPLAY"));
+							if (!TentativodiReplay(GameMode->ChessBoard->MoveStack.Last()))
 							{
-								//gestione replay
-								GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Black, TEXT("REPLAY"));
-								if (!TentativodiReplay(GameMode->ChessBoard->MoveStack.Last()))
-								{
-									bFirstClick = true;
-									bisMyTurn = true;
-									return;
-								}
+								bFirstClick = true;
+								bisMyTurn = true;
+								return;
 							}
 						}
 
@@ -443,13 +435,10 @@ void AChess_HumanPlayer::OnClick()
 							bool MoveResult = GameMode->IsGameEnded(GameMode->ChessBoard->MoveStack.Last(), GameMode->ChessBoard->BlackKing);
 							
 							//Da questo momento in poi la mossa senza promozione e con cattura é completa
-							if (GameMode->ChessBoard->CurrentChessboardState != nullptr)
+							if (GameMode->ChessBoard->MoveStack.Num() > 2 && GameMode->ChessBoard->CurrentChessboardState != GameMode->ChessBoard->MoveStack[GameMode->ChessBoard->MoveStack.Num() - 2])
 							{
 								TArray<ATile*> PreviousColoredTiles = { GameMode->ChessBoard->CurrentChessboardState->To,  GameMode->ChessBoard->CurrentChessboardState->From };
 								GameMode->ChessBoard->RestoreSquareColor(PreviousColoredTiles);
-
-							if (GameMode->ChessBoard->CurrentChessboardState != GameMode->ChessBoard->MoveStack[GameMode->ChessBoard->MoveStack.Num() - 2])
-							{
 								//gestione replay
 								GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Black, TEXT("REPLAY"));
 								if (!TentativodiReplay(GameMode->ChessBoard->MoveStack.Last()))
@@ -458,7 +447,6 @@ void AChess_HumanPlayer::OnClick()
 									bisMyTurn = true;
 									return;
 								}
-							}
 							}
 
 							GameMode->ChessBoard->CurrentChessboardState = GameMode->ChessBoard->MoveStack.Last();

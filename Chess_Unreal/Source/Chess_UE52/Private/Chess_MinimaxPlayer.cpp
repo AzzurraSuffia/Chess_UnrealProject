@@ -66,25 +66,31 @@ void AChess_MinimaxPlayer::OnTurn()
 
 			UMove* BestMove = FindBestMove(GameMode->ChessBoard, 2);
 			BestMove->MoveNumber = GameMode->MoveCounter;
-			BestMove->doMove(GameMode);
-			GameMode->ChessBoard->MoveStack.Add(BestMove);
-
-			bool MoveResult = GameMode->IsGameEnded(BestMove, GameMode->ChessBoard->WhiteKing);
-
-			GameMode->ChessBoard->CurrentChessboardState = BestMove;
-
-			AChess_PlayerController* PlayerController = Cast<AChess_PlayerController>(GetWorld()->GetFirstPlayerController());
-			if (IsValid(PlayerController))
+			if (BestMove->PieceMoving == nullptr)
 			{
-				UUI_MoveBox* MoveBox = PlayerController->HUDChess->AddMoveWidget(BestMove);
-				MoveBox->Move = BestMove;
+				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("GENERATA MOSSA VUOTA"));
 			}
-
-			if (!MoveResult)
+			else
 			{
-				GameMode->TurnNextPlayer();
+				BestMove->doMove(GameMode);
+				GameMode->ChessBoard->MoveStack.Add(BestMove);
+
+				bool MoveResult = GameMode->IsGameEnded(BestMove, GameMode->ChessBoard->WhiteKing);
+
+				GameMode->ChessBoard->CurrentChessboardState = BestMove;
+
+				AChess_PlayerController* PlayerController = Cast<AChess_PlayerController>(GetWorld()->GetFirstPlayerController());
+				if (IsValid(PlayerController))
+				{
+					UUI_MoveBox* MoveBox = PlayerController->HUDChess->AddMoveWidget(BestMove);
+					MoveBox->Move = BestMove;
+				}
+
+				if (!MoveResult)
+				{
+					GameMode->TurnNextPlayer();
+				}
 			}
-			//Il timer è di 1 secondo (aspetta 1 secondo prima di mettere il simbolo)
 	}, 3, false);
 }
 
@@ -195,7 +201,7 @@ int32 AChess_MinimaxPlayer::Utility(int32 Player)
 	if (GameMode->IsKingInCheck(Player))
 	{
 		//CHECKMATE
-		return (Player) ? -10000 : +10000;
+		return (Player) ? -1000 : +1000;
 	}
 	else
 	{
@@ -221,7 +227,7 @@ int32 AChess_MinimaxPlayer::AlphaBetaMiniMax(int32 Depth, bool bisMax, int32 alp
 
 	if (bisMax)
 	{
-		int32 best = -1000;
+		int32 best = -10000;
 		int32 NumBlackPieces = GameMode->ChessBoard->BlackPieceOnChessBoard.Num();
 		for (int32 i = 0; i < NumBlackPieces; i++)
 		{
@@ -325,12 +331,8 @@ int32 AChess_MinimaxPlayer::AlphaBetaMiniMax(int32 Depth, bool bisMax, int32 alp
 							}
 						}
 
-						/******ERRORE******/
-						/*IL FATTO CHE LA REGINA SIA DALL'ALTRA PARTE DELLA SCACCHIERA NON BASTA PER DIMOSTRARE CHE C'E' STATA UNA PROMOZIONE*/
 						if (bPromotion && Queen != nullptr)
 						{
-							/*TROVATO L'ERRORE NELLA PROMOZIONE*/
-							//MaxPiece->PlaceAt = Queen->PlaceAt;
 							Queen->PlaceAt = FVector2D(9, -1);
 
 							int32 Index = GameMode->ChessBoard->BlackPieceOnChessBoard.Find(Queen);
@@ -353,7 +355,7 @@ int32 AChess_MinimaxPlayer::AlphaBetaMiniMax(int32 Depth, bool bisMax, int32 alp
 	}
 	else
 	{
-		int32 best = +1000;
+		int32 best = +10000;
 		int32 NumWhitePieces = GameMode->ChessBoard->WhitePieceOnChessBoard.Num();
 		for (int32 i = 0; i < NumWhitePieces; i++)
 		{
@@ -457,12 +459,8 @@ int32 AChess_MinimaxPlayer::AlphaBetaMiniMax(int32 Depth, bool bisMax, int32 alp
 							}
 						}
 
-						/******ERRORE******/
-						/*IL FATTO CHE LA REGINA SIA DALL'ALTRA PARTE DELLA SCACCHIERA NON BASTA PER DIMOSTRARE CHE C'E' STATA UNA PROMOZIONE*/
 						if (Queen != nullptr && Queen->PlaceAt.X == (GameMode->ChessBoard->Size - 1) && bPromotion)
 						{
-							/*TROVATO L'ERRORE NELLA PROMOZIONE*/
-							//MinPiece->PlaceAt = Queen->PlaceAt;
 							Queen->PlaceAt = FVector2D(-1, 9);
 
 							int32 Index = GameMode->ChessBoard->WhitePieceOnChessBoard.Find(Queen);
@@ -487,9 +485,9 @@ int32 AChess_MinimaxPlayer::AlphaBetaMiniMax(int32 Depth, bool bisMax, int32 alp
 
 UMove* AChess_MinimaxPlayer::FindBestMove(AGameField* ChessBoard, int32 Depth)
 {
-	int32 bestVal = -1000;
-	int32 alpha = -1000;
-	int32 beta = 1000;
+	int32 bestVal = -10000;
+	int32 alpha = -10000;
+	int32 beta = 10000;
 	UMove* BestMove = NewObject<UMove>();
 	UMove* Move = NewObject<UMove>();
 	AChess_GameMode* GameMode = Cast<AChess_GameMode>(GetWorld()->GetAuthGameMode());
@@ -600,11 +598,8 @@ UMove* AChess_MinimaxPlayer::FindBestMove(AGameField* ChessBoard, int32 Depth)
 						to->SetTileStatus(ETileStatus::EMPTY);
 					}
 
-					/******ERRORE******/
-					/*IL FATTO CHE LA REGINA SIA DALL'ALTRA PARTE DELLA SCACCHIERA NON BASTA PER DIMOSTRARE CHE C'E' STATA UNA PROMOZIONE*/
-					if (Queen != nullptr && Queen->PlaceAt.X == 0 && bPromotion)
+					if (Queen != nullptr && bPromotion)
 					{
-						MaxPiece->PlaceAt = Queen->PlaceAt;
 						Queen->PlaceAt = FVector2D(9, -1);
 						int32 Index = ChessBoard->BlackPieceOnChessBoard.Find(Queen);
 						if (Index != INDEX_NONE)
@@ -640,8 +635,6 @@ UMove* AChess_MinimaxPlayer::FindBestMove(AGameField* ChessBoard, int32 Depth)
 					UMove::ClearMove(Move);
 					Queen = nullptr;
 					CapturedPiece = nullptr;
-					//vanno messi a false anche bisCheck e bisCheckmate se li conto sopra
-
 					}
 				}
 			}
