@@ -3,6 +3,7 @@
 
 #include "Chess_PlayerController.h"
 #include "Components/InputComponent.h"
+#include "Components/CanvasPanelSlot.h"
 
 AChess_PlayerController::AChess_PlayerController()
 { 

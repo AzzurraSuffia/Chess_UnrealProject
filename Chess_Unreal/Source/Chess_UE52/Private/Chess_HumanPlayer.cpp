@@ -103,6 +103,17 @@ bool AChess_HumanPlayer::TentativodiReplay(UMove* FirstReplayMove)
 		FirstReplayMove->UndoMove(GameMode);
 		GameMode->ChessBoard->MoveStack.Remove(FirstReplayMove);
 		FirstReplayMove->ConditionalBeginDestroy();
+
+		/*se faccio una promozione quando non è il mio turno i bottoni rimangono inaccessibili se non faccio ciò*/
+		AChess_PlayerController* PlayerController = Cast<AChess_PlayerController>(GetWorld()->GetFirstPlayerController());
+		if (IsValid(PlayerController))
+		{
+			for (UUI_MoveBox* MoveBox : PlayerController->HUDChess->AllMoves)
+			{
+				MoveBox->SetIsEnabled(true);
+			}
+		}
+
 		/*mossa annullata, ma ha mosso il random player, va bloccato TurnNextPlayer*/
 		return false;
 	}
@@ -164,6 +175,16 @@ void AChess_HumanPlayer::OnPawnPromotion()
 	AChess_GameMode* GameMode = Cast<AChess_GameMode>(GetWorld()->GetAuthGameMode());
 	if (!GameMode->bpromotionFlag)
 	{
+		AChess_PlayerController* PlayerController = Cast<AChess_PlayerController>(GetWorld()->GetFirstPlayerController());
+		if (IsValid(PlayerController))
+		{
+			for (UUI_MoveBox* MoveBox : PlayerController->HUDChess->AllMoves)
+			{
+				MoveBox->SetIsEnabled(false);
+			}
+			PlayerController->HUDChess->ResetButtonWidget->SetIsEnabled(false);
+		}
+
 		GameMode->bpromotionFlag = true;
 		OnPromotionFlagTrue.Broadcast();
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Human Pawn Promotion"));
@@ -213,11 +234,19 @@ void AChess_HumanPlayer::OnPawnPromotion()
 
 void AChess_HumanPlayer::OnTurn()
 {
-	/*DEVO CONTROLLARE QUI SE CI SONO ANCORA MOSSE CHE IL GIOCATORE UMANO PUO' FARE*/
 	AChess_GameMode* GameMode = Cast<AChess_GameMode>(GetWorld()->GetAuthGameMode());
 	AGameField* ChessBoard = GameMode->ChessBoard;
-	//METODO 1
 	
+	AChess_PlayerController* PlayerController = Cast<AChess_PlayerController>(GetWorld()->GetFirstPlayerController());
+	if (IsValid(PlayerController))
+	{
+		for (UUI_MoveBox* MoveBox : PlayerController->HUDChess->AllMoves)
+		{
+			MoveBox->SetIsEnabled(true);
+		}
+		PlayerController->HUDChess->ResetButtonWidget->SetIsEnabled(true);
+	}
+
 	bisMyTurn = true;
 	bFirstClick = true;
 	actualMoves.Empty();
@@ -291,16 +320,13 @@ void AChess_HumanPlayer::OnClick()
 						candidateTile->SetTileColor(3);
 					}
 				}
-				if (!actualMoves.IsEmpty())
+				UMove* HumanMove = NewObject<UMove>();
+				if (HumanMove)
 				{
-					UMove* HumanMove = NewObject<UMove>();
-					if (HumanMove)
-					{
-						GameMode->ChessBoard->MoveStack.Add(HumanMove);
-						HumanMove->MoveNumber = GameMode->MoveCounter;
-						HumanMove->From = SelectedTile;
-						HumanMove->PieceMoving = CurrPiece;
-					}
+					GameMode->ChessBoard->MoveStack.Add(HumanMove);
+					HumanMove->MoveNumber = GameMode->MoveCounter;
+					HumanMove->From = SelectedTile;
+					HumanMove->PieceMoving = CurrPiece;
 				}
 				bFirstClick = false;
 			}

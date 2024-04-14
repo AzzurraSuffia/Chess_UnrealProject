@@ -64,6 +64,16 @@ void AChess_RandomPlayer::OnTurn()
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("AI (Random) Turn"));
 	GameInstance->SetTurnMessage(TEXT("AI (Random) Turn"));
 
+	AChess_PlayerController* PlayerController = Cast<AChess_PlayerController>(GetWorld()->GetFirstPlayerController());
+	if (IsValid(PlayerController))
+	{
+		for (UUI_MoveBox* MoveBox : PlayerController->HUDChess->AllMoves)
+		{
+			MoveBox->SetIsEnabled(false);
+		}
+		PlayerController->HUDChess->ResetButtonWidget->SetIsEnabled(false);
+	}
+
 	//Modo per settare un Timer per simulare il fatto che l'AI si prenda del tempo per pensare
 	FTimerHandle TimerHandle;
 

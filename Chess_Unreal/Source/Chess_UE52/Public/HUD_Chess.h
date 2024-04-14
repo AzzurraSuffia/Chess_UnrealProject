@@ -6,8 +6,10 @@
 #include "Blueprint/UserWidget.h"
 #include "Components/ScrollBox.h"
 #include "Components/TextBlock.h"
+#include "Components/Button.h"
 #include "UI_MoveBox.h"
 #include "UI_TextBox.h"
+#include "UI_ResetButton.h"
 #include "Move.h"
 #include "Components/CanvasPanel.h"
 #include "HUD_Chess.generated.h"
@@ -34,6 +36,14 @@ public:
 
 	UPROPERTY(BlueprintReadWrite,/* meta = (BindWidget),*/ Category = "Widgets Components")
 	UCanvasPanel* Canvas;
+
+	UPROPERTY(BlueprintReadWrite,/* meta = (BindWidget),*/ Category = "Widgets Components")
+	UCanvasPanel* VisibleZone;
+
+	UPROPERTY(EditAnywhere, Category = "Child Widgets")
+	TSubclassOf<UUserWidget> ResetWidget;
+
+	UUI_ResetButton* ResetButtonWidget;
 
 	TArray<UUI_TextBox*> OtherNotationComponents = {};
 	TArray<UUI_MoveBox*> AllMoves = {};

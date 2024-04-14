@@ -10,6 +10,22 @@ void UHUD_Chess::NativeConstruct()
 
 	ScrollBox = Cast<UScrollBox>(GetWidgetFromName(TEXT("ScrollBox")));
 	Canvas = Cast<UCanvasPanel>(GetWidgetFromName(TEXT("CanvasPanel")));
+	VisibleZone = Cast<UCanvasPanel>(GetWidgetFromName(TEXT("Visible")));
+
+	if (ResetWidget)
+	{
+		UUserWidget* ChildWidget = CreateWidget<UUserWidget>(GetWorld(), ResetWidget);
+		ResetButtonWidget = Cast<UUI_ResetButton>(ChildWidget);
+		if (IsValid(ResetButtonWidget))
+		{
+			UCanvasPanelSlot* CanvasSlot = Cast<UCanvasPanelSlot>(VisibleZone->AddChildToCanvas(ResetButtonWidget));
+			if (IsValid(CanvasSlot))
+			{
+				CanvasSlot->SetPosition(FVector2D(36.0f, 508.0f));
+				CanvasSlot->SetSize(FVector2D(200.0f, 40.0f));
+			}
+		}
+	}
 }
 
 UUI_MoveBox* UHUD_Chess::AddMoveWidget(UMove* MoveReference)

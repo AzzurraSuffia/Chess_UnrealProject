@@ -47,6 +47,16 @@ void AChess_MinimaxPlayer::OnTurn()
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("AI (Minimax) Turn"));
 	GameInstance->SetTurnMessage(TEXT("AI (Minimax) Turn"));
 
+	AChess_PlayerController* PlayerController = Cast<AChess_PlayerController>(GetWorld()->GetFirstPlayerController());
+	if (IsValid(PlayerController))
+	{
+		for (UUI_MoveBox* MoveBox : PlayerController->HUDChess->AllMoves)
+		{
+			MoveBox->SetIsEnabled(false);
+		}
+		PlayerController->HUDChess->ResetButtonWidget->SetIsEnabled(false);
+	}
+
 	FTimerHandle TimerHandle;
 
 	//Lambda function
@@ -54,7 +64,7 @@ void AChess_MinimaxPlayer::OnTurn()
 	{
 			AChess_GameMode* GameMode = (AChess_GameMode*)(GetWorld()->GetAuthGameMode());
 
-			UMove* BestMove = FindBestMove(GameMode->ChessBoard, 3);
+			UMove* BestMove = FindBestMove(GameMode->ChessBoard, 2);
 			BestMove->MoveNumber = GameMode->MoveCounter;
 			BestMove->doMove(GameMode);
 			GameMode->ChessBoard->MoveStack.Add(BestMove);
@@ -100,6 +110,68 @@ void AChess_MinimaxPlayer::OnDraw(EResult DrawOrigin)
 	}
 }
 
+void AChess_MinimaxPlayer::DoMinimaxMove(AChessPiece* Piece, ATile* CandidateTile)
+{
+	/*
+	AChess_GameMode* GameMode = (AChess_GameMode*)(GetWorld()->GetAuthGameMode());
+	ETileStatus MyType = ETileStatus::BLACKPIECE;
+	ETileStatus OpponentType = ETileStatus::WHITEPIECE;
+	FVector2D MoveCurrPieceTo = CandidateTile->GetGridPosition();
+	AChessPiece* CapturedPiece = nullptr;
+	int32 CapturedPieceIdx = -1;
+	AQueenPiece* Queen = nullptr;
+	ATile* to = CandidateTile;
+	bool bPromotion = false;
+	ATile* from = GameMode->ChessBoard->TileMap[Piece->PlaceAt];
+	TArray<AChessPiece*> OpponentPieceOnBoard = GameMode->ChessBoard->WhitePieceOnChessBoard;
+
+	if (to->GetTileStatus() == OpponentType)
+	{
+		int32 Size = OpponentPieceOnBoard.Num();
+		for (int32 j = 0; j < Size; j++)
+		{
+			if (OpponentPieceOnBoard[j]->PlaceAt == MoveCurrPieceTo)
+			{
+				CapturedPiece = OpponentPieceOnBoard[j];
+				CapturedPieceIdx = j;
+				break;
+			}
+		}
+		if (CapturedPiece != nullptr)
+		{
+			GameMode->ChessBoard->WhitePieceOnChessBoard.Remove(CapturedPiece);
+			CapturedPiece->PlaceAt = FVector2D(-1, -1);
+		}
+	}
+
+	from->SetTileStatus(ETileStatus::EMPTY);
+	to->SetTileStatus(MyType);
+	Piece->PlaceAt = MoveCurrPieceTo;
+
+	if (Piece->PlaceAt.X == 0)
+	{
+		APawnPiece* Pawn = Cast<APawnPiece>(Piece);
+		if (IsValid(Pawn))
+		{
+			int32 InX = 9;
+			int32 InY = -1;
+			bPromotion = true;
+			//il controllo TileMap.Contains mi garantisce che ChangeTileStatus non mi restituisca errore
+			Queen = GameMode->ChessBoard->SpawnPieceQueen(EColor::BLACK, InX, InY, (GameMode->ChessBoard->TileSize / 100));
+			//Queen->SetActorHiddenInGame(true);
+			Queen->PlaceAt = Pawn->PlaceAt;
+			Pawn->PlaceAt = FVector2D(9, -1);
+
+			int32 Index = GameMode->ChessBoard->BlackPieceOnChessBoard.Find(Pawn);
+			if (Index != INDEX_NONE)
+			{
+				GameMode->ChessBoard->BlackPieceOnChessBoard[Index] = Queen;
+			}
+		}
+	}*/
+}
+
+
 int32 AChess_MinimaxPlayer::EvaluateChessboard(TArray<AChessPiece*>& WhitePieces, TArray<AChessPiece*>& BlackPieces)
 {
 	int BlackScore = 0;
@@ -133,7 +205,7 @@ int32 AChess_MinimaxPlayer::Utility(int32 Player)
 }
 
 //posso generalizzare eliminando gli elementi specifici??
-int32 AChess_MinimaxPlayer::MiniMax(int32 Depth, bool bisMax, int32 alpha, int32 beta)
+int32 AChess_MinimaxPlayer::AlphaBetaMiniMax(int32 Depth, bool bisMax, int32 alpha, int32 beta)
 {
 	AChess_GameMode* GameMode = (AChess_GameMode*)(GetWorld()->GetAuthGameMode());
 	int32 CurrentPlayer = (bisMax) ? 1 : 0;
@@ -167,12 +239,13 @@ int32 AChess_MinimaxPlayer::MiniMax(int32 Depth, bool bisMax, int32 alpha, int32
 						AChessPiece* CapturedPiece = nullptr;
 						int32 CapturedPieceIdx = -1;
 						AQueenPiece* Queen = nullptr;
-						ATile* to = MaxCandidateTile;
 						bool bPromotion = false;
-						ATile* from = GameMode->ChessBoard->TileMap[MaxPiece->PlaceAt];
 						TArray<AChessPiece*> OpponentPieceOnBoard = GameMode->ChessBoard->WhitePieceOnChessBoard;
 
-						if (to->GetTileStatus() == OpponentType)
+						ATile* from = GameMode->ChessBoard->TileMap[MaxPiece->PlaceAt];
+						ATile* to = MaxCandidateTile;
+
+						if (to->GetTileStatus() == ETileStatus::WHITEPIECE)
 						{
 							/*CATTURA DI UN PEZZO*/
 							int32 Size = OpponentPieceOnBoard.Num();
@@ -223,7 +296,7 @@ int32 AChess_MinimaxPlayer::MiniMax(int32 Depth, bool bisMax, int32 alpha, int32
 
 						//se il gioco è finito non chiamo ricorsivamente il minimax??
 						//-------------------------------------------------------------
-						best = FMath::Max(best, MiniMax(Depth - 1, !bisMax, alpha, beta));
+						best = FMath::Max(best, AlphaBetaMiniMax(Depth - 1, !bisMax, alpha, beta));
 
 						/*CODICE QUI DELL'UNDO DELLA MOSSA*/
 						// ------------------------------------------------------------
@@ -254,9 +327,10 @@ int32 AChess_MinimaxPlayer::MiniMax(int32 Depth, bool bisMax, int32 alpha, int32
 
 						/******ERRORE******/
 						/*IL FATTO CHE LA REGINA SIA DALL'ALTRA PARTE DELLA SCACCHIERA NON BASTA PER DIMOSTRARE CHE C'E' STATA UNA PROMOZIONE*/
-						if (Queen != nullptr && Queen->PlaceAt.X == 0 && bPromotion)
+						if (bPromotion && Queen != nullptr)
 						{
-							MaxPiece->PlaceAt = Queen->PlaceAt;
+							/*TROVATO L'ERRORE NELLA PROMOZIONE*/
+							//MaxPiece->PlaceAt = Queen->PlaceAt;
 							Queen->PlaceAt = FVector2D(9, -1);
 
 							int32 Index = GameMode->ChessBoard->BlackPieceOnChessBoard.Find(Queen);
@@ -353,7 +427,7 @@ int32 AChess_MinimaxPlayer::MiniMax(int32 Depth, bool bisMax, int32 alpha, int32
 
 						//se il gioco è finito non chiamo ricorsivamente il minimax??
 						//-------------------------------------------------------------
-						best = FMath::Min(best, MiniMax(Depth - 1, !bisMax, alpha, beta));
+						best = FMath::Min(best, AlphaBetaMiniMax(Depth - 1, !bisMax, alpha, beta));
 
 						/*CODICE QUI DELL'UNDO DELLA MOSSA*/
 						// ------------------------------------------------------------
@@ -387,7 +461,8 @@ int32 AChess_MinimaxPlayer::MiniMax(int32 Depth, bool bisMax, int32 alpha, int32
 						/*IL FATTO CHE LA REGINA SIA DALL'ALTRA PARTE DELLA SCACCHIERA NON BASTA PER DIMOSTRARE CHE C'E' STATA UNA PROMOZIONE*/
 						if (Queen != nullptr && Queen->PlaceAt.X == (GameMode->ChessBoard->Size - 1) && bPromotion)
 						{
-							MinPiece->PlaceAt = Queen->PlaceAt;
+							/*TROVATO L'ERRORE NELLA PROMOZIONE*/
+							//MinPiece->PlaceAt = Queen->PlaceAt;
 							Queen->PlaceAt = FVector2D(-1, 9);
 
 							int32 Index = GameMode->ChessBoard->WhitePieceOnChessBoard.Find(Queen);
@@ -506,7 +581,7 @@ UMove* AChess_MinimaxPlayer::FindBestMove(AGameField* ChessBoard, int32 Depth)
 
 					//---------------------------------------------------------
 
-					int32 moveVal = MiniMax(Depth, false, alpha, beta);
+					int32 moveVal = AlphaBetaMiniMax(Depth, false, alpha, beta);
 
 					/*QUI CI VA L'UNDO*/
 					//---------------------------------------------------------

@@ -168,8 +168,8 @@ bool AChess_GameMode::PlayerCanMove(int32 Player)
 		{
 			candidateMoves = Piece->validMoves();
 		}
-		TArray<ATile*> actualMoves = {};
 
+		TArray<ATile*> actualMoves = {};
 		for (ATile* validTile : candidateMoves)
 		{
 			if (Piece->IsLegal(validTile))
