@@ -6,6 +6,7 @@
 #include "Chess_HumanPlayer.h"
 #include "Chess_RandomPlayer.h"
 #include "Chess_MinimaxPlayer.h"
+#include "Math/UnrealMathUtility.h"
 #include "EngineUtils.h"
 
 bool AChess_GameMode::GetPromotionFlag() const
@@ -46,6 +47,41 @@ bool AChess_GameMode::IsGameEnded(UMove* Move, AKingPiece* King)
 		}
 		return true;
 	}
+}
+
+bool AChess_GameMode::IsEnPassant(ATile* DiagonalSquare, APawnPiece* Pawn, int32 OneStep)
+{
+	
+	//controllo inutile DiagonalSquare->GetTileStatus() == ETileStatus::EMPTY perchè se l'ultima mossa è stataquella di un pedone
+	// che ha mosso due la cella diero di sè è per forza libera. Posso usarlo per uscire prima se non sono in quel caso
+	if (DiagonalSquare->GetTileStatus() == ETileStatus::EMPTY)
+	{
+		if (!ChessBoard->MoveStack.IsEmpty())
+		{
+			UMove* PreviousMove = ChessBoard->MoveStack.Last();
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Cella vuota"));
+			//verifico che il pedone e piece moving siano affiancati e piecemoving sia sotto diagonalsquare
+			if ((PreviousMove->To->GetGridPosition().X + OneStep) == DiagonalSquare->GetGridPosition().X && PreviousMove->To->GetGridPosition().Y == DiagonalSquare->GetGridPosition().Y)
+			{
+				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Siamo adiacenti"));
+				//verifico che il pezzo a fianco sia un pedone
+				APawnPiece* OpponentPawn = Cast<APawnPiece>(PreviousMove->PieceMoving);
+				if (IsValid(OpponentPawn))
+				{
+					GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Ho vicino un pedone"));
+					//verifico che nel turno prima abbiamo mosso per la prima volta e di due passi
+					int32 OpponentPawnXStartPosition = PreviousMove->From->GetGridPosition().X;
+					int32 OpponentPawnXEndPosition = PreviousMove->To->GetGridPosition().X;
+					if (FMath::Abs(OpponentPawnXEndPosition - OpponentPawnXStartPosition) == 2)
+					{
+						GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Ha mosso due"));
+						return true;
+					}
+				}
+			}
+		}
+	}
+	return false;
 }
 
 bool AChess_GameMode::IsKingInCheck(int32 Player)

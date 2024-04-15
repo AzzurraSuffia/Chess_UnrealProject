@@ -70,6 +70,8 @@ public:
 
 	bool IsGameEnded(UMove* Move, AKingPiece* King);
 
+	bool IsEnPassant(ATile* DiagonalSquare, APawnPiece* Pawn, int32 OneStep);
+
 	//potrebbe essere una mappa
 	//TArray<TArray<ATile*>>& FindAllLegalMoves(int32 Player);
 

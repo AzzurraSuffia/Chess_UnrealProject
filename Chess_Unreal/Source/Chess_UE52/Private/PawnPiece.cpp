@@ -34,6 +34,7 @@ bool APawnPiece::CanCaptureOpponentPiece(AChessPiece* PieceCaptured)
 //AL TERMINA USA validMovesChoices.Empty() PER SVUOTARE L'ARRAY
 TArray<ATile*> APawnPiece::validMoves()
 {
+	AChess_GameMode* GameMode = (AChess_GameMode*)(GetWorld()->GetAuthGameMode());
 	//poco efficiente fare questo calcolo ogni volta 
 	//o lo fai una volta all'inizio o lo metti come attributo
 	ETileStatus Enemy;
@@ -41,6 +42,7 @@ TArray<ATile*> APawnPiece::validMoves()
 	double TwoXStep = 0;
 	double Xposition = PlaceAt.X;
 	double Yposition = PlaceAt.Y;
+	int32 OneStep = 0;
 	TArray<ATile*> validMovesChoices;
 
 	if (this->PieceColor == EColor::BLACK)
@@ -48,20 +50,25 @@ TArray<ATile*> APawnPiece::validMoves()
 		Enemy = ETileStatus::WHITEPIECE;
 		OneXStep = PlaceAt.X - 1;
 		TwoXStep = PlaceAt.X - 2;
+		OneStep = -1;
 	}
 	else if (this->PieceColor == EColor::WHITE)
 	{
 		Enemy = ETileStatus::BLACKPIECE;
 		OneXStep = PlaceAt.X + 1;
 		TwoXStep = PlaceAt.X + 2;
+		OneStep = 1;
 	}
 
-	//controlli sul fatto che Xposition-1 ad esempio potrebbe essere fuori dal campo 
 	if (ChessBoard->TileMap.Contains(FVector2D(OneXStep, Yposition - 1)))
 	{
 		ATile* DiagonalLeftSquare = ChessBoard->TileMap[FVector2D(OneXStep, Yposition - 1)];
 		if (DiagonalLeftSquare->GetTileStatus() == Enemy)
 		{
+			validMovesChoices.Add(DiagonalLeftSquare);
+		}
+		else if (GameMode->IsEnPassant(DiagonalLeftSquare, this, OneStep))
+		{ 
 			validMovesChoices.Add(DiagonalLeftSquare);
 		}
 	}
@@ -70,6 +77,10 @@ TArray<ATile*> APawnPiece::validMoves()
 	{
 		ATile* DiagonalRightSquare = ChessBoard->TileMap[FVector2D(OneXStep, Yposition + 1)];
 		if (DiagonalRightSquare->GetTileStatus() == Enemy)
+		{
+			validMovesChoices.Add(DiagonalRightSquare);
+		}
+		else if (GameMode->IsEnPassant(DiagonalRightSquare, this, OneStep))
 		{
 			validMovesChoices.Add(DiagonalRightSquare);
 		}

@@ -81,6 +81,7 @@ void AChess_RandomPlayer::OnTurn()
 	GetWorld()->GetTimerManager().SetTimer(TimerHandle, [&]()
 		{
 			AChess_GameMode* GameMode = (AChess_GameMode*)(GetWorld()->GetAuthGameMode());
+			GameMode->ChessBoard->RestoreSquareColor(GameMode->ChessBoard->TileArray);
 			TArray<AChessPiece*> RandomPlayerPiece = GameMode->ChessBoard->BlackPieceOnChessBoard;
 			TArray<ATile*> candidateMoves = {};
 			TArray<ATile*> actualMoves = {};
@@ -99,6 +100,7 @@ void AChess_RandomPlayer::OnTurn()
 						if (RandomPlayerPiece[RandPieceIdx]->IsLegal(candidateTile))
 						{
 							actualMoves.Add(candidateTile);
+							candidateTile->SetTileColor(3);
 						}
 					}
 
