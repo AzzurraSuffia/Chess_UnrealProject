@@ -304,18 +304,35 @@ void AChess_HumanPlayer::OnClick()
 					}
 				}				
 
-				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("clicked piece"));
 				SelectedTile = CurrPiece->ChessBoard->TileMap[CurrPiece->PlaceAt];
 				TArray<ATile*> candidateMoves = CurrPiece->validMoves();
+				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("VALIDMOVES"));
+				APawnPiece* CurrPawn = Cast<APawnPiece>(CurrPiece);
+				if (IsValid(CurrPawn))
+				{
+					if (!GameMode->ChessBoard->MoveStack.IsEmpty())
+					{
+						GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("DETECTENPASANT"));
+						UMove* PreviousMove = GameMode->ChessBoard->MoveStack.Last();
+						TArray<ATile*> CandidateEnPassant = GameMode->DetectEnPassant(CurrPawn, PreviousMove->PieceMoving, PreviousMove->To, PreviousMove->From);
+						for (ATile* Candidate : CandidateEnPassant)
+						{
+							candidateMoves.Add(Candidate);
+						}
+					}
+				}
+
 				SelectedTile->SetTileColor(2);
 				for (ATile* candidateTile : candidateMoves)
 				{
+					GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("CICLO FOR PER MOSSE LEGALI"));
 					if (CurrPiece->IsLegal(candidateTile))
 					{
 						actualMoves.Add(candidateTile);
 						candidateTile->SetTileColor(3);
 					}
 				}
+
 				UMove* HumanMove = NewObject<UMove>();
 				if (HumanMove)
 				{

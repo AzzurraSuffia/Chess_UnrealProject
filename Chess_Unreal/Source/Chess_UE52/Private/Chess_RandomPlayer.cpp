@@ -95,12 +95,25 @@ void AChess_RandomPlayer::OnTurn()
 				{
 					RandPieceIdx = FMath::Rand() % RandomPlayerPiece.Num();
 					candidateMoves = RandomPlayerPiece[RandPieceIdx]->validMoves();
+					APawnPiece* CurrPawn = Cast<APawnPiece>(RandomPlayerPiece[RandPieceIdx]);
+					if (IsValid(CurrPawn))
+					{
+						if (!GameMode->ChessBoard->MoveStack.IsEmpty())
+						{
+							GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("DETECTENPASANT"));
+							UMove* PreviousMove = GameMode->ChessBoard->MoveStack.Last();
+							TArray<ATile*> CandidateEnPassant = GameMode->DetectEnPassant(CurrPawn, PreviousMove->PieceMoving, PreviousMove->To, PreviousMove->From);
+							for (ATile* Candidate : CandidateEnPassant)
+							{
+								candidateMoves.Add(Candidate);
+							}
+						}
+					}
 					for (ATile* candidateTile : candidateMoves)
 					{
 						if (RandomPlayerPiece[RandPieceIdx]->IsLegal(candidateTile))
 						{
 							actualMoves.Add(candidateTile);
-							candidateTile->SetTileColor(3);
 						}
 					}
 

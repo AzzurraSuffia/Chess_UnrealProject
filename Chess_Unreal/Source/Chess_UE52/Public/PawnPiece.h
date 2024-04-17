@@ -22,6 +22,9 @@ public:
 
 	virtual int32 PieceWeight() override;
 
+	virtual AChessPiece* doVirtualMove(AChessPiece* Piece, ATile* from, ATile* to) override;
+	virtual void undoVirtualMove(AChessPiece* Piece, ATile* from, ATile* to, AChessPiece* CapturedPiece) override;
+
 	bool bfirstMove;
 
 protected:

@@ -67,20 +67,12 @@ TArray<ATile*> APawnPiece::validMoves()
 		{
 			validMovesChoices.Add(DiagonalLeftSquare);
 		}
-		else if (GameMode->IsEnPassant(DiagonalLeftSquare, this, OneStep))
-		{ 
-			validMovesChoices.Add(DiagonalLeftSquare);
-		}
 	}
 
 	if (ChessBoard->TileMap.Contains(FVector2D(OneXStep, Yposition + 1)))
 	{
 		ATile* DiagonalRightSquare = ChessBoard->TileMap[FVector2D(OneXStep, Yposition + 1)];
 		if (DiagonalRightSquare->GetTileStatus() == Enemy)
-		{
-			validMovesChoices.Add(DiagonalRightSquare);
-		}
-		else if (GameMode->IsEnPassant(DiagonalRightSquare, this, OneStep))
 		{
 			validMovesChoices.Add(DiagonalRightSquare);
 		}
@@ -109,14 +101,140 @@ TArray<ATile*> APawnPiece::validMoves()
 		}
 	}
 
-	
-
 	return validMovesChoices;
 }
 
 int32 APawnPiece::PieceWeight()
 {
 	return 1;
+}
+
+AChessPiece* APawnPiece::doVirtualMove(AChessPiece* Piece, ATile* from, ATile* to)
+{
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("PAWN DOVIRTUALMOVE"));
+	AChess_GameMode* GameMode = Cast<AChess_GameMode>(GetWorld()->GetAuthGameMode());
+
+	ETileStatus MyType = ETileStatus::EMPTY;
+	ETileStatus OpponentType = ETileStatus::EMPTY;
+	FVector2D MoveCurrPieceTo = to->GetGridPosition();
+	AChessPiece* CapturedPiece = nullptr;
+	TArray<AChessPiece*> OpponentPieceOnBoard = {};
+	int32 OneStep = 0;
+
+	if (Piece->PieceColor == EColor::BLACK)
+	{
+		MyType = ETileStatus::BLACKPIECE; OpponentType = ETileStatus::WHITEPIECE; OpponentPieceOnBoard = GameMode->ChessBoard->WhitePieceOnChessBoard; OneStep = -1;
+	}
+	else if (Piece->PieceColor == EColor::WHITE)
+	{
+		MyType = ETileStatus::WHITEPIECE; OpponentType = ETileStatus::BLACKPIECE; OpponentPieceOnBoard = GameMode->ChessBoard->BlackPieceOnChessBoard; OneStep = 1;
+	}
+
+	/*EN PASSANT*/
+	if (to->GetTileStatus() == ETileStatus::EMPTY && to->GetGridPosition().Y != from->GetGridPosition().Y)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("DOVIRTUALMOVE: EN PASSANT"));
+		FVector2D OpponentPawnPosition = FVector2D(to->GetGridPosition().X - OneStep, to->GetGridPosition().Y);
+		int32 Size = OpponentPieceOnBoard.Num();
+		for (int32 i = 0; i < Size; i++)
+		{
+			if (OpponentPieceOnBoard[i]->PlaceAt == OpponentPawnPosition)
+			{
+				CapturedPiece = OpponentPieceOnBoard[i];
+				break;
+			}
+		}
+
+		GameMode->ChessBoard->TileMap[OpponentPawnPosition]->SetTileStatus(ETileStatus::EMPTY);
+	}
+	/*CATTURA DI UN PEZZO*/
+	else if (to->GetTileStatus() == OpponentType)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("DOVIRTUALMOVE: CATTURA"));
+		int32 Size = OpponentPieceOnBoard.Num();
+		for (int32 i = 0; i < Size; i++)
+		{
+			if (OpponentPieceOnBoard[i]->PlaceAt == MoveCurrPieceTo)
+			{
+				CapturedPiece = OpponentPieceOnBoard[i];
+				break;
+			}
+		}
+	}
+
+	if (CapturedPiece != nullptr)
+	{
+		if (Piece->PieceColor == EColor::BLACK)
+		{
+			GameMode->ChessBoard->WhitePieceOnChessBoard.Remove(CapturedPiece);
+		}
+		else if (Piece->PieceColor == EColor::WHITE)
+		{
+			GameMode->ChessBoard->BlackPieceOnChessBoard.Remove(CapturedPiece);
+		}
+	}
+
+	from->SetTileStatus(ETileStatus::EMPTY);
+	to->SetTileStatus(MyType);
+	Piece->PlaceAt = MoveCurrPieceTo;
+
+	return CapturedPiece;
+}
+
+void APawnPiece::undoVirtualMove(AChessPiece* Piece, ATile* from, ATile* to, AChessPiece* CapturedPiece)
+{
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("PAWN UNDDOVIRTUALMOVE"));
+	AChess_GameMode* GameMode = Cast<AChess_GameMode>(GetWorld()->GetAuthGameMode());
+	
+	ETileStatus MyType = ETileStatus::EMPTY;
+	ETileStatus OpponentType = ETileStatus::EMPTY;
+	int32 OneStep = 0;
+
+	if (Piece->PieceColor == EColor::BLACK)
+	{
+		MyType = ETileStatus::BLACKPIECE; OpponentType = ETileStatus::WHITEPIECE; OneStep = -1;
+	}
+	else if (Piece->PieceColor == EColor::WHITE)
+	{
+		MyType = ETileStatus::WHITEPIECE; OpponentType = ETileStatus::BLACKPIECE; OneStep = 1;
+	}
+
+	if (CapturedPiece != nullptr)
+	{
+		/*EN PASSANT*/
+		if (CapturedPiece->PlaceAt.X != Piece->PlaceAt.X)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("UNDDOVIRTUALMOVE EN PASSANT"));
+			from->SetTileStatus(ETileStatus::EMPTY);
+			FVector2D OpponentPawnPosition = FVector2D(from->GetGridPosition().X - OneStep, from->GetGridPosition().Y);
+			GameMode->ChessBoard->TileMap[OpponentPawnPosition]->SetTileStatus(OpponentType);
+			CapturedPiece->PlaceAt = OpponentPawnPosition;
+		}
+		/*CATTURA STANDARD*/
+		else
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("UNDDOVIRTUALMOVE CATTURA"));
+			from->SetTileStatus(OpponentType);
+			CapturedPiece->PlaceAt = from->GetGridPosition();
+		}
+
+		if (Piece->PieceColor == EColor::BLACK)
+		{
+			GameMode->ChessBoard->WhitePieceOnChessBoard.Add(CapturedPiece);
+		}
+		else if (Piece->PieceColor == EColor::WHITE)
+		{
+			GameMode->ChessBoard->BlackPieceOnChessBoard.Add(CapturedPiece);
+		}
+	}
+	else
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("UNDDOVIRTUALMOVE NORMALE"));
+		from->SetTileStatus(ETileStatus::EMPTY);
+	}	
+
+	to->SetTileStatus(MyType);
+	Piece->PlaceAt = to->GetGridPosition();
 }
 
 // Called when the game starts or when spawned

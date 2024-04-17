@@ -50,11 +50,12 @@ UMove::UMove()
 	PieceCaptured = nullptr;
 	bisPromotion = false;
 	PiecePromoted = nullptr;
+	benPassant = false;
 	bisCheck = false;
 	bisCheckmate = false;
 }
 
-UMove::UMove(int32 Number, ATile* A, ATile* B, AChessPiece* Piece, bool file, bool rank, bool isCapture, AChessPiece* Captured, bool isPromotion, AChessPiece* Promoted, bool Check, bool Checkmate)
+UMove::UMove(int32 Number, ATile* A, ATile* B, AChessPiece* Piece, bool file, bool rank, bool isCapture, AChessPiece* Captured, bool isPromotion, AChessPiece* Promoted, bool IsEnPassant, bool Check, bool Checkmate)
 {
 	MoveNumber = Number;
 	From = A;
@@ -66,6 +67,7 @@ UMove::UMove(int32 Number, ATile* A, ATile* B, AChessPiece* Piece, bool file, bo
 	PieceCaptured = Captured;
 	bisPromotion = isPromotion;
 	PiecePromoted = Promoted; 
+	benPassant = IsEnPassant;
 	bisCheck = Check;
 	bisCheckmate = Checkmate;
 }

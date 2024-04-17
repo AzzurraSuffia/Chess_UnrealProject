@@ -49,41 +49,6 @@ bool AChess_GameMode::IsGameEnded(UMove* Move, AKingPiece* King)
 	}
 }
 
-bool AChess_GameMode::IsEnPassant(ATile* DiagonalSquare, APawnPiece* Pawn, int32 OneStep)
-{
-	
-	//controllo inutile DiagonalSquare->GetTileStatus() == ETileStatus::EMPTY perchè se l'ultima mossa è stataquella di un pedone
-	// che ha mosso due la cella diero di sè è per forza libera. Posso usarlo per uscire prima se non sono in quel caso
-	if (DiagonalSquare->GetTileStatus() == ETileStatus::EMPTY)
-	{
-		if (!ChessBoard->MoveStack.IsEmpty())
-		{
-			UMove* PreviousMove = ChessBoard->MoveStack.Last();
-			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Cella vuota"));
-			//verifico che il pedone e piece moving siano affiancati e piecemoving sia sotto diagonalsquare
-			if ((PreviousMove->To->GetGridPosition().X + OneStep) == DiagonalSquare->GetGridPosition().X && PreviousMove->To->GetGridPosition().Y == DiagonalSquare->GetGridPosition().Y)
-			{
-				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Siamo adiacenti"));
-				//verifico che il pezzo a fianco sia un pedone
-				APawnPiece* OpponentPawn = Cast<APawnPiece>(PreviousMove->PieceMoving);
-				if (IsValid(OpponentPawn))
-				{
-					GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Ho vicino un pedone"));
-					//verifico che nel turno prima abbiamo mosso per la prima volta e di due passi
-					int32 OpponentPawnXStartPosition = PreviousMove->From->GetGridPosition().X;
-					int32 OpponentPawnXEndPosition = PreviousMove->To->GetGridPosition().X;
-					if (FMath::Abs(OpponentPawnXEndPosition - OpponentPawnXStartPosition) == 2)
-					{
-						GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Ha mosso due"));
-						return true;
-					}
-				}
-			}
-		}
-	}
-	return false;
-}
-
 bool AChess_GameMode::IsKingInCheck(int32 Player)
 {
 	AKingPiece* MyKing = nullptr;
@@ -147,6 +112,7 @@ void AChess_GameMode::ManageEndOfGame(int32 Player, EResult GameResult)
 			float Xposition = 0.0f;
 			float Yposition = (NumberOfMoves / 2) * 50.0f + 50.0f;
 			PlayerController->HUDChess->AddTextWidget(WinningString,FVector2D(Xposition, Yposition), FVector2D(200.0f, 50.0f));
+			PlayerController->HUDChess->ResetButtonWidget->SetIsEnabled(true);
 		}
 	}
 	else if (GameResult == EResult::STALEMATE)
@@ -411,4 +377,56 @@ void AChess_GameMode::TurnNextPlayer()
 		MoveCounter += 1;
 	}
 	Players[CurrentPlayer]->OnTurn();
+}
+
+TArray<ATile*> AChess_GameMode::DetectEnPassant(APawnPiece* Pawn, AChessPiece* PreviousPieceMoving, ATile* PreviousTo, ATile* PreviousFrom)
+{
+	int32 OneStep = 0;
+	int32 OneXStep = 0;
+	int32 Yposition = Pawn->PlaceAt.Y;
+	TArray<ATile*> EnPassantSquare = {};
+
+	if (Pawn->PieceColor == EColor::WHITE)
+	{
+		OneStep = 1;
+		OneXStep = Pawn->PlaceAt.X + 1;
+	}
+	else
+	{
+		OneStep = -1;
+		OneXStep = Pawn->PlaceAt.X - 1;
+	}
+
+	TArray<FVector2D> DiagonalSquareLocations = { FVector2D(OneXStep, Yposition - 1), FVector2D(OneXStep, Yposition + 1) };
+
+	for (FVector2D DiagonalSquareLocation : DiagonalSquareLocations)
+	{
+		if (ChessBoard->TileMap.Contains(DiagonalSquareLocation))
+		{
+			//controllo inutile DiagonalSquare->GetTileStatus() == ETileStatus::EMPTY perchè se l'ultima mossa è stataquella di un pedone
+			// che ha mosso due la cella diero di sè è per forza libera. Posso usarlo per uscire prima se non sono in quel caso
+			ATile* DiagonalSquare = ChessBoard->TileMap[DiagonalSquareLocation];
+			if (DiagonalSquare->GetTileStatus() == ETileStatus::EMPTY)
+			{
+					//verifico che il pedone e piece moving siano affiancati e piecemoving sia sotto diagonalsquare
+					if ((PreviousTo->GetGridPosition().X + OneStep) == DiagonalSquare->GetGridPosition().X && PreviousTo->GetGridPosition().Y == DiagonalSquare->GetGridPosition().Y)
+					{
+						//verifico che il pezzo a fianco sia un pedone
+						APawnPiece* OpponentPawn = Cast<APawnPiece>(PreviousPieceMoving);
+						if (IsValid(OpponentPawn))
+						{
+							//verifico che nel turno prima abbiamo mosso per la prima volta e di due passi
+							int32 OpponentPawnXStartPosition = PreviousFrom->GetGridPosition().X;
+							int32 OpponentPawnXEndPosition = PreviousTo->GetGridPosition().X;
+							if (FMath::Abs(OpponentPawnXEndPosition - OpponentPawnXStartPosition) == 2)
+							{
+								GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("EN PASSANT"));
+								EnPassantSquare.Add(DiagonalSquare);
+							}
+						}
+					}
+			}
+		}
+	}
+	return EnPassantSquare;
 }

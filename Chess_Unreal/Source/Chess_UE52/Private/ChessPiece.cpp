@@ -160,6 +160,7 @@ void AChessPiece::undoVirtualMove(AChessPiece* Piece, ATile* from, ATile* to, AC
 
 bool AChessPiece::IsLegal(ATile* to)
 {
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("IS LEGAL"));
 	ATile* from = this->ChessBoard->TileMap[this->PlaceAt];
 	AChess_GameMode* GameMode = Cast<AChess_GameMode>(GetWorld()->GetAuthGameMode());
 	bool bdoesMyMoveGenerateCheck = false;
