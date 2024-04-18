@@ -311,7 +311,7 @@ void AChess_HumanPlayer::OnClick()
 				{
 					if (!GameMode->ChessBoard->MoveStack.IsEmpty())
 					{
-						UMove* PreviousMove = GameMode->ChessBoard->MoveStack.Last();
+						UMove* PreviousMove = GameMode->ChessBoard->CurrentChessboardState;
 						TArray<ATile*> CandidateEnPassant = GameMode->DetectEnPassant(CurrPawn, PreviousMove->PieceMoving, PreviousMove->To, PreviousMove->From);
 						for (ATile* Candidate : CandidateEnPassant)
 						{

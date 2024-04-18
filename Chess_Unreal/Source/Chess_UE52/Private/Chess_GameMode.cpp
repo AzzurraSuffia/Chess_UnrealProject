@@ -146,7 +146,6 @@ void AChess_GameMode::ManageEndOfGame(int32 Player, EResult GameResult)
 
 bool AChess_GameMode::PlayerCanMove(int32 Player)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("PlayerCanMove"));
 	TArray<AChessPiece*> PiecesOnChessBoard = {};
 	if (Player == 0)
 	{

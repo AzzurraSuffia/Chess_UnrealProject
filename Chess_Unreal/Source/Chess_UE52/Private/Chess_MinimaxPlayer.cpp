@@ -72,6 +72,7 @@ void AChess_MinimaxPlayer::OnTurn()
 			}
 			else
 			{
+				/*da portare a false bfirstmove se ho mosso un pedone*/
 				BestMove->doMove(GameMode);
 				GameMode->ChessBoard->MoveStack.Add(BestMove);
 
@@ -240,6 +241,11 @@ int32 AChess_MinimaxPlayer::AlphaBetaMiniMax(int32 Depth, bool bisMax, int32 alp
 				for (ATile* Candidate : CandidateEnPassant)
 				{
 					MaxCandidateMoves.Add(Candidate);
+					GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("TILE TROVATE PER EN PASSANT"));
+				}
+				if (GameMode->ChessBoard->TileMap[CurrPawn->PlaceAt]->GetGridPosition().X == GameMode->ChessBoard->Size - 2)
+				{
+					CurrPawn->bfirstMove = true;
 				}
 			}
 			for (ATile* MaxCandidateTile : MaxCandidateMoves)
@@ -261,7 +267,7 @@ int32 AChess_MinimaxPlayer::AlphaBetaMiniMax(int32 Depth, bool bisMax, int32 alp
 						ATile* from = GameMode->ChessBoard->TileMap[MaxPiece->PlaceAt];
 						ATile* to = MaxCandidateTile;
 
-						if (to->GetTileStatus() == ETileStatus::WHITEPIECE)
+						if (to->GetTileStatus() == OpponentType)
 						{
 							/*CATTURA DI UN PEZZO*/
 							int32 Size = OpponentPieceOnBoard.Num();
@@ -277,13 +283,9 @@ int32 AChess_MinimaxPlayer::AlphaBetaMiniMax(int32 Depth, bool bisMax, int32 alp
 							if (CapturedPiece != nullptr)
 							{
 								GameMode->ChessBoard->WhitePieceOnChessBoard.Remove(CapturedPiece);
-								CapturedPiece->PlaceAt = FVector2D(-1, -1);
+								//CapturedPiece->PlaceAt = FVector2D(-1, -1);
 							}
 						}
-
-						from->SetTileStatus(ETileStatus::EMPTY);
-						to->SetTileStatus(MyType);
-						MaxPiece->PlaceAt = MoveCurrPieceTo;
 
 						APawnPiece* Pawn = Cast<APawnPiece>(MaxPiece);
 						if (IsValid(Pawn))
@@ -309,10 +311,16 @@ int32 AChess_MinimaxPlayer::AlphaBetaMiniMax(int32 Depth, bool bisMax, int32 alp
 									GameMode->ChessBoard->TileMap[OpponentPawnPosition]->SetTileStatus(ETileStatus::EMPTY);
 								}
 							}
-						
+						}
 
+						from->SetTileStatus(ETileStatus::EMPTY);
+						to->SetTileStatus(MyType);
+						MaxPiece->PlaceAt = MoveCurrPieceTo;
+
+						if(IsValid(Pawn))
+						{
 							/*PROMOZIONE*/
-							if (MaxPiece->PlaceAt.X == 0)
+							if (Pawn->PlaceAt.X == 0)
 							{
 								int32 InX = 9;
 								int32 InY = -1;
@@ -339,16 +347,10 @@ int32 AChess_MinimaxPlayer::AlphaBetaMiniMax(int32 Depth, bool bisMax, int32 alp
 
 						/*CODICE QUI DELL'UNDO DELLA MOSSA*/
 						// ------------------------------------------------------------
-
+						
 						//APawnPiece* Pawn = Cast<APawnPiece>(MaxPiece);
 						if (IsValid(Pawn))
 						{
-							int32 PawnStartPosition = (GameMode->ChessBoard->Size - 2);
-							if (from->GetGridPosition().X == PawnStartPosition)
-							{
-								Pawn->bfirstMove = true;
-							}
-
 							if (CapturedPiece != nullptr)
 							{
 								/*EN PASSANT*/
@@ -387,6 +389,7 @@ int32 AChess_MinimaxPlayer::AlphaBetaMiniMax(int32 Depth, bool bisMax, int32 alp
 							{
 								to->SetTileStatus(ETileStatus::EMPTY);
 							}
+
 						}
 
 						from->SetTileStatus(MyType);
@@ -430,6 +433,10 @@ int32 AChess_MinimaxPlayer::AlphaBetaMiniMax(int32 Depth, bool bisMax, int32 alp
 				{
 					MinCandidateMoves.Add(Candidate);
 				}
+				if (GameMode->ChessBoard->TileMap[CurrPawn->PlaceAt]->GetGridPosition().X == 1)
+				{
+					CurrPawn->bfirstMove = true;
+				}
 			}
 			for (ATile* MinCandidateTile : MinCandidateMoves)
 			{
@@ -465,13 +472,9 @@ int32 AChess_MinimaxPlayer::AlphaBetaMiniMax(int32 Depth, bool bisMax, int32 alp
 							if (CapturedPiece != nullptr)
 							{
 								GameMode->ChessBoard->BlackPieceOnChessBoard.Remove(CapturedPiece);
-								CapturedPiece->PlaceAt = FVector2D(9, 9);
+								//CapturedPiece->PlaceAt = FVector2D(9, 9);
 							}
 						}
-
-						from->SetTileStatus(ETileStatus::EMPTY);
-						to->SetTileStatus(MyType);
-						MinPiece->PlaceAt = MoveCurrPieceTo;
 
 						APawnPiece* Pawn = Cast<APawnPiece>(MinPiece);
 						if (IsValid(Pawn))
@@ -497,7 +500,14 @@ int32 AChess_MinimaxPlayer::AlphaBetaMiniMax(int32 Depth, bool bisMax, int32 alp
 									GameMode->ChessBoard->TileMap[OpponentPawnPosition]->SetTileStatus(ETileStatus::EMPTY);
 								}
 							}
+						}
 
+						from->SetTileStatus(ETileStatus::EMPTY);
+						to->SetTileStatus(MyType);
+						MinPiece->PlaceAt = MoveCurrPieceTo;
+
+						if(IsValid(Pawn))
+						{
 							/*PROMOZIONE*/
 							if (MinPiece->PlaceAt.X == (GameMode->ChessBoard->Size - 1))
 							{
@@ -525,8 +535,6 @@ int32 AChess_MinimaxPlayer::AlphaBetaMiniMax(int32 Depth, bool bisMax, int32 alp
 
 						/*CODICE QUI DELL'UNDO DELLA MOSSA*/
 						// ------------------------------------------------------------
-						from->SetTileStatus(MyType);
-						MinPiece->PlaceAt = from->GetGridPosition();
 
 						//APawnPiece* Pawn = Cast<APawnPiece>(MinPiece);
 						if (IsValid(Pawn))
@@ -629,6 +637,10 @@ UMove* AChess_MinimaxPlayer::FindBestMove(AGameField* ChessBoard, int32 Depth)
 				{
 					MaxCandidateMoves.Add(Candidate);
 				}
+				if (GameMode->ChessBoard->TileMap[CurrPawn->PlaceAt]->GetGridPosition().X == GameMode->ChessBoard->Size - 2)
+				{
+					CurrPawn->bfirstMove = true;
+				}
 			}
 			for (ATile* MaxCandidateTile : MaxCandidateMoves)
 			{
@@ -670,14 +682,10 @@ UMove* AChess_MinimaxPlayer::FindBestMove(AGameField* ChessBoard, int32 Depth)
 						if (CapturedPiece != nullptr)
 						{
 							GameMode->ChessBoard->WhitePieceOnChessBoard.Remove(CapturedPiece);
-							CapturedPiece->PlaceAt = FVector2D(-1, -1);
+							//CapturedPiece->PlaceAt = FVector2D(-1, -1);
 							Move->PieceCaptured = CapturedPiece;
 						}
 					}
-					
-					from->SetTileStatus(ETileStatus::EMPTY);
-					to->SetTileStatus(MyType);
-					MaxPiece->PlaceAt = MoveCurrPieceTo;
 
 					APawnPiece* Pawn = Cast<APawnPiece>(MaxPiece);
 					if (IsValid(Pawn))
@@ -705,7 +713,14 @@ UMove* AChess_MinimaxPlayer::FindBestMove(AGameField* ChessBoard, int32 Depth)
 								Move->benPassant = true;
 							}
 						}
+					}
 
+					from->SetTileStatus(ETileStatus::EMPTY);
+					to->SetTileStatus(MyType);
+					MaxPiece->PlaceAt = MoveCurrPieceTo;
+
+					if(IsValid(Pawn))
+					{
 						/*PROMOZIONE*/
 						if (MaxPiece->PlaceAt.X == 0)
 						{

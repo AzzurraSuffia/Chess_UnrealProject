@@ -111,7 +111,6 @@ int32 APawnPiece::PieceWeight()
 
 AChessPiece* APawnPiece::doVirtualMove(AChessPiece* Piece, ATile* from, ATile* to)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("PAWN DOVIRTUALMOVE"));
 	AChess_GameMode* GameMode = Cast<AChess_GameMode>(GetWorld()->GetAuthGameMode());
 
 	ETileStatus MyType = ETileStatus::EMPTY;
@@ -133,7 +132,6 @@ AChessPiece* APawnPiece::doVirtualMove(AChessPiece* Piece, ATile* from, ATile* t
 	/*EN PASSANT*/
 	if (to->GetTileStatus() == ETileStatus::EMPTY && to->GetGridPosition().Y != from->GetGridPosition().Y)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("DOVIRTUALMOVE: EN PASSANT"));
 		FVector2D OpponentPawnPosition = FVector2D(to->GetGridPosition().X - OneStep, to->GetGridPosition().Y);
 		int32 Size = OpponentPieceOnBoard.Num();
 		for (int32 i = 0; i < Size; i++)
@@ -150,7 +148,6 @@ AChessPiece* APawnPiece::doVirtualMove(AChessPiece* Piece, ATile* from, ATile* t
 	/*CATTURA DI UN PEZZO*/
 	else if (to->GetTileStatus() == OpponentType)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("DOVIRTUALMOVE: CATTURA"));
 		int32 Size = OpponentPieceOnBoard.Num();
 		for (int32 i = 0; i < Size; i++)
 		{
@@ -183,7 +180,6 @@ AChessPiece* APawnPiece::doVirtualMove(AChessPiece* Piece, ATile* from, ATile* t
 
 void APawnPiece::undoVirtualMove(AChessPiece* Piece, ATile* from, ATile* to, AChessPiece* CapturedPiece)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("PAWN UNDDOVIRTUALMOVE"));
 	AChess_GameMode* GameMode = Cast<AChess_GameMode>(GetWorld()->GetAuthGameMode());
 	
 	ETileStatus MyType = ETileStatus::EMPTY;
@@ -204,7 +200,6 @@ void APawnPiece::undoVirtualMove(AChessPiece* Piece, ATile* from, ATile* to, ACh
 		/*EN PASSANT*/
 		if (CapturedPiece->PlaceAt.X != Piece->PlaceAt.X)
 		{
-			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("UNDDOVIRTUALMOVE EN PASSANT"));
 			from->SetTileStatus(ETileStatus::EMPTY);
 			FVector2D OpponentPawnPosition = FVector2D(from->GetGridPosition().X - OneStep, from->GetGridPosition().Y);
 			GameMode->ChessBoard->TileMap[OpponentPawnPosition]->SetTileStatus(OpponentType);
@@ -213,7 +208,6 @@ void APawnPiece::undoVirtualMove(AChessPiece* Piece, ATile* from, ATile* to, ACh
 		/*CATTURA STANDARD*/
 		else
 		{
-			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("UNDDOVIRTUALMOVE CATTURA"));
 			from->SetTileStatus(OpponentType);
 			CapturedPiece->PlaceAt = from->GetGridPosition();
 		}
@@ -229,7 +223,6 @@ void APawnPiece::undoVirtualMove(AChessPiece* Piece, ATile* from, ATile* to, ACh
 	}
 	else
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("UNDDOVIRTUALMOVE NORMALE"));
 		from->SetTileStatus(ETileStatus::EMPTY);
 	}	
 
