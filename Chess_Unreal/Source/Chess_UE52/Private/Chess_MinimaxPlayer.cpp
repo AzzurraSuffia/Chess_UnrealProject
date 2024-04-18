@@ -211,7 +211,7 @@ int32 AChess_MinimaxPlayer::Utility(int32 Player)
 }
 
 //posso generalizzare eliminando gli elementi specifici??
-int32 AChess_MinimaxPlayer::AlphaBetaMiniMax(int32 Depth, bool bisMax, int32 alpha, int32 beta)
+int32 AChess_MinimaxPlayer::AlphaBetaMiniMax(int32 Depth, bool bisMax, int32 alpha, int32 beta, AChessPiece* PreviousPiece, ATile* PreviousTo, ATile* PreviousFrom)
 {
 	AChess_GameMode* GameMode = (AChess_GameMode*)(GetWorld()->GetAuthGameMode());
 	int32 CurrentPlayer = (bisMax) ? 1 : 0;
@@ -233,6 +233,15 @@ int32 AChess_MinimaxPlayer::AlphaBetaMiniMax(int32 Depth, bool bisMax, int32 alp
 		{
 			AChessPiece* MaxPiece = GameMode->ChessBoard->BlackPieceOnChessBoard[i];
 			TArray<ATile*> MaxCandidateMoves = MaxPiece->validMoves();
+			APawnPiece* CurrPawn = Cast<APawnPiece>(MaxPiece);
+			if (IsValid(CurrPawn))
+			{
+				TArray<ATile*> CandidateEnPassant = GameMode->DetectEnPassant(CurrPawn, PreviousPiece, PreviousTo, PreviousFrom);
+				for (ATile* Candidate : CandidateEnPassant)
+				{
+					MaxCandidateMoves.Add(Candidate);
+				}
+			}
 			for (ATile* MaxCandidateTile : MaxCandidateMoves)
 			{
 				if (MaxPiece->IsLegal(MaxCandidateTile))
@@ -246,6 +255,7 @@ int32 AChess_MinimaxPlayer::AlphaBetaMiniMax(int32 Depth, bool bisMax, int32 alp
 						int32 CapturedPieceIdx = -1;
 						AQueenPiece* Queen = nullptr;
 						bool bPromotion = false;
+						int32 OneStep = -1;
 						TArray<AChessPiece*> OpponentPieceOnBoard = GameMode->ChessBoard->WhitePieceOnChessBoard;
 
 						ATile* from = GameMode->ChessBoard->TileMap[MaxPiece->PlaceAt];
@@ -275,11 +285,34 @@ int32 AChess_MinimaxPlayer::AlphaBetaMiniMax(int32 Depth, bool bisMax, int32 alp
 						to->SetTileStatus(MyType);
 						MaxPiece->PlaceAt = MoveCurrPieceTo;
 
-						/*PROMOZIONE*/
-						if (MaxPiece->PlaceAt.X == 0)
+						APawnPiece* Pawn = Cast<APawnPiece>(MaxPiece);
+						if (IsValid(Pawn))
 						{
-							APawnPiece* Pawn = Cast<APawnPiece>(MaxPiece);
-							if (IsValid(Pawn))
+							/*EN PASSANT*/
+							if (to->GetTileStatus() == ETileStatus::EMPTY && to->GetGridPosition().Y != from->GetGridPosition().Y)
+							{
+								FVector2D OpponentPawnPosition = FVector2D(to->GetGridPosition().X - OneStep, to->GetGridPosition().Y);
+								int32 Size = OpponentPieceOnBoard.Num();
+								for (int32 j = 0; j < Size; j++)
+								{
+									if (OpponentPieceOnBoard[j]->PlaceAt == OpponentPawnPosition)
+									{
+										CapturedPiece = OpponentPieceOnBoard[j];
+										CapturedPieceIdx = j;
+										break;
+									}
+								}
+								if (CapturedPiece != nullptr)
+								{
+									GameMode->ChessBoard->WhitePieceOnChessBoard.Remove(CapturedPiece);
+									//CapturedPiece->PlaceAt = FVector2D(-1, -1);
+									GameMode->ChessBoard->TileMap[OpponentPawnPosition]->SetTileStatus(ETileStatus::EMPTY);
+								}
+							}
+						
+
+							/*PROMOZIONE*/
+							if (MaxPiece->PlaceAt.X == 0)
 							{
 								int32 InX = 9;
 								int32 InY = -1;
@@ -302,26 +335,12 @@ int32 AChess_MinimaxPlayer::AlphaBetaMiniMax(int32 Depth, bool bisMax, int32 alp
 
 						//se il gioco è finito non chiamo ricorsivamente il minimax??
 						//-------------------------------------------------------------
-						best = FMath::Max(best, AlphaBetaMiniMax(Depth - 1, !bisMax, alpha, beta));
+						best = FMath::Max(best, AlphaBetaMiniMax(Depth - 1, !bisMax, alpha, beta, MaxPiece, to, from));
 
 						/*CODICE QUI DELL'UNDO DELLA MOSSA*/
 						// ------------------------------------------------------------
-						from->SetTileStatus(MyType);
-						MaxPiece->PlaceAt = from->GetGridPosition();
 
-						if (CapturedPiece != nullptr)
-						{
-							/*DEVO RIPRISTINARE IL PEZZO CATTURATO*/
-							to->SetTileStatus(OpponentType);
-							GameMode->ChessBoard->WhitePieceOnChessBoard.Insert(CapturedPiece, CapturedPieceIdx);
-							CapturedPiece->PlaceAt = to->GetGridPosition();
-						}
-						else
-						{
-							to->SetTileStatus(ETileStatus::EMPTY);
-						}
-
-						APawnPiece* Pawn = Cast<APawnPiece>(MaxPiece);
+						//APawnPiece* Pawn = Cast<APawnPiece>(MaxPiece);
 						if (IsValid(Pawn))
 						{
 							int32 PawnStartPosition = (GameMode->ChessBoard->Size - 2);
@@ -329,7 +348,49 @@ int32 AChess_MinimaxPlayer::AlphaBetaMiniMax(int32 Depth, bool bisMax, int32 alp
 							{
 								Pawn->bfirstMove = true;
 							}
+
+							if (CapturedPiece != nullptr)
+							{
+								/*EN PASSANT*/
+								if (CapturedPiece->PlaceAt.X != MaxPiece->PlaceAt.X)
+								{
+									to->SetTileStatus(ETileStatus::EMPTY);
+									FVector2D OpponentPawnPosition = FVector2D(to->GetGridPosition().X - OneStep, to->GetGridPosition().Y);
+									GameMode->ChessBoard->TileMap[OpponentPawnPosition]->SetTileStatus(OpponentType);
+									CapturedPiece->PlaceAt = OpponentPawnPosition;
+								}
+								/*CATTURA STANDARD*/
+								else
+								{
+									to->SetTileStatus(OpponentType);
+									CapturedPiece->PlaceAt = to->GetGridPosition();
+								}
+
+								GameMode->ChessBoard->WhitePieceOnChessBoard.Insert(CapturedPiece, CapturedPieceIdx);
+								
+							}
+							else
+							{
+								to->SetTileStatus(ETileStatus::EMPTY);
+							}
 						}
+						else
+						{
+							if (CapturedPiece != nullptr)
+							{
+								/*DEVO RIPRISTINARE IL PEZZO CATTURATO*/
+								to->SetTileStatus(OpponentType);
+								GameMode->ChessBoard->WhitePieceOnChessBoard.Insert(CapturedPiece, CapturedPieceIdx);
+								CapturedPiece->PlaceAt = to->GetGridPosition();
+							}
+							else
+							{
+								to->SetTileStatus(ETileStatus::EMPTY);
+							}
+						}
+
+						from->SetTileStatus(MyType);
+						MaxPiece->PlaceAt = from->GetGridPosition();
 
 						if (bPromotion && Queen != nullptr)
 						{
@@ -361,6 +422,15 @@ int32 AChess_MinimaxPlayer::AlphaBetaMiniMax(int32 Depth, bool bisMax, int32 alp
 		{
 			AChessPiece* MinPiece = GameMode->ChessBoard->WhitePieceOnChessBoard[i];
 			TArray<ATile*> MinCandidateMoves = MinPiece->validMoves();
+			APawnPiece* CurrPawn = Cast<APawnPiece>(MinPiece);
+			if (IsValid(CurrPawn))
+			{
+				TArray<ATile*> CandidateEnPassant = GameMode->DetectEnPassant(CurrPawn, PreviousPiece, PreviousTo, PreviousFrom);
+				for (ATile* Candidate : CandidateEnPassant)
+				{
+					MinCandidateMoves.Add(Candidate);
+				}
+			}
 			for (ATile* MinCandidateTile : MinCandidateMoves)
 			{
 				if (MinPiece->IsLegal(MinCandidateTile))
@@ -375,6 +445,7 @@ int32 AChess_MinimaxPlayer::AlphaBetaMiniMax(int32 Depth, bool bisMax, int32 alp
 						AQueenPiece* Queen = nullptr;
 						ATile* to = MinCandidateTile;
 						bool bPromotion = false;
+						int32 OneStep = 1;
 						ATile* from = GameMode->ChessBoard->TileMap[MinPiece->PlaceAt];
 						TArray<AChessPiece*> OpponentPieceOnBoard = GameMode->ChessBoard->BlackPieceOnChessBoard;
 
@@ -402,11 +473,33 @@ int32 AChess_MinimaxPlayer::AlphaBetaMiniMax(int32 Depth, bool bisMax, int32 alp
 						to->SetTileStatus(MyType);
 						MinPiece->PlaceAt = MoveCurrPieceTo;
 
-						/*PROMOZIONE*/
-						if (MinPiece->PlaceAt.X == (GameMode->ChessBoard->Size - 1))
+						APawnPiece* Pawn = Cast<APawnPiece>(MinPiece);
+						if (IsValid(Pawn))
 						{
-							APawnPiece* Pawn = Cast<APawnPiece>(MinPiece);
-							if (IsValid(Pawn))
+							/*EN PASSANT*/
+							if (to->GetTileStatus() == ETileStatus::EMPTY && to->GetGridPosition().Y != from->GetGridPosition().Y)
+							{
+								FVector2D OpponentPawnPosition = FVector2D(to->GetGridPosition().X - OneStep, to->GetGridPosition().Y);
+								int32 Size = OpponentPieceOnBoard.Num();
+								for (int32 j = 0; j < Size; j++)
+								{
+									if (OpponentPieceOnBoard[j]->PlaceAt == OpponentPawnPosition)
+									{
+										CapturedPiece = OpponentPieceOnBoard[j];
+										CapturedPieceIdx = j;
+										break;
+									}
+								}
+								if (CapturedPiece != nullptr)
+								{
+									GameMode->ChessBoard->BlackPieceOnChessBoard.Remove(CapturedPiece);
+									//CapturedPiece->PlaceAt = FVector2D(9, 9);
+									GameMode->ChessBoard->TileMap[OpponentPawnPosition]->SetTileStatus(ETileStatus::EMPTY);
+								}
+							}
+
+							/*PROMOZIONE*/
+							if (MinPiece->PlaceAt.X == (GameMode->ChessBoard->Size - 1))
 							{
 								int32 InX = 9;
 								int32 InY = -1;
@@ -426,30 +519,16 @@ int32 AChess_MinimaxPlayer::AlphaBetaMiniMax(int32 Depth, bool bisMax, int32 alp
 								}
 							}
 						}
-
 						//se il gioco è finito non chiamo ricorsivamente il minimax??
 						//-------------------------------------------------------------
-						best = FMath::Min(best, AlphaBetaMiniMax(Depth - 1, !bisMax, alpha, beta));
+						best = FMath::Min(best, AlphaBetaMiniMax(Depth - 1, !bisMax, alpha, beta, MinPiece, to, from));
 
 						/*CODICE QUI DELL'UNDO DELLA MOSSA*/
 						// ------------------------------------------------------------
 						from->SetTileStatus(MyType);
 						MinPiece->PlaceAt = from->GetGridPosition();
-						CapturedPiece = CapturedPiece;
 
-						if (CapturedPiece != nullptr)
-						{
-							/*DEVO RIPRISTINARE IL PEZZO CATTURATO*/
-							to->SetTileStatus(OpponentType);
-							GameMode->ChessBoard->BlackPieceOnChessBoard.Insert(CapturedPiece, CapturedPieceIdx);
-							CapturedPiece->PlaceAt = to->GetGridPosition();
-						}
-						else
-						{
-							to->SetTileStatus(ETileStatus::EMPTY);
-						}
-
-						APawnPiece* Pawn = Cast<APawnPiece>(MinPiece);
+						//APawnPiece* Pawn = Cast<APawnPiece>(MinPiece);
 						if (IsValid(Pawn))
 						{
 							int32 PawnStartPosition = 1;
@@ -457,7 +536,48 @@ int32 AChess_MinimaxPlayer::AlphaBetaMiniMax(int32 Depth, bool bisMax, int32 alp
 							{
 								Pawn->bfirstMove = true;
 							}
+
+							if (CapturedPiece != nullptr)
+							{
+								/*EN PASSANT*/
+								if (CapturedPiece->PlaceAt.X != MinPiece->PlaceAt.X)
+								{
+									to->SetTileStatus(ETileStatus::EMPTY);
+									FVector2D OpponentPawnPosition = FVector2D(to->GetGridPosition().X - OneStep, to->GetGridPosition().Y);
+									GameMode->ChessBoard->TileMap[OpponentPawnPosition]->SetTileStatus(OpponentType);
+									CapturedPiece->PlaceAt = OpponentPawnPosition;
+								}
+
+								/*CATTURA STANDARD*/
+								else
+								{
+									to->SetTileStatus(OpponentType);
+									CapturedPiece->PlaceAt = to->GetGridPosition();
+								}
+								GameMode->ChessBoard->BlackPieceOnChessBoard.Insert(CapturedPiece, CapturedPieceIdx);
+							}
+							else
+							{
+								to->SetTileStatus(ETileStatus::EMPTY);
+							}
 						}
+						else
+						{
+							if (CapturedPiece != nullptr)
+							{
+								/*DEVO RIPRISTINARE IL PEZZO CATTURATO*/
+								to->SetTileStatus(OpponentType);
+								GameMode->ChessBoard->BlackPieceOnChessBoard.Insert(CapturedPiece, CapturedPieceIdx);
+								CapturedPiece->PlaceAt = to->GetGridPosition();
+							}
+							else
+							{
+								to->SetTileStatus(ETileStatus::EMPTY);
+							}
+						}
+
+						from->SetTileStatus(MyType);
+						MinPiece->PlaceAt = from->GetGridPosition();
 
 						if (Queen != nullptr && Queen->PlaceAt.X == (GameMode->ChessBoard->Size - 1) && bPromotion)
 						{
@@ -499,6 +619,17 @@ UMove* AChess_MinimaxPlayer::FindBestMove(AGameField* ChessBoard, int32 Depth)
 		{
 			AChessPiece* MaxPiece = ChessBoard->BlackPieceOnChessBoard[i];
 			TArray<ATile*> MaxCandidateMoves = MaxPiece->validMoves();
+			APawnPiece* CurrPawn = Cast<APawnPiece>(MaxPiece);
+			if (IsValid(CurrPawn))
+			{
+				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("DETECTENPASANT"));
+				UMove* PreviousMove = GameMode->ChessBoard->MoveStack.Last();
+				TArray<ATile*> CandidateEnPassant = GameMode->DetectEnPassant(CurrPawn, PreviousMove->PieceMoving, PreviousMove->To, PreviousMove->From);
+				for (ATile* Candidate : CandidateEnPassant)
+				{
+					MaxCandidateMoves.Add(Candidate);
+				}
+			}
 			for (ATile* MaxCandidateTile : MaxCandidateMoves)
 			{
 				if (MaxPiece->IsLegal(MaxCandidateTile))
@@ -512,6 +643,7 @@ UMove* AChess_MinimaxPlayer::FindBestMove(AGameField* ChessBoard, int32 Depth)
 					int32 CapturedPieceIdx = -1;
 					AQueenPiece* Queen = nullptr;
 					ATile* to = MaxCandidateTile;
+					int32 OneStep = -1;
 					ATile* from = ChessBoard->TileMap[MaxPiece->PlaceAt];
 					bool bPromotion = false;
 					TArray<AChessPiece*> OpponentPieceOnBoard = GameMode->ChessBoard->WhitePieceOnChessBoard;
@@ -547,19 +679,43 @@ UMove* AChess_MinimaxPlayer::FindBestMove(AGameField* ChessBoard, int32 Depth)
 					to->SetTileStatus(MyType);
 					MaxPiece->PlaceAt = MoveCurrPieceTo;
 
-					/*PROMOZIONE*/
-					if (MaxPiece->PlaceAt.X == 0)
+					APawnPiece* Pawn = Cast<APawnPiece>(MaxPiece);
+					if (IsValid(Pawn))
 					{
-						APawnPiece* Pawn = Cast<APawnPiece>(MaxPiece);
-						if (IsValid(Pawn))
+						/*EN PASSANT*/
+						if (to->GetTileStatus() == ETileStatus::EMPTY && to->GetGridPosition().Y != from->GetGridPosition().Y)
+						{
+							FVector2D OpponentPawnPosition = FVector2D(to->GetGridPosition().X - OneStep, to->GetGridPosition().Y);
+							int32 Size = OpponentPieceOnBoard.Num();
+							for (int32 j = 0; j < Size; j++)
+							{
+								if (OpponentPieceOnBoard[j]->PlaceAt == OpponentPawnPosition)
+								{
+									CapturedPiece = OpponentPieceOnBoard[j];
+									CapturedPieceIdx = j;
+									break;
+								}
+							}
+							if (CapturedPiece != nullptr)
+							{
+								GameMode->ChessBoard->WhitePieceOnChessBoard.Remove(CapturedPiece);
+								//CapturedPiece->PlaceAt = FVector2D(-1, -1);
+								GameMode->ChessBoard->TileMap[OpponentPawnPosition]->SetTileStatus(ETileStatus::EMPTY);
+								Move->PieceCaptured = CapturedPiece;
+								Move->benPassant = true;
+							}
+						}
+
+						/*PROMOZIONE*/
+						if (MaxPiece->PlaceAt.X == 0)
 						{
 							int32 InX = 9;
 							int32 InY = -1;
 							bPromotion = true;
 							//il controllo TileMap.Contains mi garantisce che ChangeTileStatus non mi restituisca errore
-							Queen = ChessBoard->SpawnPieceQueen(EColor::BLACK, InX, InY, (ChessBoard->TileSize / 100));
+							Queen = GameMode->ChessBoard->SpawnPieceQueen(EColor::BLACK, InX, InY, (GameMode->ChessBoard->TileSize / 100));
 							//Queen->SetActorHiddenInGame(true);
-							
+
 							/*DEVO AGGIORNARE ANCHE QUESTO PERCHE' NELLA CATTURA VIENE CONTROLLATO PER TROVARE I PEZZI*/
 							Queen->PlaceAt = Pawn->PlaceAt;
 							Pawn->PlaceAt = FVector2D(9, -1);
@@ -575,39 +731,76 @@ UMove* AChess_MinimaxPlayer::FindBestMove(AGameField* ChessBoard, int32 Depth)
 						}
 					}
 
-					//se il gioco è finito non chiamo ricorsivamente il minimax??
-
 					//---------------------------------------------------------
 
-					int32 moveVal = AlphaBetaMiniMax(Depth, false, alpha, beta);
+					int32 moveVal = AlphaBetaMiniMax(Depth, false, alpha, beta, MaxPiece, to, from);
 
 					/*QUI CI VA L'UNDO*/
 					//---------------------------------------------------------
-					from->SetTileStatus(MyType);
-					MaxPiece->PlaceAt = from->GetGridPosition();
 
-					if (CapturedPiece != nullptr)
+					//APawnPiece* Pawn = Cast<APawnPiece>(MaxPiece);
+					if (IsValid(Pawn))
 					{
-						/*DEVO RIPRISTINARE IL PEZZO CATTURATO*/
-						to->SetTileStatus(OpponentType);
-						CapturedPiece->PlaceAt = to->GetGridPosition();
-						GameMode->ChessBoard->WhitePieceOnChessBoard.Insert(CapturedPiece, CapturedPieceIdx);
+						int32 PawnStartPosition = (GameMode->ChessBoard->Size - 2);
+						if (from->GetGridPosition().X == PawnStartPosition)
+						{
+							Pawn->bfirstMove = true;
+						}
+
+						if (CapturedPiece != nullptr)
+						{
+							/*EN PASSANT*/
+							if (CapturedPiece->PlaceAt.X != MaxPiece->PlaceAt.X)
+							{
+								to->SetTileStatus(ETileStatus::EMPTY);
+								FVector2D OpponentPawnPosition = FVector2D(to->GetGridPosition().X - OneStep, to->GetGridPosition().Y);
+								GameMode->ChessBoard->TileMap[OpponentPawnPosition]->SetTileStatus(OpponentType);
+								CapturedPiece->PlaceAt = OpponentPawnPosition;
+							}
+							/*CATTURA STANDARD*/
+							else
+							{
+								to->SetTileStatus(OpponentType);
+								CapturedPiece->PlaceAt = to->GetGridPosition();
+							}
+
+							GameMode->ChessBoard->WhitePieceOnChessBoard.Insert(CapturedPiece, CapturedPieceIdx);
+
+						}
+						else
+						{
+							to->SetTileStatus(ETileStatus::EMPTY);
+						}
 					}
 					else
 					{
-						to->SetTileStatus(ETileStatus::EMPTY);
-					}
-
-					if (Queen != nullptr && bPromotion)
-					{
-						Queen->PlaceAt = FVector2D(9, -1);
-						int32 Index = ChessBoard->BlackPieceOnChessBoard.Find(Queen);
-						if (Index != INDEX_NONE)
+						if (CapturedPiece != nullptr)
 						{
-							ChessBoard->BlackPieceOnChessBoard[Index] = MaxPiece;
+							/*DEVO RIPRISTINARE IL PEZZO CATTURATO*/
+							to->SetTileStatus(OpponentType);
+							GameMode->ChessBoard->WhitePieceOnChessBoard.Insert(CapturedPiece, CapturedPieceIdx);
+							CapturedPiece->PlaceAt = to->GetGridPosition();
+						}
+						else
+						{
+							to->SetTileStatus(ETileStatus::EMPTY);
 						}
 					}
 
+					from->SetTileStatus(MyType);
+					MaxPiece->PlaceAt = from->GetGridPosition();
+
+					if (bPromotion && Queen != nullptr)
+					{
+						Queen->PlaceAt = FVector2D(9, -1);
+
+						int32 Index = GameMode->ChessBoard->BlackPieceOnChessBoard.Find(Queen);
+						if (Index != INDEX_NONE)
+						{
+							GameMode->ChessBoard->BlackPieceOnChessBoard[Index] = MaxPiece;
+						}
+						Queen->Destroy();
+					}
 					//---------------------------------------------------------
 					
 					if (moveVal > bestVal)

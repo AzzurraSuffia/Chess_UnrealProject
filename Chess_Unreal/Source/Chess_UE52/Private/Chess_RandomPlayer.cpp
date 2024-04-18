@@ -146,8 +146,34 @@ void AChess_RandomPlayer::OnTurn()
 						}
 					}
 				}
-
+				
 				ATile* From = ChessBoard->TileMap[RandomPlayerPiece[RandPieceIdx]->PlaceAt];
+				ATile* To = actualMoves[RandTileIdx];
+
+				/*EN PASSANT*/
+				APawnPiece* CurrPawn = Cast<APawnPiece>(RandomPlayerPiece[RandPieceIdx]);
+				if (IsValid(CurrPawn))
+				{
+					if (To->GetTileStatus() == ETileStatus::EMPTY && To->GetGridPosition().Y != From->GetGridPosition().Y)
+					{
+						FVector2D OpponentPawnPosition = FVector2D(To->GetGridPosition().X + 1, To->GetGridPosition().Y);
+						for (AChessPiece* whitePiece : ChessBoard->WhitePieceOnChessBoard)
+						{
+							if (whitePiece->PlaceAt == OpponentPawnPosition)
+							{
+								ChessBoard->WhitePieceOnChessBoard.Remove(whitePiece);
+								RandomMove->benPassant = true;
+								RandomMove->PieceCaptured = whitePiece;
+								//whitePiece->SetActorHiddenInGame(true);
+								ChessBoard->MoveOutOfChessBoard(whitePiece);
+								break;
+							}
+						}
+
+						GameMode->ChessBoard->TileMap[OpponentPawnPosition]->SetTileStatus(ETileStatus::EMPTY);
+					}
+				}
+
 				GameMode->MovePiece(RandomPlayerPiece[RandPieceIdx], From, actualMoves[RandTileIdx]);
 
 
@@ -170,8 +196,7 @@ void AChess_RandomPlayer::OnTurn()
 				{
 					GameMode->TurnNextPlayer();
 				}
-				
-				
+
 			}
 			else
 			{

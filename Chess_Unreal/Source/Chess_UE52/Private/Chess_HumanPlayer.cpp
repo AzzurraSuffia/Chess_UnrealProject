@@ -306,13 +306,11 @@ void AChess_HumanPlayer::OnClick()
 
 				SelectedTile = CurrPiece->ChessBoard->TileMap[CurrPiece->PlaceAt];
 				TArray<ATile*> candidateMoves = CurrPiece->validMoves();
-				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("VALIDMOVES"));
 				APawnPiece* CurrPawn = Cast<APawnPiece>(CurrPiece);
 				if (IsValid(CurrPawn))
 				{
 					if (!GameMode->ChessBoard->MoveStack.IsEmpty())
 					{
-						GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("DETECTENPASANT"));
 						UMove* PreviousMove = GameMode->ChessBoard->MoveStack.Last();
 						TArray<ATile*> CandidateEnPassant = GameMode->DetectEnPassant(CurrPawn, PreviousMove->PieceMoving, PreviousMove->To, PreviousMove->From);
 						for (ATile* Candidate : CandidateEnPassant)
@@ -325,7 +323,6 @@ void AChess_HumanPlayer::OnClick()
 				SelectedTile->SetTileColor(2);
 				for (ATile* candidateTile : candidateMoves)
 				{
-					GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("CICLO FOR PER MOSSE LEGALI"));
 					if (CurrPiece->IsLegal(candidateTile))
 					{
 						actualMoves.Add(candidateTile);
@@ -352,6 +349,29 @@ void AChess_HumanPlayer::OnClick()
 				if (CurrTile->GetTileStatus() == ETileStatus::EMPTY && actualMoves.Contains(CurrTile))
 				{
 					//ResolveAmbiguitiNotation!!!!(CurrTile)
+
+					APawnPiece* CurrPawn = Cast<APawnPiece>(CurrPiece);
+					if (IsValid(CurrPawn))
+					{
+						if (CurrTile->GetTileStatus() == ETileStatus::EMPTY && CurrTile->GetGridPosition().Y != SelectedTile->GetGridPosition().Y)
+						{
+							FVector2D OpponentPawnPosition = FVector2D(CurrTile->GetGridPosition().X - 1, CurrTile->GetGridPosition().Y);
+							for (AChessPiece* blackPiece : GameMode->ChessBoard->BlackPieceOnChessBoard)
+							{
+								if (blackPiece->PlaceAt == OpponentPawnPosition)
+								{
+									GameMode->ChessBoard->BlackPieceOnChessBoard.Remove(blackPiece);
+									GameMode->ChessBoard->MoveStack.Last()->benPassant = true;
+									GameMode->ChessBoard->MoveStack.Last()->PieceCaptured = blackPiece;
+									//blackPiece->SetActorHiddenInGame(true);
+									GameMode->ChessBoard->MoveOutOfChessBoard(blackPiece);
+									break;
+								}
+							}
+
+							GameMode->ChessBoard->TileMap[OpponentPawnPosition]->SetTileStatus(ETileStatus::EMPTY);
+						}
+					}
 
 					GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("clicked tile"));
 					GameMode->MovePiece(CurrPiece, SelectedTile, CurrTile);
@@ -399,8 +419,6 @@ void AChess_HumanPlayer::OnClick()
 					{
 						GameMode->ChessBoard->MoveStack.Last()->bisPromotion = true;
 					}
-
-					
 				}
 			}
 			if (AChessPiece* DestinationPiece = Cast<AChessPiece>(Hit.GetActor()))

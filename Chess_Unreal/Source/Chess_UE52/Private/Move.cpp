@@ -103,7 +103,7 @@ FString UMove::AlgebricMoveNotation()
 			MoveNotation.Append(FString::FromInt(Xfrom + 1));
 		}
 
-		if (bisCapture)
+		if (bisCapture || benPassant)
 		{
 			if (Letter == EPieceNotation::P && !bfileAmbiguity)
 			{
@@ -183,6 +183,7 @@ void UMove::UndoMove(AChess_GameMode* GameMode)
 	*/
 
 	/*funzione che aggiorna tutte le strutture dati, devo solo spostare gli attori */
+	/*grazie all'override aggiorna le strutture dati per l'en passant da sè */
 	PieceMoving->undoVirtualMove(PieceMoving, To, From, PieceCaptured);
 
 	APawnPiece* Pawn = Cast<APawnPiece>(PieceMoving);
@@ -209,6 +210,13 @@ void UMove::UndoMove(AChess_GameMode* GameMode)
 	PieceMoving->SetActorLocation(NewLocation);
 
 	if (bisCapture)
+	{
+		Location = GameMode->ChessBoard->GetRelativeLocationByXYPosition(PieceCaptured->PlaceAt.X, PieceCaptured->PlaceAt.Y);
+		NewLocation = Location + FVector(6, 6, 20);
+		PieceCaptured->SetActorLocation(NewLocation);
+		PieceCaptured->SetActorHiddenInGame(false);
+	} 
+	else if (benPassant)
 	{
 		Location = GameMode->ChessBoard->GetRelativeLocationByXYPosition(PieceCaptured->PlaceAt.X, PieceCaptured->PlaceAt.Y);
 		NewLocation = Location + FVector(6, 6, 20);
@@ -290,6 +298,7 @@ void UMove::doMove(AChess_GameMode* GameMode)
 		return CapturedPiece;
 	}
 	*/
+	/*grazie all'override aggiorna le strutture dati per l'en passant da sè */
 	AChessPiece* Captured = PieceMoving->doVirtualMove(PieceMoving, From, To);
 
 	APawnPiece* Pawn = Cast<APawnPiece>(PieceMoving);
@@ -320,9 +329,10 @@ void UMove::doMove(AChess_GameMode* GameMode)
 		GameMode->ChessBoard->MoveOutOfChessBoard(PieceCaptured);
 		//PieceCaptured->SetActorHiddenInGame(true);
 	}
-	else
+	else if (benPassant && Captured == PieceCaptured)
 	{
-		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Sono nell'else"));
+		GameMode->ChessBoard->MoveOutOfChessBoard(PieceCaptured);
+		//PieceCaptured->SetActorHiddenInGame(true);
 	}
 
 	if (bisPromotion)

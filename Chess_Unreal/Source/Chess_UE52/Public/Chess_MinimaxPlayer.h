@@ -41,6 +41,6 @@ public:
 	void DoMinimaxMove(AChessPiece* Piece, ATile* CandidateTile);
 	int32 EvaluateChessboard(TArray<AChessPiece*>& WhitePieces, TArray<AChessPiece*>& BlackPieces);
 	int32 Utility(int32 Player);
-	int32 AlphaBetaMiniMax(int32 Depth, bool bisMax, int32 alpha, int32 beta);
+	int32 AlphaBetaMiniMax(int32 Depth, bool bisMax, int32 alpha, int32 beta, AChessPiece* PreviousPiece, ATile* PreviousTo, ATile* PreviousFrom);
 	UMove* FindBestMove(AGameField* ChessBoard, int32 Depth);
 };

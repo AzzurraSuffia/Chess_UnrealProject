@@ -230,6 +230,10 @@ void AGameField::ResetField()
 			{
 				MoveBox->Move->PieceCaptured->Destroy();
 			}
+			if (MoveBox->Move->benPassant && MoveBox->Move->PieceCaptured != nullptr)
+			{
+				MoveBox->Move->PieceCaptured->Destroy();
+			}
 			if (MoveBox->Move->bisPromotion)
 			{
 				MoveBox->Move->PieceMoving->Destroy();
@@ -424,7 +428,7 @@ void AGameField::MoveOutOfChessBoard(AChessPiece* HiddenPiece)
 	FVector Location = GetRelativeLocationByXYPosition(Xposition, Yposition);
 	FVector NewLocation = Location + FVector(6, 6, 20);
 	HiddenPiece->SetActorLocation(NewLocation);
-	HiddenPiece->PlaceAt = FVector2D(Xposition, Yposition);
+	//HiddenPiece->PlaceAt = FVector2D(Xposition, Yposition);
 }
 
 void AGameField::RestoreSquareColor(TArray<ATile*> Squares)
