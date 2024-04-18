@@ -331,6 +331,7 @@ void UMove::doMove(AChess_GameMode* GameMode)
 	}
 	else if (benPassant && Captured == PieceCaptured)
 	{
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("IN IF DI DO MOVE"));
 		GameMode->ChessBoard->MoveOutOfChessBoard(PieceCaptured);
 		//PieceCaptured->SetActorHiddenInGame(true);
 	}
@@ -371,6 +372,7 @@ void UMove::CopyFrom(const UMove* OtherMove)
 	PieceCaptured = OtherMove->PieceCaptured;
 	bisPromotion = OtherMove->bisPromotion;
 	PiecePromoted = OtherMove->PiecePromoted;
+	benPassant = OtherMove->benPassant;
 	bisCheck = OtherMove->bisCheck;
 	bisCheckmate = OtherMove->bisCheckmate;
 }
@@ -396,6 +398,7 @@ void UMove::ClearMove(UMove* Move)
 	Move->PieceCaptured = nullptr;
 	Move->bisPromotion = false;
 	Move->PiecePromoted = nullptr;
+	Move->benPassant = false;
 	Move->bisCheck = false;
 	Move->bisCheckmate = false;
 }

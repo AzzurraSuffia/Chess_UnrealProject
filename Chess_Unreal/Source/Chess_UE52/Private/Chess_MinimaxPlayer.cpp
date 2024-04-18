@@ -630,12 +630,13 @@ UMove* AChess_MinimaxPlayer::FindBestMove(AGameField* ChessBoard, int32 Depth)
 			APawnPiece* CurrPawn = Cast<APawnPiece>(MaxPiece);
 			if (IsValid(CurrPawn))
 			{
-				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("DETECTENPASANT"));
+				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("DETECTENPASSANT"));
 				UMove* PreviousMove = GameMode->ChessBoard->MoveStack.Last();
 				TArray<ATile*> CandidateEnPassant = GameMode->DetectEnPassant(CurrPawn, PreviousMove->PieceMoving, PreviousMove->To, PreviousMove->From);
 				for (ATile* Candidate : CandidateEnPassant)
 				{
 					MaxCandidateMoves.Add(Candidate);
+					GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Black, TEXT("ENPASSANT MOVE!!"));
 				}
 				if (GameMode->ChessBoard->TileMap[CurrPawn->PlaceAt]->GetGridPosition().X == GameMode->ChessBoard->Size - 2)
 				{
@@ -667,8 +668,6 @@ UMove* AChess_MinimaxPlayer::FindBestMove(AGameField* ChessBoard, int32 Depth)
 					if (to->GetTileStatus() == OpponentType)
 					{
 						/*CATTURA DI UN PEZZO*/
-						Move->bisCapture = true;
-
 						int32 Size = OpponentPieceOnBoard.Num();
 						for (int32 j = 0; j < Size; j++)
 						{
@@ -684,6 +683,7 @@ UMove* AChess_MinimaxPlayer::FindBestMove(AGameField* ChessBoard, int32 Depth)
 							GameMode->ChessBoard->WhitePieceOnChessBoard.Remove(CapturedPiece);
 							//CapturedPiece->PlaceAt = FVector2D(-1, -1);
 							Move->PieceCaptured = CapturedPiece;
+							Move->bisCapture = true;
 						}
 					}
 
@@ -711,6 +711,7 @@ UMove* AChess_MinimaxPlayer::FindBestMove(AGameField* ChessBoard, int32 Depth)
 								GameMode->ChessBoard->TileMap[OpponentPawnPosition]->SetTileStatus(ETileStatus::EMPTY);
 								Move->PieceCaptured = CapturedPiece;
 								Move->benPassant = true;
+								GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("PIECE CAPTURED TROVATO"));
 							}
 						}
 					}
@@ -771,6 +772,7 @@ UMove* AChess_MinimaxPlayer::FindBestMove(AGameField* ChessBoard, int32 Depth)
 								FVector2D OpponentPawnPosition = FVector2D(to->GetGridPosition().X - OneStep, to->GetGridPosition().Y);
 								GameMode->ChessBoard->TileMap[OpponentPawnPosition]->SetTileStatus(OpponentType);
 								CapturedPiece->PlaceAt = OpponentPawnPosition;
+								Move->benPassant = true;
 							}
 							/*CATTURA STANDARD*/
 							else
@@ -814,7 +816,7 @@ UMove* AChess_MinimaxPlayer::FindBestMove(AGameField* ChessBoard, int32 Depth)
 						{
 							GameMode->ChessBoard->BlackPieceOnChessBoard[Index] = MaxPiece;
 						}
-						Queen->Destroy();
+
 					}
 					//---------------------------------------------------------
 					

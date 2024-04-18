@@ -156,23 +156,23 @@ void DisplayPiecesStartConfiguration(AGameField* GField)
 		GField->BlackPieceOnChessBoard.Add(GField->SpawnPiecePawn(EColor::BLACK, GField->Size - 2, y, TileScale));
 	}
 
-	GField->WhitePieceOnChessBoard.Add(GField->SpawnPieceRook(EColor::WHITE, 0, 0, TileScale));
-	GField->WhitePieceOnChessBoard.Add(GField->SpawnPieceRook(EColor::WHITE, 0, GField->Size - 1, TileScale));
-	GField->BlackPieceOnChessBoard.Add(GField->SpawnPieceRook(EColor::BLACK, GField->Size - 1, 0, TileScale));
-	GField->BlackPieceOnChessBoard.Add(GField->SpawnPieceRook(EColor::BLACK, GField->Size - 1, GField->Size - 1, TileScale));
-
-	GField->WhitePieceOnChessBoard.Add(GField->SpawnPieceKnight(EColor::WHITE, 0, 1, TileScale));
-	GField->WhitePieceOnChessBoard.Add(GField->SpawnPieceKnight(EColor::WHITE, 0, GField->Size - 2, TileScale));
-	GField->BlackPieceOnChessBoard.Add(GField->SpawnPieceKnight(EColor::BLACK, GField->Size - 1, 1, TileScale));
-	GField->BlackPieceOnChessBoard.Add(GField->SpawnPieceKnight(EColor::BLACK, GField->Size - 1, GField->Size - 2, TileScale));
-	
-	GField->WhitePieceOnChessBoard.Add(GField->SpawnPieceBishop(EColor::WHITE, 0, 2, TileScale));
-	GField->WhitePieceOnChessBoard.Add(GField->SpawnPieceBishop(EColor::WHITE, 0, GField->Size - 3, TileScale));
-	GField->BlackPieceOnChessBoard.Add(GField->SpawnPieceBishop(EColor::BLACK, GField->Size - 1, 2, TileScale));
-	GField->BlackPieceOnChessBoard.Add(GField->SpawnPieceBishop(EColor::BLACK, GField->Size - 1, GField->Size - 3, TileScale));
-
-	GField->WhitePieceOnChessBoard.Add(GField->SpawnPieceQueen(EColor::WHITE, 0, 3, TileScale));
-	GField->BlackPieceOnChessBoard.Add(GField->SpawnPieceQueen(EColor::BLACK, GField->Size - 1, GField->Size - 5, TileScale));
+	//GField->WhitePieceOnChessBoard.Add(GField->SpawnPieceRook(EColor::WHITE, 0, 0, TileScale));
+	//GField->WhitePieceOnChessBoard.Add(GField->SpawnPieceRook(EColor::WHITE, 0, GField->Size - 1, TileScale));
+	//GField->BlackPieceOnChessBoard.Add(GField->SpawnPieceRook(EColor::BLACK, GField->Size - 1, 0, TileScale));
+	//GField->BlackPieceOnChessBoard.Add(GField->SpawnPieceRook(EColor::BLACK, GField->Size - 1, GField->Size - 1, TileScale));
+	//
+	//GField->WhitePieceOnChessBoard.Add(GField->SpawnPieceKnight(EColor::WHITE, 0, 1, TileScale));
+	//GField->WhitePieceOnChessBoard.Add(GField->SpawnPieceKnight(EColor::WHITE, 0, GField->Size - 2, TileScale));
+	//GField->BlackPieceOnChessBoard.Add(GField->SpawnPieceKnight(EColor::BLACK, GField->Size - 1, 1, TileScale));
+	//GField->BlackPieceOnChessBoard.Add(GField->SpawnPieceKnight(EColor::BLACK, GField->Size - 1, GField->Size - 2, TileScale));
+	//
+	//GField->WhitePieceOnChessBoard.Add(GField->SpawnPieceBishop(EColor::WHITE, 0, 2, TileScale));
+	//GField->WhitePieceOnChessBoard.Add(GField->SpawnPieceBishop(EColor::WHITE, 0, GField->Size - 3, TileScale));
+	//GField->BlackPieceOnChessBoard.Add(GField->SpawnPieceBishop(EColor::BLACK, GField->Size - 1, 2, TileScale));
+	//GField->BlackPieceOnChessBoard.Add(GField->SpawnPieceBishop(EColor::BLACK, GField->Size - 1, GField->Size - 3, TileScale));
+	//
+	//GField->WhitePieceOnChessBoard.Add(GField->SpawnPieceQueen(EColor::WHITE, 0, 3, TileScale));
+	//GField->BlackPieceOnChessBoard.Add(GField->SpawnPieceQueen(EColor::BLACK, GField->Size - 1, GField->Size - 5, TileScale));
 	
 	AKingPiece* WKing = GField->SpawnPieceKing(EColor::WHITE, 0, 4, TileScale);
 	GField->WhitePieceOnChessBoard.Add(WKing);
