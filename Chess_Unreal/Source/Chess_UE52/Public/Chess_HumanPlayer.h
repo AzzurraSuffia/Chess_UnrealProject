@@ -61,5 +61,5 @@ public:
 	UFUNCTION()
 	void OnClick();
 
-	bool TentativodiReplay(UMove* FirstReplayMove);
+	bool ManageReplay(UMove* FirstReplayMove);
 };

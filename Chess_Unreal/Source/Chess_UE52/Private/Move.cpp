@@ -121,6 +121,7 @@ FString UMove::AlgebricMoveNotation()
 
 		if (bisPromotion)
 		{
+			MoveNotation.Append("=");
 			switch (PieceToNotation(PiecePromoted))
 			{
 			case EPieceNotation::R: MoveNotation.Append("R"); break;
@@ -387,7 +388,7 @@ void UMove::CopyMove(UMove* DestinationMove, const UMove* SourceMove)
 
 void UMove::ClearMove(UMove* Move)
 {
-	//clear all the move fields
+	//Clear all the move fields
 	Move->MoveNumber = 0;
 	Move->PieceMoving = nullptr;
 	Move->To = nullptr;

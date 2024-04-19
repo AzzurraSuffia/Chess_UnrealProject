@@ -112,6 +112,10 @@ void AChess_GameMode::ManageEndOfGame(int32 Player, EResult GameResult)
 			float Xposition = 0.0f;
 			float Yposition = (NumberOfMoves / 2) * 50.0f + 50.0f;
 			PlayerController->HUDChess->AddTextWidget(WinningString,FVector2D(Xposition, Yposition), FVector2D(200.0f, 50.0f));
+			for (UUI_MoveBox* MoveBox : PlayerController->HUDChess->AllMoves)
+			{
+				MoveBox->SetIsEnabled(true);
+			}
 			PlayerController->HUDChess->ResetButtonWidget->SetIsEnabled(true);
 		}
 	}
@@ -130,6 +134,10 @@ void AChess_GameMode::ManageEndOfGame(int32 Player, EResult GameResult)
 			float Yposition = (NumberOfMoves / 2) * 50.0f + 50.0f;
 			FString DrawString = FString("1/2-1/2");
 			PlayerController->HUDChess->AddTextWidget(DrawString, FVector2D(Xposition, Yposition), FVector2D(200.0f, 50.0f));
+			for (UUI_MoveBox* MoveBox : PlayerController->HUDChess->AllMoves)
+			{
+				MoveBox->SetIsEnabled(true);
+			}
 		}
 		
 		// add a timer (3 seconds)

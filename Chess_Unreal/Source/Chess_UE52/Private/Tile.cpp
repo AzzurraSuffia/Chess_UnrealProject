@@ -67,6 +67,11 @@ void ATile::SetTileColor(int32 color)
 	{
 		StaticMeshComponent->SetMaterial(0, CheckTile);
 	}
+	else if(color == 5)
+	{
+		StaticMeshComponent->SetMaterial(0, ReplayTile);
+	}
+
 }
 
 // Called when the game starts or when spawned

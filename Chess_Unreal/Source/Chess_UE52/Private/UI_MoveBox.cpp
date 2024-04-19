@@ -42,8 +42,8 @@ void UUI_MoveBox::OnButtonClicked()
     {
         GameMode->ChessBoard->RestoreSquareColor(PreviousColoredTiles);
 
-        Move->To->SetTileColor(3);
-        Move->From->SetTileColor(3);
+        Move->To->SetTileColor(5);
+        Move->From->SetTileColor(5);
 
         if (ClickedMoveIdx < CurrentMoveIdx)
         {

@@ -30,7 +30,7 @@ AChess_HumanPlayer::AChess_HumanPlayer()
 
 }
 
-bool AChess_HumanPlayer::TentativodiReplay(UMove* FirstReplayMove)
+bool AChess_HumanPlayer::ManageReplay(UMove* FirstReplayMove)
 {
 	/*
 	* problema: quando la mossa nuova viene creata deve avere il numero seguente all'ultima mossa cliccata nello storyboard.
@@ -188,7 +188,7 @@ void AChess_HumanPlayer::OnPawnPromotion()
 		GameMode->bpromotionFlag = true;
 		OnPromotionFlagTrue.Broadcast();
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Human Pawn Promotion"));
-		GameInstance->SetTurnMessage(TEXT("Human Pawn Promotion"));
+		//GameInstance->SetTurnMessage(TEXT("Human Pawn Promotion"));
 	}
 	else
 	{
@@ -204,7 +204,7 @@ void AChess_HumanPlayer::OnPawnPromotion()
 			GameMode->ChessBoard->RestoreSquareColor(PreviousColoredTiles);
 			//gestione replay
 			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Black, TEXT("REPLAY"));
-			if (!TentativodiReplay(GameMode->ChessBoard->MoveStack.Last()))
+			if (!ManageReplay(GameMode->ChessBoard->MoveStack.Last()))
 			{
 				bFirstClick = true;
 				bisMyTurn = true;
@@ -393,7 +393,7 @@ void AChess_HumanPlayer::OnClick()
 							GameMode->ChessBoard->RestoreSquareColor(PreviousColoredTiles);
 							//gestione replay
 							GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Black, TEXT("REPLAY"));
-							if (!TentativodiReplay(GameMode->ChessBoard->MoveStack.Last()))
+							if (!ManageReplay(GameMode->ChessBoard->MoveStack.Last()))
 							{
 								bFirstClick = true;
 								bisMyTurn = true;
@@ -476,7 +476,7 @@ void AChess_HumanPlayer::OnClick()
 								GameMode->ChessBoard->RestoreSquareColor(PreviousColoredTiles);
 								//gestione replay
 								GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Black, TEXT("REPLAY"));
-								if (!TentativodiReplay(GameMode->ChessBoard->MoveStack.Last()))
+								if (!ManageReplay(GameMode->ChessBoard->MoveStack.Last()))
 								{
 									bFirstClick = true;
 									bisMyTurn = true;

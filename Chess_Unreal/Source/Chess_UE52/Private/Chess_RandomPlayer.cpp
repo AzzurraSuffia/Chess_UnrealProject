@@ -39,7 +39,8 @@ void AChess_RandomPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInput
 void AChess_RandomPlayer::OnPawnPromotion()
 {
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("AI (Random) Pawn Promotion"));
-	GameInstance->SetTurnMessage(TEXT("AI (Random) Pawn Promotion"));
+	//GameInstance->SetTurnMessage(TEXT("AI (Random) Pawn Promotion"));
+
 	AChess_GameMode* GameMode = (AChess_GameMode*)(GetWorld()->GetAuthGameMode());
 
 	FTimerHandle TimerHandle;
@@ -81,7 +82,6 @@ void AChess_RandomPlayer::OnTurn()
 	GetWorld()->GetTimerManager().SetTimer(TimerHandle, [&]()
 		{
 			AChess_GameMode* GameMode = (AChess_GameMode*)(GetWorld()->GetAuthGameMode());
-			GameMode->ChessBoard->RestoreSquareColor(GameMode->ChessBoard->TileArray);
 			TArray<AChessPiece*> RandomPlayerPiece = GameMode->ChessBoard->BlackPieceOnChessBoard;
 			TArray<ATile*> candidateMoves = {};
 			TArray<ATile*> actualMoves = {};
@@ -100,7 +100,6 @@ void AChess_RandomPlayer::OnTurn()
 					{
 						if (!GameMode->ChessBoard->MoveStack.IsEmpty())
 						{
-							GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("DETECTENPASANT"));
 							UMove* PreviousMove = GameMode->ChessBoard->MoveStack.Last();
 							TArray<ATile*> CandidateEnPassant = GameMode->DetectEnPassant(CurrPawn, PreviousMove->PieceMoving, PreviousMove->To, PreviousMove->From);
 							for (ATile* Candidate : CandidateEnPassant)
