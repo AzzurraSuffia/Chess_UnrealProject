@@ -44,8 +44,8 @@ UMove::UMove()
 	From = nullptr;
 	To = nullptr;
 	PieceMoving = nullptr;
-	bfileAmbiguity = false;
-	brankAmbiguity = false;
+	//bfileAmbiguity = false;
+	//brankAmbiguity = false;
 	bisCapture = false;
 	PieceCaptured = nullptr;
 	bisPromotion = false;
@@ -55,14 +55,14 @@ UMove::UMove()
 	bisCheckmate = false;
 }
 
-UMove::UMove(int32 Number, ATile* A, ATile* B, AChessPiece* Piece, bool file, bool rank, bool isCapture, AChessPiece* Captured, bool isPromotion, AChessPiece* Promoted, bool IsEnPassant, bool Check, bool Checkmate)
+UMove::UMove(int32 Number, ATile* A, ATile* B, AChessPiece* Piece, /*bool file, bool rank,*/ bool isCapture, AChessPiece* Captured, bool isPromotion, AChessPiece* Promoted, bool IsEnPassant, bool Check, bool Checkmate)
 {
 	MoveNumber = Number;
 	From = A;
 	To = B;
 	PieceMoving = Piece;
-	bfileAmbiguity = file;
-	brankAmbiguity = rank;
+	//bfileAmbiguity = file;
+	//brankAmbiguity = rank;
 	bisCapture = isCapture;
 	PieceCaptured = Captured;
 	bisPromotion = isPromotion;
@@ -92,26 +92,30 @@ FString UMove::AlgebricMoveNotation()
 			MoveNotation.Append("");
 		}
 		
-		if (bfileAmbiguity)
-		{
+		//if (bfileAmbiguity)
+		//{
 			int32 Yfrom = From->GetGridPosition().Y;
 			MoveNotation.Append(NumberToLetter[Yfrom]);
-		} 
-		else if (brankAmbiguity)
-		{
-			int32 Xfrom = To->GetGridPosition().X;
+		//} 
+		//else if (brankAmbiguity)
+		//{
+			int32 Xfrom = From->GetGridPosition().X;
 			MoveNotation.Append(FString::FromInt(Xfrom + 1));
-		}
+		//}
 
 		if (bisCapture || benPassant)
 		{
-			if (Letter == EPieceNotation::P && !bfileAmbiguity)
-			{
-				int32 Ypawn = From->GetGridPosition().Y;
-				MoveNotation.Append(NumberToLetter[Ypawn]);
-			}
+			//if (Letter == EPieceNotation::P && !bfileAmbiguity)
+			//{
+			//	int32 Ypawn = From->GetGridPosition().Y;
+			//	MoveNotation.Append(NumberToLetter[Ypawn]);
+			//}
 
 			MoveNotation.Append("x");
+		}
+		else
+		{
+			MoveNotation.Append("-");
 		}
 
 		int32 Xposition = To->GetGridPosition().X; 
@@ -147,42 +151,6 @@ FString UMove::AlgebricMoveNotation()
 
 void UMove::UndoMove(AChess_GameMode* GameMode)
 {
-	/*
-	ETileStatus MyType = ETileStatus::EMPTY;
-	ETileStatus OpponentType = ETileStatus::EMPTY;
-
-	if (PieceMoving->PieceColor == EColor::BLACK)
-	{
-		MyType = ETileStatus::BLACKPIECE; OpponentType = ETileStatus::WHITEPIECE;
-	}
-	else if (PieceMoving->PieceColor == EColor::WHITE)
-	{
-		MyType = ETileStatus::WHITEPIECE; OpponentType = ETileStatus::BLACKPIECE;
-	}
-
-	To->SetTileStatus(MyType);
-	PieceMoving->PlaceAt = To->GetGridPosition();
-
-	if (PieceCaptured != nullptr)
-	{
-		//DEVO RIPRISTINARE IL PEZZO CATTURATO
-		From->SetTileStatus(OpponentType);
-		PieceCaptured->PlaceAt = From->GetGridPosition();
-		if (PieceMoving->PieceColor == EColor::BLACK)
-		{
-			GameMode->ChessBoard->WhitePieceOnChessBoard.Add(PieceCaptured);
-		}
-		else if (PieceMoving->PieceColor == EColor::WHITE)
-		{
-			GameMode->ChessBoard->BlackPieceOnChessBoard.Add(PieceCaptured);
-		}
-	}
-	else
-	{
-		From->SetTileStatus(ETileStatus::EMPTY);
-	}
-	*/
-
 	/*funzione che aggiorna tutte le strutture dati, devo solo spostare gli attori */
 	/*grazie all'override aggiorna le strutture dati per l'en passant da sè */
 	PieceMoving->undoVirtualMove(PieceMoving, To, From, PieceCaptured);
@@ -246,59 +214,6 @@ void UMove::UndoMove(AChess_GameMode* GameMode)
 
 void UMove::doMove(AChess_GameMode* GameMode)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("doMove"));
-	/*
-	AChessPiece* AChessPiece::doVirtualMove(AChessPiece * Piece, ATile * from, ATile * to)
-	{
-		AChess_GameMode* GameMode = Cast<AChess_GameMode>(GetWorld()->GetAuthGameMode());
-
-		ETileStatus MyType = ETileStatus::EMPTY;
-		ETileStatus OpponentType = ETileStatus::EMPTY;
-		FVector2D MoveCurrPieceTo = to->GetGridPosition();
-		AChessPiece* CapturedPiece = nullptr;
-		TArray<AChessPiece*> OpponentPieceOnBoard = {};
-
-		if (Piece->PieceColor == EColor::BLACK)
-		{
-			MyType = ETileStatus::BLACKPIECE; OpponentType = ETileStatus::WHITEPIECE; OpponentPieceOnBoard = GameMode->ChessBoard->WhitePieceOnChessBoard;
-		}
-		else if (Piece->PieceColor == EColor::WHITE)
-		{
-			MyType = ETileStatus::WHITEPIECE; OpponentType = ETileStatus::BLACKPIECE; OpponentPieceOnBoard = GameMode->ChessBoard->BlackPieceOnChessBoard;
-		}
-
-		if (to->GetTileStatus() == OpponentType)
-		{
-			//CATTURA DI UN PEZZO
-			int32 Size = OpponentPieceOnBoard.Num();
-			for (int32 i = 0; i < Size; i++)
-			{
-				if (OpponentPieceOnBoard[i]->PlaceAt == MoveCurrPieceTo)
-				{
-					CapturedPiece = OpponentPieceOnBoard[i];
-					break;
-				}
-			}
-			if (CapturedPiece != nullptr)
-			{
-				if (Piece->PieceColor == EColor::BLACK)
-				{
-					GameMode->ChessBoard->WhitePieceOnChessBoard.Remove(CapturedPiece);
-				}
-				else if (Piece->PieceColor == EColor::WHITE)
-				{
-					GameMode->ChessBoard->BlackPieceOnChessBoard.Remove(CapturedPiece);
-				}
-			}
-		}
-
-		from->SetTileStatus(ETileStatus::EMPTY);
-		to->SetTileStatus(MyType);
-		Piece->PlaceAt = MoveCurrPieceTo;
-
-		return CapturedPiece;
-	}
-	*/
 	/*grazie all'override aggiorna le strutture dati per l'en passant da sè */
 	AChessPiece* Captured = PieceMoving->doVirtualMove(PieceMoving, From, To);
 
@@ -328,13 +243,13 @@ void UMove::doMove(AChess_GameMode* GameMode)
 	if (bisCapture && Captured == PieceCaptured)
 	{
 		GameMode->ChessBoard->MoveOutOfChessBoard(PieceCaptured);
-		//PieceCaptured->SetActorHiddenInGame(true);
+		PieceCaptured->SetActorHiddenInGame(true);
 	}
 	else if (benPassant && Captured == PieceCaptured)
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("IN IF DI DO MOVE"));
 		GameMode->ChessBoard->MoveOutOfChessBoard(PieceCaptured);
-		//PieceCaptured->SetActorHiddenInGame(true);
+		PieceCaptured->SetActorHiddenInGame(true);
 	}
 
 	if (bisPromotion)
@@ -352,7 +267,6 @@ void UMove::doMove(AChess_GameMode* GameMode)
 
 		PiecePromoted->PlaceAt = PieceMoving->PlaceAt;
 		GameMode->ChessBoard->MoveOutOfChessBoard(PieceMoving);
-		//OriginalPawn->SetActorHiddenInGame(true);
 		Location = GameMode->ChessBoard->GetRelativeLocationByXYPosition(PiecePromoted->PlaceAt.X, PiecePromoted->PlaceAt.Y);
 		NewLocation = Location + FVector(6, 6, 20);
 		PiecePromoted->SetActorLocation(NewLocation);
@@ -367,8 +281,8 @@ void UMove::CopyFrom(const UMove* OtherMove)
 	From = OtherMove->From;
 	To = OtherMove->To;
 	PieceMoving = OtherMove->PieceMoving;
-	bfileAmbiguity = OtherMove->bfileAmbiguity;
-	brankAmbiguity = OtherMove->brankAmbiguity;
+	//bfileAmbiguity = OtherMove->bfileAmbiguity;
+	//brankAmbiguity = OtherMove->brankAmbiguity;
 	bisCapture = OtherMove->bisCapture;
 	PieceCaptured = OtherMove->PieceCaptured;
 	bisPromotion = OtherMove->bisPromotion;
@@ -393,8 +307,8 @@ void UMove::ClearMove(UMove* Move)
 	Move->PieceMoving = nullptr;
 	Move->To = nullptr;
 	Move->From = nullptr;
-	Move->bfileAmbiguity = false;
-	Move->brankAmbiguity = false;
+	//Move->bfileAmbiguity = false;
+	//Move->brankAmbiguity = false;
 	Move->bisCapture = false;
 	Move->PieceCaptured = nullptr;
 	Move->bisPromotion = false;

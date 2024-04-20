@@ -327,7 +327,7 @@ int32 AChess_MinimaxPlayer::AlphaBetaMiniMax(int32 Depth, bool bisMax, int32 alp
 								bPromotion = true;
 								//il controllo TileMap.Contains mi garantisce che ChangeTileStatus non mi restituisca errore
 								Queen = GameMode->ChessBoard->SpawnPieceQueen(EColor::BLACK, InX, InY, (GameMode->ChessBoard->TileSize / 100));
-								//Queen->SetActorHiddenInGame(true);
+								Queen->SetActorHiddenInGame(true);
 
 								/*DEVO AGGIORNARE ANCHE QUESTO PERCHE' NELLA CATTURA VIENE CONTROLLATO PER TROVARE I PEZZI*/
 								Queen->PlaceAt = Pawn->PlaceAt;
@@ -730,7 +730,7 @@ UMove* AChess_MinimaxPlayer::FindBestMove(AGameField* ChessBoard, int32 Depth)
 							bPromotion = true;
 							//il controllo TileMap.Contains mi garantisce che ChangeTileStatus non mi restituisca errore
 							Queen = GameMode->ChessBoard->SpawnPieceQueen(EColor::BLACK, InX, InY, (GameMode->ChessBoard->TileSize / 100));
-							//Queen->SetActorHiddenInGame(true);
+							Queen->SetActorHiddenInGame(true);
 
 							/*DEVO AGGIORNARE ANCHE QUESTO PERCHE' NELLA CATTURA VIENE CONTROLLATO PER TROVARE I PEZZI*/
 							Queen->PlaceAt = Pawn->PlaceAt;

@@ -127,8 +127,6 @@ void AChess_RandomPlayer::OnTurn()
 				RandomMove->To = actualMoves[RandTileIdx];
 				RandomMove->PieceMoving = RandomPlayerPiece[RandPieceIdx];
 
-				//ResolveAmbiguitiNotation!!!! (actualMoves[randTileIdx])
-
 				if (actualMoves[RandTileIdx]->GetTileStatus() == ETileStatus::WHITEPIECE)
 				{
 					/*C'E' UNA CATTURA*/
@@ -139,7 +137,7 @@ void AChess_RandomPlayer::OnTurn()
 							ChessBoard->WhitePieceOnChessBoard.Remove(whitePiece);
 							RandomMove->bisCapture = true;
 							RandomMove->PieceCaptured = whitePiece;
-							//whitePiece->SetActorHiddenInGame(true);
+							whitePiece->SetActorHiddenInGame(true);
 							ChessBoard->MoveOutOfChessBoard(whitePiece);
 							break;
 						}
@@ -163,7 +161,7 @@ void AChess_RandomPlayer::OnTurn()
 								ChessBoard->WhitePieceOnChessBoard.Remove(whitePiece);
 								RandomMove->benPassant = true;
 								RandomMove->PieceCaptured = whitePiece;
-								//whitePiece->SetActorHiddenInGame(true);
+								whitePiece->SetActorHiddenInGame(true);
 								ChessBoard->MoveOutOfChessBoard(whitePiece);
 								break;
 							}
@@ -195,15 +193,12 @@ void AChess_RandomPlayer::OnTurn()
 				{
 					GameMode->TurnNextPlayer();
 				}
-
 			}
 			else
 			{
 				// Pointer to the UMove object is not valid
 				UE_LOG(LogTemp, Warning, TEXT("RandomMove or GameMode pointer not valid."));
 			}
-
-		//Il timer è di 1 secondo (aspetta 1 secondo prima di mettere il simbolo)
 		}, 1, false);
 
 }

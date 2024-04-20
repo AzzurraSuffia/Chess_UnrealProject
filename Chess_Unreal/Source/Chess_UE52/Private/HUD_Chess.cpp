@@ -22,7 +22,7 @@ void UHUD_Chess::NativeConstruct()
 			if (IsValid(CanvasSlot))
 			{
 				CanvasSlot->SetPosition(FVector2D(36.0f, 508.0f));
-				CanvasSlot->SetSize(FVector2D(200.0f, 40.0f));
+				CanvasSlot->SetSize(FVector2D(270.0f, 40.0f));
 			}
 		}
 	}
@@ -50,14 +50,28 @@ UUI_MoveBox* UHUD_Chess::AddMoveWidget(UMove* MoveReference)
 				UCanvasPanelSlot* CanvasSlot = Cast<UCanvasPanelSlot>(Canvas->AddChildToCanvas(MoveBox));
 				if (IsValid(CanvasSlot))
 				{
-					float Yposition = (MoveReference->MoveNumber-1) * 50.0f;
-					float Xposition = 50.0f;
-					if (MoveReference->PieceMoving->PieceColor == EColor::BLACK)
+					if (MoveReference->MoveNumber < 100)
 					{
-						Xposition = 225.0f;
+						float Yposition = (MoveReference->MoveNumber - 1) * 50.0f;
+						float Xposition = 50.0f;
+						if (MoveReference->PieceMoving->PieceColor == EColor::BLACK)
+						{
+							Xposition = 280.0f;
+						}
+						CanvasSlot->SetPosition(FVector2D(Xposition, Yposition));
+						CanvasSlot->SetSize(FVector2D(230.0f, 50.0f));
 					}
-					CanvasSlot->SetPosition(FVector2D(Xposition, Yposition));
-					CanvasSlot->SetSize(FVector2D(175.0f, 50.0f));
+					else
+					{
+						float Yposition = (MoveReference->MoveNumber - 1) * 50.0f;
+						float Xposition = 70.0f;
+						if (MoveReference->PieceMoving->PieceColor == EColor::BLACK)
+						{
+							Xposition = 290.0f;
+						}
+						CanvasSlot->SetPosition(FVector2D(Xposition, Yposition));
+						CanvasSlot->SetSize(FVector2D(220.0f, 50.0f));
+					}
 				}			
 				FString MoveString = MoveReference->AlgebricMoveNotation();
 				MoveBox->MoveNotation->SetText(FText::FromString(MoveString));

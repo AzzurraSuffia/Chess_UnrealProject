@@ -349,7 +349,7 @@ void AGameField::PromotePawn(EPieceNotation ToPromote)
 
 	FVector2D SpawnPosition = Pawn->PlaceAt;
 	const float TileScale = TileSize / 100;
-	//Pawn->SetActorHiddenInGame(true);
+	Pawn->SetActorHiddenInGame(true);
 	
 	MoveOutOfChessBoard(Pawn);
 

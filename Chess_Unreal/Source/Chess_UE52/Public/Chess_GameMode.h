@@ -38,7 +38,7 @@ class CHESS_UE52_API AChess_GameMode : public AGameModeBase
 
 public:
 
-	UPROPERTY(EditAnywhere, Transient)
+	UPROPERTY(EditAnywhere)
 	bool bpromotionFlag = false;
 
 	UFUNCTION(BlueprintCallable)
@@ -72,9 +72,6 @@ public:
 
 	TArray<ATile*> DetectEnPassant(APawnPiece* Pawn, AChessPiece* PreviousPieceMoving, ATile* PreviousTo, ATile* PreviousFrom);
 
-	//potrebbe essere una mappa
-	//TArray<TArray<ATile*>>& FindAllLegalMoves(int32 Player);
-
 	int32 CurrentPlayer;
 
 	// tracks the number of moves
@@ -100,10 +97,6 @@ public:
 	// called at the start of the game
 	UFUNCTION(BlueprintCallable)
 	void ChoosePlayerAndStartGame(bool difficult);
-
-	/*DA TRASFORMARE IN SETCELLPIECE*/
-	// set the cell sign and the position 
-	//void SetCellSign(const int32 PlayerNumber, const FVector& SpawnPosition);
 
 	// get the next player index
 	int32 GetNextPlayer(int32 Player);

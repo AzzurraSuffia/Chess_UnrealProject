@@ -13,42 +13,36 @@
 // Sets default values
 AChess_HumanPlayer::AChess_HumanPlayer()
 {
-	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	//Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	// Set this pawn to be controlled by the lowest-numbered player
+	//Set this pawn to be controlled by the lowest-numbered player
 	AutoPossessPlayer = EAutoReceiveInput::Player0;
-	// create a camera component
+
+	//create a camera component
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
+
 	//set the camera as RootComponent
 	SetRootComponent(Camera);
-	// get the game instance reference
-	GameInstance = Cast<UChess_GameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
-	// default init values
-	PlayerNumber = -1;
-	Set = ESet::EMPTY;
 
+	//get the game instance reference
+	GameInstance = Cast<UChess_GameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
+
+	//default init values
+	PlayerNumber = -1;
+
+	Set = ESet::EMPTY;
 }
 
+/*
+* Function that manages replay: update move data structures and widgets to resume the game from the move clicked
+*/
 bool AChess_HumanPlayer::ManageReplay(UMove* FirstReplayMove)
 {
-	/*
-	* problema: quando la mossa nuova viene creata deve avere il numero seguente all'ultima mossa cliccata nello storyboard.
-	* Ne si deve aggiornare il move counter e quello della GameMode
-	* problema: quando si vuole fare una nuova mossa l'ultima mossa cliccata nello storyboard deve essere del random player.
-	* problema: se una pedina viene cliccata ma poi non viene mossa nulla deve cambiare, va distrutta la mossa creata.
-	* posso fare un attribtuo di HumanPlayer contenente l'ultima mossa e aggiungerla solo alla fine per non usare sempre MoveStack.Last()
-	*/
-
-	//se currentchessboardstate é diverso da nullptr E da a movestack-2 ho toccato lo storyboard (è uguale a movestack-2 sto cercando di riprendere dall'ultima mossa) 
-	//-> ho già fatto questo controllo prima di chiamare la funzione
-
+	//move clicked in the storyboard was a black move: the human move is valid (confirm the move)
 	AChess_GameMode* GameMode = Cast<AChess_GameMode>(GetWorld()->GetAuthGameMode());
 	if (GameMode->ChessBoard->CurrentChessboardState->PieceMoving->PieceColor == EColor::BLACK)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("Ultima mossa nera: PROCEDO"));
-
-		//oppure: int32 MoveDoneIdx = GameMode->ChessBoard->MoveStack.Num()-1;
 		int32 MoveDoneIdx = GameMode->ChessBoard->MoveStack.Find(GameMode->ChessBoard->MoveStack.Last());
 		int32 ClickedMoveIdx = GameMode->ChessBoard->MoveStack.Find(GameMode->ChessBoard->CurrentChessboardState);
 
@@ -57,9 +51,6 @@ bool AChess_HumanPlayer::ManageReplay(UMove* FirstReplayMove)
 			AChess_PlayerController* PlayerController = Cast<AChess_PlayerController>(GetWorld()->GetFirstPlayerController());
 			if (IsValid(PlayerController))
 			{
-				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("Riprendo la partita da un NUOVO PUNTO."));
-				
-				//aggiorno il move counter della game mode
 				GameMode->MoveCounter = GameMode->ChessBoard->MoveStack[ClickedMoveIdx]->MoveNumber + 1;
 				GameMode->ChessBoard->MoveStack.Last()->MoveNumber = GameMode->MoveCounter;
 
@@ -84,7 +75,6 @@ bool AChess_HumanPlayer::ManageReplay(UMove* FirstReplayMove)
 					{
 						Move->PiecePromoted->Destroy();
 					}
-
 					Move->ConditionalBeginDestroy();
 					GameMode->ChessBoard->MoveStack.Remove(Move);
 
@@ -97,14 +87,12 @@ bool AChess_HumanPlayer::ManageReplay(UMove* FirstReplayMove)
 	}
 	else
 	{
-		/*devo annullare la mossa*/
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("Ultima mossa bianca: NON PROCEDO"));
-		GameInstance->SetTurnMessage(TEXT("Not Human Turn"));
+		//move clicked in the storyboard was a white move: the human move is not valid (undo the move)
 		FirstReplayMove->UndoMove(GameMode);
 		GameMode->ChessBoard->MoveStack.Remove(FirstReplayMove);
 		FirstReplayMove->ConditionalBeginDestroy();
 
-		/*se faccio una promozione quando non è il mio turno i bottoni rimangono inaccessibili se non faccio ciò*/
+		//enable storyboard bottons to click on another move
 		AChess_PlayerController* PlayerController = Cast<AChess_PlayerController>(GetWorld()->GetFirstPlayerController());
 		if (IsValid(PlayerController))
 		{
@@ -113,39 +101,10 @@ bool AChess_HumanPlayer::ManageReplay(UMove* FirstReplayMove)
 				MoveBox->SetIsEnabled(true);
 			}
 		}
+		GameMode->ChessBoard->CurrentChessboardState->To->SetTileColor(5);
+		GameMode->ChessBoard->CurrentChessboardState->From->SetTileColor(5);
 
-		/*mossa annullata, ma ha mosso il random player, va bloccato TurnNextPlayer*/
 		return false;
-	}
-}
-
-void ResolveAmbiguityNotation(UMove* Move, AChessPiece* PieceMoving, TArray<AChessPiece*>& MyPieces, ATile* Square, AGameField* ChessBoard)
-{
-	APawnPiece* Pawn = Cast<APawnPiece>(PieceMoving);
-	if (IsValid(Pawn)) 
-	{
-		for (AChessPiece* Piece : MyPieces)
-		{
-			APawnPiece* OtherPawn = Cast<APawnPiece>(Piece);
-			if (IsValid(OtherPawn) && OtherPawn != Pawn)
-			{
-				TArray<ATile*> candidateMoves = OtherPawn->validMoves();
-				for (ATile* candidateSquare : candidateMoves)
-				{
-					if (OtherPawn->IsLegal(candidateSquare) && candidateSquare == Square)
-					{
-						if (candidateSquare->GetGridPosition().Y == Square->GetGridPosition().Y)
-						{
-							Move->brankAmbiguity = true;
-						}
-						else
-						{
-							Move->bfileAmbiguity = true;
-						}
-					}
-				}
-			}
-		}
 	}
 }
 
@@ -153,7 +112,6 @@ void ResolveAmbiguityNotation(UMove* Move, AChessPiece* PieceMoving, TArray<AChe
 void AChess_HumanPlayer::BeginPlay()
 {
 	Super::BeginPlay();
-
 }
 
 // Called every frame
@@ -170,11 +128,16 @@ void AChess_HumanPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 
 }
 
+/*
+* When bpromotionFlag is false, OnPawnPromotion() set visibile the pieces menu to the user (human pawn promotion start)
+* When bpromotionFlag is true, OnPawnPromotion() checks if game ended and add the move widgetto the storyboard (human pawn promotion end)
+*/
 void AChess_HumanPlayer::OnPawnPromotion()
 {
 	AChess_GameMode* GameMode = Cast<AChess_GameMode>(GetWorld()->GetAuthGameMode());
 	if (!GameMode->bpromotionFlag)
 	{
+		//To avoid bugs, storyboard and restart buttons are disable during human pawn promotion
 		AChess_PlayerController* PlayerController = Cast<AChess_PlayerController>(GetWorld()->GetFirstPlayerController());
 		if (IsValid(PlayerController))
 		{
@@ -187,23 +150,19 @@ void AChess_HumanPlayer::OnPawnPromotion()
 
 		GameMode->bpromotionFlag = true;
 		OnPromotionFlagTrue.Broadcast();
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Human Pawn Promotion"));
-		//GameInstance->SetTurnMessage(TEXT("Human Pawn Promotion"));
 	}
 	else
 	{
-
 		GameMode->bpromotionFlag = false;
 		bisMyTurn = false;
 		bool MoveResult = GameMode->IsGameEnded(GameMode->ChessBoard->MoveStack.Last(), GameMode->ChessBoard->BlackKing);
 
-		//Da questo momento in poi la mossa con promozione é completa
+		//if the current chessboard state is different from the last move done, the user has clicked a movebutton and replay has to be managed
 		if (GameMode->ChessBoard->MoveStack.Num() > 2 && GameMode->ChessBoard->CurrentChessboardState != GameMode->ChessBoard->MoveStack[GameMode->ChessBoard->MoveStack.Num() - 2])
 		{
 			TArray<ATile*> PreviousColoredTiles = { GameMode->ChessBoard->CurrentChessboardState->To,  GameMode->ChessBoard->CurrentChessboardState->From };
 			GameMode->ChessBoard->RestoreSquareColor(PreviousColoredTiles);
-			//gestione replay
-			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Black, TEXT("REPLAY"));
+			
 			if (!ManageReplay(GameMode->ChessBoard->MoveStack.Last()))
 			{
 				bFirstClick = true;
@@ -363,7 +322,7 @@ void AChess_HumanPlayer::OnClick()
 									GameMode->ChessBoard->BlackPieceOnChessBoard.Remove(blackPiece);
 									GameMode->ChessBoard->MoveStack.Last()->benPassant = true;
 									GameMode->ChessBoard->MoveStack.Last()->PieceCaptured = blackPiece;
-									//blackPiece->SetActorHiddenInGame(true);
+									blackPiece->SetActorHiddenInGame(true);
 									GameMode->ChessBoard->MoveOutOfChessBoard(blackPiece);
 									break;
 								}
@@ -449,11 +408,11 @@ void AChess_HumanPlayer::OnClick()
 					if (actualMoves.Contains(CurrTile))
 					{
 
-						//ResolveAmbiguitiNotation!!!!(CurrTile)
+						
 
 						GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("clicked enemy piece"));
 						GameMode->ChessBoard->BlackPieceOnChessBoard.Remove(DestinationPiece);
-						//DestinationPiece->SetActorHiddenInGame(true);
+						DestinationPiece->SetActorHiddenInGame(true);
 						GameMode->ChessBoard->MoveOutOfChessBoard(DestinationPiece);
 						GameMode->MovePiece(CurrPiece, SelectedTile, CurrTile);
 

@@ -2,6 +2,8 @@
 
 
 #include "UI_MoveBox.h"
+#include "Chess_PlayerController.h"
+#include "Chess_HumanPlayer.h"
 
 void UUI_MoveBox::NativeConstruct()
 {
@@ -21,12 +23,27 @@ void UUI_MoveBox::NativeConstruct()
 
 void UUI_MoveBox::OnButtonClicked()
 {
-	AChess_GameMode* GameMode = Cast<AChess_GameMode>(GetWorld()->GetAuthGameMode());
-
+    AChess_GameMode* GameMode = Cast<AChess_GameMode>(GetWorld()->GetAuthGameMode());
+    
     int32 ClickedMoveIdx = GameMode->ChessBoard->MoveStack.Find(Move);
     int32 CurrentMoveIdx = -1;
     TArray<ATile*> PreviousColoredTiles = {};
-   
+
+    AChess_HumanPlayer* HumanPlayer = Cast<AChess_HumanPlayer>(GameMode->Players[0]);
+    if (IsValid(HumanPlayer) && !GameMode->ChessBoard->MoveStack.Last()->bisCheckmate)
+    {   
+        if (!HumanPlayer->bFirstClick)
+        {
+            GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("PRIMO CLICK E POI STORICO"));
+            HumanPlayer->bFirstClick = true;
+            HumanPlayer->actualMoves.Add(HumanPlayer->SelectedTile);
+            GameMode->ChessBoard->RestoreSquareColor(HumanPlayer->actualMoves);
+            UMove* firstclickmove = GameMode->ChessBoard->MoveStack.Last();
+            firstclickmove->ConditionalBeginDestroy();
+            GameMode->ChessBoard->MoveStack.Remove(firstclickmove);
+        }
+    }
+
     if (GameMode->ChessBoard->CurrentChessboardState != nullptr)
     {
         CurrentMoveIdx = GameMode->ChessBoard->MoveStack.Find(GameMode->ChessBoard->CurrentChessboardState);
@@ -48,7 +65,6 @@ void UUI_MoveBox::OnButtonClicked()
         if (ClickedMoveIdx < CurrentMoveIdx)
         {
             // ClickedMove is placed before CurrentMove in the stack
-            GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("Cliccata Mossa Precedente"));
             for (int32 i = CurrentMoveIdx; i > ClickedMoveIdx; i--)
             {
                 GameMode->ChessBoard->MoveStack[i]->UndoMove(GameMode);

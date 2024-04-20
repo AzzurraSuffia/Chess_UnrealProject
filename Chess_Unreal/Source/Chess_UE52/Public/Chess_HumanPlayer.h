@@ -33,17 +33,18 @@ public:
 	// Game instance reference
 	UChess_GameInstance* GameInstance;
 
+	bool bFirstClick = true;
+	TArray<ATile*> actualMoves = {};
+	ATile* SelectedTile = nullptr;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
 	// Keeps track of turn
 	bool bisMyTurn = false;
-	bool bFirstClick = true;
 	AChessPiece* CurrPiece = nullptr;
-	ATile* SelectedTile = nullptr;
-	TArray<ATile*> actualMoves = {};
-
+	
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
