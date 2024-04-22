@@ -24,7 +24,6 @@ void UUI_MoveBox::NativeConstruct()
 void UUI_MoveBox::OnButtonClicked()
 {
     AChess_GameMode* GameMode = Cast<AChess_GameMode>(GetWorld()->GetAuthGameMode());
-    
     int32 ClickedMoveIdx = GameMode->ChessBoard->MoveStack.Find(Move);
     int32 CurrentMoveIdx = -1;
     TArray<ATile*> PreviousColoredTiles = {};
@@ -34,10 +33,9 @@ void UUI_MoveBox::OnButtonClicked()
     {   
         if (!HumanPlayer->bFirstClick)
         {
-            GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("PRIMO CLICK E POI STORICO"));
             HumanPlayer->bFirstClick = true;
             HumanPlayer->actualMoves.Add(HumanPlayer->SelectedTile);
-            GameMode->ChessBoard->RestoreSquareColor(HumanPlayer->actualMoves);
+            GameMode->ChessBoard->RestoreSquaresColor(HumanPlayer->actualMoves);
             UMove* firstclickmove = GameMode->ChessBoard->MoveStack.Last();
             firstclickmove->ConditionalBeginDestroy();
             GameMode->ChessBoard->MoveStack.Remove(firstclickmove);
@@ -57,7 +55,7 @@ void UUI_MoveBox::OnButtonClicked()
 
     if (ClickedMoveIdx != INDEX_NONE && CurrentMoveIdx != INDEX_NONE)
     {
-        GameMode->ChessBoard->RestoreSquareColor(PreviousColoredTiles);
+        GameMode->ChessBoard->RestoreSquaresColor(PreviousColoredTiles);
 
         Move->To->SetTileColor(5);
         Move->From->SetTileColor(5);

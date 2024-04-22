@@ -47,6 +47,8 @@ void AChess_MinimaxPlayer::OnTurn()
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("AI (Minimax) Turn"));
 	GameInstance->SetTurnMessage(TEXT("AI (Minimax) Turn"));
 
+	AChess_GameMode* GameMode = (AChess_GameMode*)(GetWorld()->GetAuthGameMode());
+
 	AChess_PlayerController* PlayerController = Cast<AChess_PlayerController>(GetWorld()->GetFirstPlayerController());
 	if (IsValid(PlayerController))
 	{
@@ -63,17 +65,28 @@ void AChess_MinimaxPlayer::OnTurn()
 	GetWorld()->GetTimerManager().SetTimer(TimerHandle, [&]()
 	{
 			AChess_GameMode* GameMode = (AChess_GameMode*)(GetWorld()->GetAuthGameMode());
-
 			UMove* BestMove = FindBestMove(GameMode->ChessBoard, 2);
 			BestMove->MoveNumber = GameMode->MoveCounter;
 			if (BestMove->PieceMoving == nullptr)
 			{
-				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("GENERATA MOSSA VUOTA"));
 			}
 			else
 			{
-				/*da portare a false bfirstmove se ho mosso un pedone*/
 				BestMove->doMove(GameMode);
+				if (!GameMode->ChessBoard->MoveStack.IsEmpty() && GameMode->ChessBoard->MoveStack.Last()->bisCheck)
+				{
+					AKingPiece* King = Cast<AKingPiece>(BestMove->PieceMoving);
+					if (IsValid(King))
+					{
+						ATile* BKingPosition = BestMove->From;
+						GameMode->ChessBoard->RestoreASquareColor(BKingPosition);
+					}
+					else
+					{
+						ATile* BKingPosition = GameMode->ChessBoard->TileMap[GameMode->ChessBoard->BlackKing->PlaceAt];
+						GameMode->ChessBoard->RestoreASquareColor(BKingPosition);
+					}
+				}
 				GameMode->ChessBoard->MoveStack.Add(BestMove);
 
 				bool MoveResult = GameMode->IsGameEnded(BestMove, GameMode->ChessBoard->WhiteKing);
@@ -536,7 +549,6 @@ int32 AChess_MinimaxPlayer::AlphaBetaMiniMax(int32 Depth, bool bisMax, int32 alp
 						/*CODICE QUI DELL'UNDO DELLA MOSSA*/
 						// ------------------------------------------------------------
 
-						//APawnPiece* Pawn = Cast<APawnPiece>(MinPiece);
 						if (IsValid(Pawn))
 						{
 							int32 PawnStartPosition = 1;
@@ -630,13 +642,11 @@ UMove* AChess_MinimaxPlayer::FindBestMove(AGameField* ChessBoard, int32 Depth)
 			APawnPiece* CurrPawn = Cast<APawnPiece>(MaxPiece);
 			if (IsValid(CurrPawn))
 			{
-				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("DETECTENPASSANT"));
 				UMove* PreviousMove = GameMode->ChessBoard->MoveStack.Last();
 				TArray<ATile*> CandidateEnPassant = GameMode->DetectEnPassant(CurrPawn, PreviousMove->PieceMoving, PreviousMove->To, PreviousMove->From);
 				for (ATile* Candidate : CandidateEnPassant)
 				{
 					MaxCandidateMoves.Add(Candidate);
-					GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Black, TEXT("ENPASSANT MOVE!!"));
 				}
 				if (GameMode->ChessBoard->TileMap[CurrPawn->PlaceAt]->GetGridPosition().X == GameMode->ChessBoard->Size - 2)
 				{
@@ -711,7 +721,6 @@ UMove* AChess_MinimaxPlayer::FindBestMove(AGameField* ChessBoard, int32 Depth)
 								GameMode->ChessBoard->TileMap[OpponentPawnPosition]->SetTileStatus(ETileStatus::EMPTY);
 								Move->PieceCaptured = CapturedPiece;
 								Move->benPassant = true;
-								GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("PIECE CAPTURED TROVATO"));
 							}
 						}
 					}

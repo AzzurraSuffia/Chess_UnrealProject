@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Components/TextRenderComponent.h"
 #include "Tile.generated.h"
 
 UENUM()
@@ -35,7 +36,13 @@ public:
 	// get the (x, y) position
 	FVector2D GetGridPosition();
 
+	UStaticMeshComponent* GetStaticMeshComponent();
+
 	void SetTileColor(int32 color);
+
+	void SetTileNumber(int32 number);
+
+	void SetTileLetter(FString letter);
 
 protected:
 	// Called when the game starts or when spawned
@@ -64,6 +71,12 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Components")
 	UMaterialInstance* ReplayTile;
+
+	UPROPERTY(EditAnywhere)
+	UTextRenderComponent* TextNumberComponent;
+
+	UPROPERTY(EditAnywhere)
+	UTextRenderComponent* TextLetterComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	ETileStatus Status;

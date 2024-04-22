@@ -89,6 +89,12 @@ void AChess_RandomPlayer::OnTurn()
 			AGameField* ChessBoard = GameMode->ChessBoard;
 			UMove* RandomMove = NewObject<UMove>();
 			
+			if (!GameMode->ChessBoard->MoveStack.IsEmpty())
+			{
+				TArray<ATile*> PreviousTiles = { GameMode->ChessBoard->CurrentChessboardState->To,GameMode->ChessBoard->CurrentChessboardState->From };
+				GameMode->ChessBoard->RestoreSquaresColor(PreviousTiles);
+			}
+
 			if (RandomMove && IsValid(GameMode))
 			{
 				do
@@ -121,7 +127,6 @@ void AChess_RandomPlayer::OnTurn()
 				int32 RandTileIdx = FMath::Rand() % actualMoves.Num();
 				FVector2D MoveCurrPieceTo = actualMoves[RandTileIdx]->GetGridPosition();
 
-				ChessBoard->MoveStack.Add(RandomMove);
 				RandomMove->MoveNumber = GameMode->MoveCounter;
 				RandomMove->From = ChessBoard->TileMap[RandomPlayerPiece[RandPieceIdx]->PlaceAt];
 				RandomMove->To = actualMoves[RandTileIdx];
@@ -173,6 +178,22 @@ void AChess_RandomPlayer::OnTurn()
 
 				GameMode->MovePiece(RandomPlayerPiece[RandPieceIdx], From, actualMoves[RandTileIdx]);
 
+				if (!GameMode->ChessBoard->MoveStack.IsEmpty() && GameMode->ChessBoard->MoveStack.Last()->bisCheck)
+				{
+					AKingPiece* King = Cast<AKingPiece>(RandomPlayerPiece[RandPieceIdx]);
+					if (IsValid(King))
+					{
+						ATile* BKingPosition = RandomMove->From;
+						GameMode->ChessBoard->RestoreASquareColor(BKingPosition);
+					}
+					else
+					{
+						ATile* BKingPosition = GameMode->ChessBoard->TileMap[GameMode->ChessBoard->BlackKing->PlaceAt];
+						GameMode->ChessBoard->RestoreASquareColor(BKingPosition);
+					}
+				}
+
+				ChessBoard->MoveStack.Add(RandomMove);
 
 				if (GameMode->CheckForPawnPromotion(RandomPlayerPiece[RandPieceIdx]))
 				{

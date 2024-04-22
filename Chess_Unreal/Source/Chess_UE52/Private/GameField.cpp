@@ -26,7 +26,7 @@ ARookPiece* AGameField::SpawnPieceRook(EColor Color, const double InX, const dou
 	//FRotator Rotation = ChooseRotation(Color);
 	ChangeTileStatus(Color, InX, InY, this);
 	ARookPiece* Obj = GetWorld()->SpawnActor<ARookPiece>(RookClass, Location, RotationPiece);
-	const float PieceScale = (TileScale * 0.8);
+	const float PieceScale = (TileScale * 0.7);
 	Obj->SetActorScale3D(FVector(PieceScale, PieceScale, 0.2));
 	Obj->PieceColor = Color;
 	Obj->ChessBoard = this;
@@ -40,7 +40,7 @@ AKnightPiece* AGameField::SpawnPieceKnight(EColor Color, const double InX, const
 	//FRotator Rotation = ChooseRotation(Color);
 	ChangeTileStatus(Color, InX, InY, this);
 	AKnightPiece* Obj = GetWorld()->SpawnActor<AKnightPiece>(KnightClass, Location, RotationPiece);
-	const float PieceScale = (TileScale * 0.8);
+	const float PieceScale = (TileScale * 0.7);
 	Obj->SetActorScale3D(FVector(PieceScale, PieceScale, 0.2));
 	Obj->PieceColor = Color;
 	Obj->ChessBoard = this;
@@ -54,7 +54,7 @@ ABishopPiece* AGameField::SpawnPieceBishop(EColor Color, const double InX, const
 	//FRotator Rotation = ChooseRotation(Color);
 	ChangeTileStatus(Color, InX, InY, this);
 	ABishopPiece* Obj = GetWorld()->SpawnActor<ABishopPiece>(BishopClass, Location, RotationPiece);
-	const float PieceScale = (TileScale * 0.8);
+	const float PieceScale = (TileScale * 0.7);
 	Obj->SetActorScale3D(FVector(PieceScale, PieceScale, 0.2));
 	Obj->PieceColor = Color;
 	Obj->ChessBoard = this;
@@ -70,7 +70,7 @@ AQueenPiece* AGameField::SpawnPieceQueen(EColor Color, const double InX, const d
 	AQueenPiece* Obj = GetWorld()->SpawnActor<AQueenPiece>(QueenClass, Location, RotationPiece);
 	FVector Loggin = Obj->GetActorScale3D();
 	//FVector OriginalScale = Obj0->GetActorScale3D();
-	const float PieceScale = (TileScale * 0.8);
+	const float PieceScale = (TileScale * 0.7);
 	Obj->SetActorScale3D(FVector(PieceScale, PieceScale, 0.2));
 	Obj->PieceColor = Color;
 	Obj->ChessBoard = this;
@@ -85,7 +85,7 @@ AKingPiece* AGameField::SpawnPieceKing(EColor Color, const double InX, const dou
 	ChangeTileStatus(Color, InX, InY, this);
 	AKingPiece* Obj = GetWorld()->SpawnActor<AKingPiece>(KingClass, Location, RotationPiece);
 	//FVector OriginalScale = Obj0->GetActorScale3D();
-	const float PieceScale = (TileScale * 0.8);
+	const float PieceScale = (TileScale * 0.7);
 	Obj->SetActorScale3D(FVector(PieceScale, PieceScale, 0.2));
 	Obj->PieceColor = Color;
 	Obj->ChessBoard = this;
@@ -99,7 +99,7 @@ APawnPiece* AGameField::SpawnPiecePawn(EColor Color, const double InX, const dou
 	//FRotator Rotation = ChooseRotation(Color);
 	ChangeTileStatus(Color, InX, InY, this);
 	APawnPiece* Obj = GetWorld()->SpawnActor<APawnPiece>(PawnClass, Location, RotationPiece);
-	const float PieceScale = (TileScale * 0.8);
+	const float PieceScale = (TileScale * 0.7);
 	Obj->SetActorScale3D(FVector(PieceScale, PieceScale, 0.2));
 	Obj->PieceColor = Color;
 	Obj->ChessBoard = this;
@@ -144,7 +144,6 @@ void AGameField::BeginPlay()
 
 void DisplayPiecesStartConfiguration(AGameField* GField)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("DisplayStartConfiguration"));
 	const float TileScale = GField->TileSize / 100;
 	// Pieces creation
 	for (int32 y = 0; y < GField->Size; y++)
@@ -201,7 +200,7 @@ void AGameField::ResetField()
 	//non solo al checkmate le caselle dei re cambiano colore,
 	//ma se clicco su reset dopo aver selezionato una tile è difficile risalire a quale fosse
 	//finchè non istanzio la classe mossa
-	RestoreSquareColor(TileArray);
+	RestoreSquaresColor(TileArray);
 
 	// send broadcast event to registered objects 
 	OnResetEvent.Broadcast();
@@ -214,7 +213,6 @@ void AGameField::ResetField()
 	}
 	MoveStack.Empty();
 
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("ChessBoardEmpty"));
 	DisplayPiecesStartConfiguration(this);
 
 	AChess_GameMode* GameMode = Cast<AChess_GameMode>(GetWorld()->GetAuthGameMode());
@@ -261,6 +259,7 @@ FString AGameField::GetLastMoveAlgebricNotation()
 void AGameField::GenerateField()
 {
 	const float TileScale = TileSize / 100;
+	TArray<FString> Number2Letter = { FString("a"), FString("b"), FString("c"), FString("d"), FString("e"), FString("f"), FString("g"), FString("h") };
 
 	// Chessboard creation
 	for (int32 x = 0; x < Size; x++)
@@ -279,7 +278,14 @@ void AGameField::GenerateField()
 			{
 				Obj->SetTileColor(1);
 			}
-
+			if (y == 0)
+			{
+				Obj->SetTileNumber(x+1);
+			}
+			if (x == 0)
+			{
+				Obj->SetTileLetter(Number2Letter[y]);
+			}
 			TileArray.Add(Obj);
 			TileMap.Add(FVector2D(x, y), Obj);
 		}
@@ -291,7 +297,6 @@ void AGameField::GenerateField()
 /* QUANDO USI GET POSITION RICORDADI USARE ISVALID PER VERIFICARE CHE IL CAST SIA ANDATO A BUON FINE */
 FVector2D AGameField::GetPosition(const FHitResult& Hit)
 {
-	//restituisce l'attore toccato (se ne   stato toccato uno), ne fa il cast a Tile e ne restituisce la posizione x e y. 
 	return Cast<ATile>(Hit.GetActor())->GetGridPosition();
 }
 
@@ -431,20 +436,24 @@ void AGameField::MoveOutOfChessBoard(AChessPiece* HiddenPiece)
 	//HiddenPiece->PlaceAt = FVector2D(Xposition, Yposition);
 }
 
-void AGameField::RestoreSquareColor(TArray<ATile*> Squares)
+void AGameField::RestoreSquaresColor(TArray<ATile*> Squares)
 {
 	for (ATile* Tile : Squares)
 	{
-		int32 x = Tile->GetGridPosition().X;
-		int32 y = Tile->GetGridPosition().Y;
-		if(((x + y) % 2) == 0)
-		{
-			Tile->SetTileColor(0);
-		}
-		else
-		{
-			Tile->SetTileColor(1);
-		}
+		RestoreASquareColor(Tile);
 	}
-	
+}
+
+void AGameField::RestoreASquareColor(ATile* Square)
+{
+	int32 x = Square->GetGridPosition().X;
+	int32 y = Square->GetGridPosition().Y;
+	if (((x + y) % 2) == 0)
+	{
+		Square->SetTileColor(0);
+	}
+	else
+	{
+		Square->SetTileColor(1);
+	}
 }

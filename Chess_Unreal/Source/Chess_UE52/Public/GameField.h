@@ -11,6 +11,7 @@
 #include "RookPiece.h"
 #include "PawnPiece.h"
 #include "Move.h"
+#include "Components/TextRenderComponent.h"
 #include "GameFramework/Actor.h"
 #include "GameField.generated.h"
 
@@ -148,7 +149,9 @@ public:
 
 	void MoveOutOfChessBoard(AChessPiece* HiddenPiece);
 
-	void RestoreSquareColor(TArray<ATile*> Squares);
+	void RestoreSquaresColor(TArray<ATile*> Squares);
+
+	void RestoreASquareColor(ATile* Square);
 
 	// return a (x,y) position given a hit (click) on a field tile
 	FVector2D GetPosition(const FHitResult& Hit);

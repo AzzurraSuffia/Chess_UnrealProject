@@ -23,6 +23,21 @@ ATile::ATile()
 	Status = ETileStatus::EMPTY;
 	TileGridPosition = FVector2D(0, 0);
 
+	TextNumberComponent = CreateDefaultSubobject<UTextRenderComponent>(TEXT("TextNumberComponent"));
+	TextNumberComponent->SetupAttachment(StaticMeshComponent);
+	TextNumberComponent->SetRelativeLocation(FVector(20.f, -35.f, 200.f));
+	TextNumberComponent->SetText(FText::FromString(TEXT("")));
+	TextNumberComponent->SetTextRenderColor(FColor::Black);
+	TextNumberComponent->SetWorldRotation(FRotator(90.0f, -90.0f, 90.0f));
+	TextNumberComponent->SetWorldScale3D(FVector(3.0f, 1.0f, 5.0f));
+
+	TextLetterComponent = CreateDefaultSubobject<UTextRenderComponent>(TEXT("TextLetterComponent"));
+	TextLetterComponent->SetupAttachment(StaticMeshComponent);
+	TextLetterComponent->SetRelativeLocation(FVector(-40.f, 20.f, 200.f));
+	TextLetterComponent->SetText(FText::FromString(TEXT("")));
+	TextLetterComponent->SetTextRenderColor(FColor::Black);
+	TextLetterComponent->SetWorldRotation(FRotator(90.0f, -90.0f, 90.0f));
+	TextLetterComponent->SetWorldScale3D(FVector(1.0f, 1.0f, 5.0f)); // Set text scale (size)
 }
 
 void ATile::SetTileStatus(const ETileStatus TileStatus)
@@ -43,6 +58,11 @@ void ATile::SetGridPosition(const double InX, const double InY)
 FVector2D ATile::GetGridPosition()
 {
 	return TileGridPosition;
+}
+
+UStaticMeshComponent* ATile::GetStaticMeshComponent()
+{
+	return StaticMeshComponent;
 }
 
 void ATile::SetTileColor(int32 color)
@@ -72,6 +92,16 @@ void ATile::SetTileColor(int32 color)
 		StaticMeshComponent->SetMaterial(0, ReplayTile);
 	}
 
+}
+
+void ATile::SetTileNumber(int32 number)
+{
+	TextNumberComponent->SetText(FText::FromString(FString::FromInt(number)));
+}
+
+void ATile::SetTileLetter(FString letter)
+{
+	TextLetterComponent->SetText(FText::FromString(letter));
 }
 
 // Called when the game starts or when spawned

@@ -210,6 +210,19 @@ void UMove::UndoMove(AChess_GameMode* GameMode)
 		GameMode->ChessBoard->MoveOutOfChessBoard(PiecePromoted);
 		PieceMoving->SetActorHiddenInGame(false);
 	}
+	if (bisCheckmate)
+	{
+		if (PieceMoving->PieceColor == EColor::WHITE)
+		{
+			ATile* BKingPosition = GameMode->ChessBoard->TileMap[GameMode->ChessBoard->BlackKing->PlaceAt];
+			GameMode->ChessBoard->RestoreASquareColor(BKingPosition);
+		}
+		else
+		{
+			ATile* WKingPosition = GameMode->ChessBoard->TileMap[GameMode->ChessBoard->WhiteKing->PlaceAt];
+			GameMode->ChessBoard->RestoreASquareColor(WKingPosition);
+		}
+	}
 }
 
 void UMove::doMove(AChess_GameMode* GameMode)
@@ -247,7 +260,6 @@ void UMove::doMove(AChess_GameMode* GameMode)
 	}
 	else if (benPassant && Captured == PieceCaptured)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("IN IF DI DO MOVE"));
 		GameMode->ChessBoard->MoveOutOfChessBoard(PieceCaptured);
 		PieceCaptured->SetActorHiddenInGame(true);
 	}
@@ -271,6 +283,17 @@ void UMove::doMove(AChess_GameMode* GameMode)
 		NewLocation = Location + FVector(6, 6, 20);
 		PiecePromoted->SetActorLocation(NewLocation);
 		PiecePromoted->SetActorHiddenInGame(false);
+	}
+	if (bisCheckmate)
+	{
+		if (PieceMoving->PieceColor == EColor::WHITE)
+		{
+			GameMode->ChessBoard->TileMap[GameMode->ChessBoard->BlackKing->PlaceAt]->SetTileColor(4);
+		}
+		else
+		{
+			GameMode->ChessBoard->TileMap[GameMode->ChessBoard->WhiteKing->PlaceAt]->SetTileColor(4);
+		}
 	}
 }
 

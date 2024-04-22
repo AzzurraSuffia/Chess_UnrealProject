@@ -161,7 +161,7 @@ void AChess_HumanPlayer::OnPawnPromotion()
 		if (GameMode->ChessBoard->MoveStack.Num() > 2 && GameMode->ChessBoard->CurrentChessboardState != GameMode->ChessBoard->MoveStack[GameMode->ChessBoard->MoveStack.Num() - 2])
 		{
 			TArray<ATile*> PreviousColoredTiles = { GameMode->ChessBoard->CurrentChessboardState->To,  GameMode->ChessBoard->CurrentChessboardState->From };
-			GameMode->ChessBoard->RestoreSquareColor(PreviousColoredTiles);
+			GameMode->ChessBoard->RestoreSquaresColor(PreviousColoredTiles);
 			
 			if (!ManageReplay(GameMode->ChessBoard->MoveStack.Last()))
 			{
@@ -192,6 +192,12 @@ void AChess_HumanPlayer::OnTurn()
 	AChess_GameMode* GameMode = Cast<AChess_GameMode>(GetWorld()->GetAuthGameMode());
 	AGameField* ChessBoard = GameMode->ChessBoard;
 	
+	if (!ChessBoard->MoveStack.IsEmpty())
+	{
+		TArray<ATile*> PreviousTiles = { ChessBoard->MoveStack.Last()->To,ChessBoard->MoveStack.Last()->From };
+		ChessBoard->RestoreSquaresColor(PreviousTiles);
+	}
+
 	AChess_PlayerController* PlayerController = Cast<AChess_PlayerController>(GetWorld()->GetFirstPlayerController());
 	if (IsValid(PlayerController))
 	{
@@ -240,6 +246,7 @@ void AChess_HumanPlayer::OnClick()
 	/*VA CONTROLLATO SE IL SEGUENTE CAST VA A BUON FINE*/
 	AChess_GameMode* GameMode = Cast<AChess_GameMode>(GetWorld()->GetAuthGameMode());
 	// GetHitResultUnderCursor function sends a ray from the mouse position and gives the corresponding hit results
+
 	GetWorld()->GetFirstPlayerController()->GetHitResultUnderCursor(ECollisionChannel::ECC_Pawn, true, Hit);
 
 	if (IsValid(GameMode) && Hit.bBlockingHit && !Hit.GetActor()->IsHidden() && bisMyTurn && !GameMode->bisGameOver)
@@ -336,7 +343,7 @@ void AChess_HumanPlayer::OnClick()
 					GameMode->MovePiece(CurrPiece, SelectedTile, CurrTile);
 					
 					actualMoves.Add(SelectedTile);
-					GameMode->ChessBoard->RestoreSquareColor(actualMoves);
+					GameMode->ChessBoard->RestoreSquaresColor(actualMoves);
 
 					GameMode->ChessBoard->MoveStack.Last()->To = CurrTile;
 
@@ -349,14 +356,30 @@ void AChess_HumanPlayer::OnClick()
 						if (GameMode->ChessBoard->MoveStack.Num() > 2 && GameMode->ChessBoard->CurrentChessboardState != GameMode->ChessBoard->MoveStack[GameMode->ChessBoard->MoveStack.Num() - 2])
 						{
 							TArray<ATile*> PreviousColoredTiles = { GameMode->ChessBoard->CurrentChessboardState->To,  GameMode->ChessBoard->CurrentChessboardState->From };
-							GameMode->ChessBoard->RestoreSquareColor(PreviousColoredTiles);
+							GameMode->ChessBoard->RestoreSquaresColor(PreviousColoredTiles);
 							//gestione replay
-							GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Black, TEXT("REPLAY"));
 							if (!ManageReplay(GameMode->ChessBoard->MoveStack.Last()))
 							{
 								bFirstClick = true;
 								bisMyTurn = true;
 								return;
+							}
+						}
+						else
+						{
+							if (GameMode->ChessBoard->MoveStack.Num() > 2 && GameMode->ChessBoard->MoveStack[GameMode->ChessBoard->MoveStack.Num() - 2]->bisCheck)
+							{
+								AKingPiece* King = Cast<AKingPiece>(CurrPiece);
+								if (IsValid(King))
+								{
+									ATile* WKingPosition = GameMode->ChessBoard->MoveStack.Last()->From;
+									GameMode->ChessBoard->RestoreASquareColor(WKingPosition);
+								}
+								else
+								{
+									ATile* WKingPosition = GameMode->ChessBoard->TileMap[GameMode->ChessBoard->WhiteKing->PlaceAt];
+									GameMode->ChessBoard->RestoreASquareColor(WKingPosition);
+								}
 							}
 						}
 
@@ -385,7 +408,7 @@ void AChess_HumanPlayer::OnClick()
 				if (DestinationPiece == CurrPiece)
 				{
 					actualMoves.Add(SelectedTile);
-					GameMode->ChessBoard->RestoreSquareColor(actualMoves);
+					GameMode->ChessBoard->RestoreSquaresColor(actualMoves);
 					APawnPiece* PawnInStart = Cast<APawnPiece>(DestinationPiece);
 					if (IsValid(PawnInStart) && PawnInStart->PlaceAt.X == 1)
 					{
@@ -393,12 +416,6 @@ void AChess_HumanPlayer::OnClick()
 					}
 					UMove* MoveToDelete = GameMode->ChessBoard->MoveStack.Last();
 					GameMode->ChessBoard->MoveStack.Remove(MoveToDelete);
-
-					// Convert the integer variable to a string
-					GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("IL NUMERO DI MOSSE E':"));
-					FString MyIntString = FString::Printf(TEXT("%d"), GameMode->ChessBoard->MoveStack.Num());
-					GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, MyIntString);
-
 					bFirstClick = true;
 				}
 				if (DestinationPiece->PieceColor == EColor::BLACK)
@@ -407,17 +424,13 @@ void AChess_HumanPlayer::OnClick()
 					/*CATTURA DI UN PEZZO*/
 					if (actualMoves.Contains(CurrTile))
 					{
-
-						
-
-						GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("clicked enemy piece"));
 						GameMode->ChessBoard->BlackPieceOnChessBoard.Remove(DestinationPiece);
 						DestinationPiece->SetActorHiddenInGame(true);
 						GameMode->ChessBoard->MoveOutOfChessBoard(DestinationPiece);
 						GameMode->MovePiece(CurrPiece, SelectedTile, CurrTile);
 
 						actualMoves.Add(SelectedTile);
-						GameMode->ChessBoard->RestoreSquareColor(actualMoves);
+						GameMode->ChessBoard->RestoreSquaresColor(actualMoves);
 
 						GameMode->ChessBoard->MoveStack.Last()->To = CurrTile;
 						GameMode->ChessBoard->MoveStack.Last()->bisCapture = true;
@@ -432,14 +445,30 @@ void AChess_HumanPlayer::OnClick()
 							if (GameMode->ChessBoard->MoveStack.Num() > 2 && GameMode->ChessBoard->CurrentChessboardState != GameMode->ChessBoard->MoveStack[GameMode->ChessBoard->MoveStack.Num() - 2])
 							{
 								TArray<ATile*> PreviousColoredTiles = { GameMode->ChessBoard->CurrentChessboardState->To,  GameMode->ChessBoard->CurrentChessboardState->From };
-								GameMode->ChessBoard->RestoreSquareColor(PreviousColoredTiles);
+								GameMode->ChessBoard->RestoreSquaresColor(PreviousColoredTiles);
 								//gestione replay
-								GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Black, TEXT("REPLAY"));
 								if (!ManageReplay(GameMode->ChessBoard->MoveStack.Last()))
 								{
 									bFirstClick = true;
 									bisMyTurn = true;
 									return;
+								}
+							}
+							else
+							{
+								if (GameMode->ChessBoard->MoveStack.Num() > 2 && GameMode->ChessBoard->MoveStack[GameMode->ChessBoard->MoveStack.Num() - 2]->bisCheck)
+								{
+									AKingPiece* King = Cast<AKingPiece>(CurrPiece);
+									if (IsValid(King))
+									{
+										ATile* WKingPosition = GameMode->ChessBoard->MoveStack.Last()->From;
+										GameMode->ChessBoard->RestoreASquareColor(WKingPosition);
+									}
+									else
+									{
+										ATile* WKingPosition = GameMode->ChessBoard->TileMap[GameMode->ChessBoard->WhiteKing->PlaceAt];
+										GameMode->ChessBoard->RestoreASquareColor(WKingPosition);
+									}
 								}
 							}
 

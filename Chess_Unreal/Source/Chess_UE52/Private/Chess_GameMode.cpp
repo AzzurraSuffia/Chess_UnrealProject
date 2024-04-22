@@ -28,7 +28,7 @@ bool AChess_GameMode::IsGameEnded(UMove* Move, AKingPiece* King)
 		if (IsKingInCheck(NextPlayer))
 		{
 			Move->bisCheck = true;
-			ChessBoard->TileMap[King->PlaceAt]->SetTileColor(4);
+			//ChessBoard->TileMap[King->PlaceAt]->SetTileColor(4);
 		}
 		return false;
 	}
@@ -77,7 +77,6 @@ bool AChess_GameMode::IsKingInCheck(int32 Player)
 			}
 			else
 			{
-				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("GameMode.cpp: PIECE VUOTO NELL'ARRAY"));
 			}
 		}
 	}
