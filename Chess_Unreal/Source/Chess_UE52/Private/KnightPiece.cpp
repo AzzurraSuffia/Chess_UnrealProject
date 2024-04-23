@@ -12,21 +12,9 @@ AKnightPiece::AKnightPiece()
 
 }
 
-void AddIfIsValidToJump(double InX, double InY, AGameField* ChessBoard, TArray<ATile*> validMovesChoices, ETileStatus Enemy) {
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("AddIfIsValidToJump"));
-	ATile* CurrTile = ChessBoard->TileMap[FVector2D(InX, InY)];
-	if (CurrTile->GetTileStatus() == Enemy || CurrTile->GetTileStatus() == ETileStatus::EMPTY)
-	{
-		validMovesChoices.Add(CurrTile);
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("ho aggiunto la tile"));
-	}
-}
-
-//AL TERMINA USA validMovesChoices.Empty() PER SVUOTARE L'ARRAY
 TArray<ATile*> AKnightPiece::validMoves()
 {
-	//poco efficiente fare questo calcolo ogni volta 
-	//o lo fai una volta all'inizio o lo metti come attributo
+	//set the tile status of tiles occupied by opponent's piece
 	ETileStatus Enemy;
 	if (this->PieceColor == EColor::BLACK)
 	{
@@ -37,78 +25,100 @@ TArray<ATile*> AKnightPiece::validMoves()
 		Enemy = ETileStatus::BLACKPIECE;
 	}
 
-	//Aggiungere controlli sul fatto che Xposition-1 ad esempio potrebbe essere fuori dal campo (li fa IsValid)
 	double Xposition = PlaceAt.X;
 	double Yposition = PlaceAt.Y;
 	TArray<ATile*> validMovesChoices;
 
-	//SE UTILIZZO LE CHIAMATE A ADDIFISVALIDTOJUMP NON AGGIUNGE LE TILE E RESTITUISCE VALIDMOVESCHOICES VUOTO, NON SO PERCHE'
-	if (ChessBoard->TileMap.Contains(FVector2D(Xposition + 2, Yposition + 1))) {
-		//AddIfIsValidToJump(Xposition + 2, Yposition + 1, ChessBoard, validMovesChoices, Enemy);
+	//check if the searched position is still part of the chessboard
+	if (ChessBoard->TileMap.Contains(FVector2D(Xposition + 2, Yposition + 1))) 
+	{
 		ATile* CurrTile = ChessBoard->TileMap[FVector2D(Xposition + 2, Yposition + 1)];
+
+		//if the tile is occupied by an enemy or empty, add the tile as a candidate destination tile
 		if (CurrTile->GetTileStatus() == Enemy || CurrTile->GetTileStatus() == ETileStatus::EMPTY)
 		{
 			validMovesChoices.Add(CurrTile);
 		}
 	}
+
+	//check if the searched position is still part of the chessboard 
 	if (ChessBoard->TileMap.Contains(FVector2D(Xposition + 2, Yposition - 1)))
 	{
-		//AddIfIsValidToJump(PlaceAt.X + 2, PlaceAt.Y + 1, ChessBoard, validMovesChoices, Enemy);
 		ATile* CurrTile = ChessBoard->TileMap[FVector2D(Xposition + 2, Yposition - 1)];
+
+		//if the tile is occupied by an enemy or empty, add the tile as a candidate destination tile
 		if (CurrTile->GetTileStatus() == Enemy || CurrTile->GetTileStatus() == ETileStatus::EMPTY)
 		{
 			validMovesChoices.Add(CurrTile);
 		}
 	}
+
+	//check if the searched position is still part of the chessboard 
 	if (ChessBoard->TileMap.Contains(FVector2D(Xposition - 2, Yposition + 1)))
 	{
-		//AddIfIsValidToJump(PlaceAt.X - 2, PlaceAt.Y + 1, ChessBoard, validMovesChoices, Enemy);
 		ATile* CurrTile = ChessBoard->TileMap[FVector2D(Xposition - 2, Yposition + 1)];
+
+		//if the tile is occupied by an enemy or empty, add the tile as a candidate destination tile
 		if (CurrTile->GetTileStatus() == Enemy || CurrTile->GetTileStatus() == ETileStatus::EMPTY)
 		{
 			validMovesChoices.Add(CurrTile);
 		}
 	}
+
+	//check if the searched position is still part of the chessboard 
 	if (ChessBoard->TileMap.Contains(FVector2D(Xposition - 2, Yposition - 1)))
 	{
-		//AddIfIsValidToJump(PlaceAt.X - 2, PlaceAt.Y - 1, ChessBoard, validMovesChoices, Enemy);
 		ATile* CurrTile = ChessBoard->TileMap[FVector2D(Xposition - 2, Yposition - 1)];
+
+		//if the tile is occupied by an enemy or empty, add the tile as a candidate destination tile
 		if (CurrTile->GetTileStatus() == Enemy || CurrTile->GetTileStatus() == ETileStatus::EMPTY)
 		{
 			validMovesChoices.Add(CurrTile);
 		}
 	}
+
+	//check if the searched position is still part of the chessboard
 	if (ChessBoard->TileMap.Contains(FVector2D(Xposition - 1, Yposition + 2)))
 	{
-		//AddIfIsValidToJump(PlaceAt.X - 1, PlaceAt.Y + 2, ChessBoard, validMovesChoices, Enemy);
 		ATile* CurrTile = ChessBoard->TileMap[FVector2D(Xposition - 1, Yposition + 2)];
+
+		//if the tile is occupied by an enemy or empty, add the tile as a candidate destination tile
 		if (CurrTile->GetTileStatus() == Enemy || CurrTile->GetTileStatus() == ETileStatus::EMPTY)
 		{
 			validMovesChoices.Add(CurrTile);
 		}
 	}
+
+	//check if the searched position is still part of the chessboard
 	if (ChessBoard->TileMap.Contains(FVector2D(Xposition + 1, Yposition + 2)))
 	{
-		//AddIfIsValidToJump(PlaceAt.X + 1, PlaceAt.Y + 2, ChessBoard, validMovesChoices, Enemy);
 		ATile* CurrTile = ChessBoard->TileMap[FVector2D(Xposition + 1, Yposition + 2)];
+
+		//if the tile is occupied by an enemy or empty, add the tile as a candidate destination tile
 		if (CurrTile->GetTileStatus() == Enemy || CurrTile->GetTileStatus() == ETileStatus::EMPTY)
 		{
 			validMovesChoices.Add(CurrTile);
 		}
 	}
+
+	//check if the searched position is still part of the chessboard
 	if (ChessBoard->TileMap.Contains(FVector2D(Xposition - 1, Yposition - 2)))
 	{
-		//AddIfIsValidToJump(PlaceAt.X - 1, PlaceAt.Y - 2, ChessBoard, validMovesChoices, Enemy);
 		ATile* CurrTile = ChessBoard->TileMap[FVector2D(Xposition - 1, Yposition - 2)];
+
+		//if the tile is occupied by an enemy or empty, add the tile as a candidate destination tile
 		if (CurrTile->GetTileStatus() == Enemy || CurrTile->GetTileStatus() == ETileStatus::EMPTY)
 		{
 			validMovesChoices.Add(CurrTile);
 		}
 	}
+
+	//check if the searched position is still part of the chessboard
 	if (ChessBoard->TileMap.Contains(FVector2D(Xposition + 1, Yposition - 2)))
 	{
-		//AddIfIsValidToJump(PlaceAt.X + 1, PlaceAt.Y - 2, ChessBoard, validMovesChoices, Enemy);
 		ATile* CurrTile = ChessBoard->TileMap[FVector2D(Xposition + 1, Yposition - 2)];
+
+		//if the tile is occupied by an enemy or empty, add the tile as a candidate destination tile
 		if (CurrTile->GetTileStatus() == Enemy || CurrTile->GetTileStatus() == ETileStatus::EMPTY)
 		{
 			validMovesChoices.Add(CurrTile);

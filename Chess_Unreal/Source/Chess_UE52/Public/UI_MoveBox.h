@@ -20,6 +20,7 @@ class CHESS_UE52_API UUI_MoveBox : public UUserWidget
 	GENERATED_BODY()
 	
 public:
+
 	UPROPERTY(BlueprintReadWrite,/* meta = (BindWidget),*/ Category = "Widgets Components")
 	USizeBox* ExternalBox;
 
@@ -28,7 +29,8 @@ public:
 
 	UPROPERTY(BlueprintReadWrite,/* meta = (BindWidget),*/ Category = "Widgets Components")
 	UTextBlock* MoveNotation;
-
+	
+	//move whose notation is displayed in the button
 	UMove* Move;
 
 	UFUNCTION()

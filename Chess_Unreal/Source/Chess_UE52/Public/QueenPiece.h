@@ -16,8 +16,10 @@ public:
 	// Sets default values for this actor's properties
 	AQueenPiece();
 
+	//return an array of candidate destination tiles from the current position and chessboard state 
 	virtual TArray<ATile*> validMoves() override;
 
+	//return piece value for minimax evaluation function
 	virtual int32 PieceWeight() override;
 
 protected:

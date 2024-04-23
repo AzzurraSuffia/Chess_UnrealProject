@@ -12,11 +12,9 @@ ARookPiece::ARookPiece()
 
 }
 
-//AL TERMINA USA validMovesChoices.Empty() PER SVUOTARE L'ARRAY
 TArray<ATile*> ARookPiece::validMoves()
 {
-	//poco efficiente fare questo calcolo ogni volta 
-	//o lo fai una volta all'inizio o lo metti come attributo
+	//set the tile status of tiles occupied by opponent's piece
 	ETileStatus Enemy;
 	if (this->PieceColor == EColor::BLACK)
 	{
@@ -27,95 +25,122 @@ TArray<ATile*> ARookPiece::validMoves()
 		Enemy = ETileStatus::BLACKPIECE;
 	}
 
-
-	//Aggiungere controlli sul fatto che Xposition-1 ad esempio potrebbe essere fuori dal campo (li fa IsValid)
 	double Xposition = PlaceAt.X;
 	double Yposition = PlaceAt.Y;
 	TArray<ATile*> validMovesChoices;
 
+	//evaluate the tiles in the vertical axis below rook current position
 	for (int32 x = PlaceAt.X+1; x < ChessBoard->Size; x++)
 	{
+		//check if the searched position is still part of the chessboard
 		if (ChessBoard->TileMap.Contains(FVector2D(x, Yposition)))
 		{
 			ATile* CurrTile = ChessBoard->TileMap[FVector2D(x, PlaceAt.Y)];
-		
-						if (CurrTile->GetTileStatus() == Enemy)
-						{
-							validMovesChoices.Add(CurrTile);
-							break;
-						}
-						else if (CurrTile->GetTileStatus() == ETileStatus::EMPTY)
-						{
-							validMovesChoices.Add(CurrTile);
-						}
-						else
-						{
-							break;
-						}
+						
+			//if the tile is occupied by an enemy, add the tile and stop the search
+			if (CurrTile->GetTileStatus() == Enemy)
+			{
+				validMovesChoices.Add(CurrTile);
+				break;
+			}
+
+			//if the tile is empty, add the tile and keep going
+			else if (CurrTile->GetTileStatus() == ETileStatus::EMPTY)
+			{
+				validMovesChoices.Add(CurrTile);
+			}
+
+			//if the tile is occupied by one of my pieces, stop the search
+			else
+			{
+				break;
+			}
 		}
 	}
 
+	//evaluate the tiles in the vertical axis above rook current position
 	for (int32 x = PlaceAt.X - 1; x >= 0; x--)
 	{
+		//check if the searched position is still part of the chessboard
 		if (ChessBoard->TileMap.Contains(FVector2D(x, Yposition)))
 		{
 			ATile* CurrTile = ChessBoard->TileMap[FVector2D(x, Yposition)];
-		
-						if (CurrTile->GetTileStatus() == Enemy)
-						{
-							validMovesChoices.Add(CurrTile);
-							break;
-						}
-						else if (CurrTile->GetTileStatus() == ETileStatus::EMPTY)
-						{
-							validMovesChoices.Add(CurrTile);
-						}
-						else
-						{
-							break;
-						}
+
+			//if the tile is occupied by an enemy, add the tile and stop the search
+			if (CurrTile->GetTileStatus() == Enemy)
+			{
+				validMovesChoices.Add(CurrTile);
+				break;
+			}
+
+			//if the tile is empty, add the tile and keep going
+			else if (CurrTile->GetTileStatus() == ETileStatus::EMPTY)
+			{
+				validMovesChoices.Add(CurrTile);
+			}
+
+			//if the tile is occupied by one of my pieces, stop the search
+			else
+			{
+				break;
+			}
 		}
 	}
 
+	//evaluate the tiles in the horizontal to the left of rook current position
 	for (int32 y = PlaceAt.Y + 1; y < ChessBoard->Size; y++)
 	{
+		//check if the searched position is still part of the chessboard
 		if (ChessBoard->TileMap.Contains(FVector2D(Xposition, y)))
 		{
 			ATile* CurrTile = ChessBoard->TileMap[FVector2D(Xposition, y)];
-						if (CurrTile->GetTileStatus() == Enemy)
-						{
-							validMovesChoices.Add(CurrTile);
-							break;
-						}
-						else if (CurrTile->GetTileStatus() == ETileStatus::EMPTY)
-						{
-							validMovesChoices.Add(CurrTile);
-						}
-						else
-						{
-							break;
-						}
+						
+			//if the tile is occupied by an enemy, add the tile and stop the search
+			if (CurrTile->GetTileStatus() == Enemy)
+			{
+				validMovesChoices.Add(CurrTile);
+				break;
+			}
+
+			//if the tile is empty, add the tile and keep going
+			else if (CurrTile->GetTileStatus() == ETileStatus::EMPTY)
+			{
+				validMovesChoices.Add(CurrTile);
+			}
+
+			//if the tile is occupied by one of my pieces, stop the search
+			else
+			{
+				break;
+			}
 		}
 	}
 
+	//evaluate the tiles in the horizontal to the right of rook current position
 	for (int32 y = PlaceAt.Y - 1; y >= 0; y--)
 	{
+		//check if the searched position is still part of the chessboard
 		if (ChessBoard->TileMap.Contains(FVector2D(Xposition, y)))
 		{
+			//if the tile is occupied by an enemy, add the tile and stop the search
 			ATile* CurrTile = ChessBoard->TileMap[FVector2D(Xposition, y)];
-						if (CurrTile->GetTileStatus() == Enemy)
-						{
-							validMovesChoices.Add(CurrTile);
-							break;
-						}
-						else if (CurrTile->GetTileStatus() == ETileStatus::EMPTY)
-						{
-							validMovesChoices.Add(CurrTile);
-						}
-						else
-						{
-							break;
-						}
+			if (CurrTile->GetTileStatus() == Enemy)
+			{
+				validMovesChoices.Add(CurrTile);
+				break;
+			}
+
+			//if the tile is empty, add the tile and keep going
+			else if (CurrTile->GetTileStatus() == ETileStatus::EMPTY)
+			{
+				validMovesChoices.Add(CurrTile);
+			}
+
+			//if the tile is occupied by one of my pieces, stop the search
+			else
+			{
+				break;
+			}
 		}	
 	}
 	

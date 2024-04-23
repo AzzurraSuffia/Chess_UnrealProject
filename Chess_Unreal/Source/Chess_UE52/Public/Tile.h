@@ -36,12 +36,13 @@ public:
 	// get the (x, y) position
 	FVector2D GetGridPosition();
 
-	UStaticMeshComponent* GetStaticMeshComponent();
-
+	// set tile material
 	void SetTileColor(int32 color);
 
+	// set a number as text of tile text number component 
 	void SetTileNumber(int32 number);
 
+	// set a FString as text of tile text letter component 
 	void SetTileLetter(FString letter);
 
 protected:
@@ -54,21 +55,27 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UStaticMeshComponent* StaticMeshComponent;
 
+	// material instance for black tiles
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Components")
 	UMaterialInstance* BlackTile;
 
+	// material instance for white tiles
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Components")
 	UMaterialInstance* WhiteTile;
 
+	// material instance for the tile selected by human player on his turn
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Components")
 	UMaterialInstance* SelectedTile;
 
+	// material instance for suggested tiles during human player's turn
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Components")
 	UMaterialInstance* SuggestedTile;
 
+	// material instance for kings' tiles when checkmate occurs
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Components")
 	UMaterialInstance* CheckTile;
 
+	// material instance for departure and destination tiles of the move clicked in the storyboard
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Components")
 	UMaterialInstance* ReplayTile;
 

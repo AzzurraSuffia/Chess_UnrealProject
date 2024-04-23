@@ -11,11 +11,9 @@ AKingPiece::AKingPiece()
 
 }
 
-//AL TERMINA USA validMovesChoices.Empty() PER SVUOTARE L'ARRAY
 TArray<ATile*> AKingPiece::validMoves()
 {
-	//poco efficiente fare questo calcolo ogni volta 
-	//o lo fai una volta all'inizio o lo metti come attributo
+	//set the tile status of tiles occupied by opponent's piece
 	ETileStatus Enemy;
 	if (this->PieceColor == EColor::BLACK)
 	{
@@ -26,11 +24,11 @@ TArray<ATile*> AKingPiece::validMoves()
 		Enemy = ETileStatus::BLACKPIECE;
 	}
 
-	//Aggiungere controlli sul fatto che Xposition-1 ad esempio potrebbe essere fuori dal campo (li fa IsValid)
 	double Xposition = PlaceAt.X;
 	double Yposition = PlaceAt.Y;
 	TArray<ATile*> validMovesChoices;
 	
+	//store all king's possible destinations
 	TArray<FVector2D> ToEvaluateSquare = { 
 		FVector2D(Xposition + 1, Yposition + 1), 
 		FVector2D(Xposition + 1, Yposition),
@@ -42,14 +40,17 @@ TArray<ATile*> AKingPiece::validMoves()
 		FVector2D(Xposition - 1, Yposition - 1)};
 
 	for (int32 i = 0; i < ToEvaluateSquare.Num(); i++) {
+
+		//check if the searched position is still part of the chessboard
 		if(ChessBoard->TileMap.Contains(ToEvaluateSquare[i]))
 		{
 			ATile* CurrTile = ChessBoard->TileMap[ToEvaluateSquare[i]];
-		
-				if (CurrTile->GetTileStatus() == Enemy || CurrTile->GetTileStatus() == ETileStatus::EMPTY)
-				{
-					validMovesChoices.Add(CurrTile);
-				}
+				
+			//if the tile is occupied by an enemy or empty, add the tile as a candidate destination tile
+			if (CurrTile->GetTileStatus() == Enemy || CurrTile->GetTileStatus() == ETileStatus::EMPTY)
+			{
+				validMovesChoices.Add(CurrTile);
+			}
 		}
 	}
 

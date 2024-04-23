@@ -8,8 +8,8 @@ void UUI_TextBox::NativeConstruct()
 	Super::NativeConstruct();
 
 	Text = Cast<UTextBlock>(GetWidgetFromName(TEXT("TextNotation")));
-	if (IsValid(Text))
+	if (!IsValid(Text))
 	{
-		Text->SetText(FText::FromString("Null"));
+		UE_LOG(LogTemp, Warning, TEXT("Failed to cast Text Block"));
 	}
 }

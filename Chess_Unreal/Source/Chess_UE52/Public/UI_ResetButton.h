@@ -17,6 +17,7 @@ class CHESS_UE52_API UUI_ResetButton : public UUserWidget
 	
 public:
 
+	//reference to restart button on viewport
 	UPROPERTY(BlueprintReadWrite,/* meta = (BindWidget),*/ Category = "Widgets Components")
 	UButton* ResetFieldButton;
 

@@ -14,34 +14,51 @@ void UUI_MoveBox::NativeConstruct()
 	MoveNotation = Cast<UTextBlock>(GetWidgetFromName(TEXT("MoveString")));
 	if (IsValid(ExternalBox) && IsValid(Button) && IsValid(MoveNotation))
 	{
+        //set width and height of the size box
 		ExternalBox->SetWidthOverride(700.0f);
 		ExternalBox->SetHeightOverride(100.0f);
+
+        //set a default text for the text block
 		MoveNotation->SetText(FText::FromString("Move"));
+
+        //add on clicked event
 		Button->OnClicked.AddDynamic(this, &UUI_MoveBox::OnButtonClicked);
 	}
 }
 
+/*
+* When the button is clicked, change the chessboard state.
+*/
 void UUI_MoveBox::OnButtonClicked()
 {
     AChess_GameMode* GameMode = Cast<AChess_GameMode>(GetWorld()->GetAuthGameMode());
+
+    //get the index of the move clicked in the move stack
     int32 ClickedMoveIdx = GameMode->ChessBoard->MoveStack.Find(Move);
     int32 CurrentMoveIdx = -1;
     TArray<ATile*> PreviousColoredTiles = {};
 
+    //if the human player has selected a piece and then he has clicked in the storyboard, undo the first action
     AChess_HumanPlayer* HumanPlayer = Cast<AChess_HumanPlayer>(GameMode->Players[0]);
     if (IsValid(HumanPlayer) && !GameMode->ChessBoard->MoveStack.Last()->bisCheckmate)
     {   
         if (!HumanPlayer->bFirstClick)
         {
+            //set bfirstclick true again
             HumanPlayer->bFirstClick = true;
+
+            //restore the color of the suggested tiles and of the tile under the selected piece
             HumanPlayer->actualMoves.Add(HumanPlayer->SelectedTile);
             GameMode->ChessBoard->RestoreSquaresColor(HumanPlayer->actualMoves);
+
+            //delete the move instantiated
             UMove* firstclickmove = GameMode->ChessBoard->MoveStack.Last();
             firstclickmove->ConditionalBeginDestroy();
             GameMode->ChessBoard->MoveStack.Remove(firstclickmove);
         }
     }
 
+    //get the index of the current last move displayed on the screen and its departure and destination tiles
     if (GameMode->ChessBoard->CurrentChessboardState != nullptr)
     {
         CurrentMoveIdx = GameMode->ChessBoard->MoveStack.Find(GameMode->ChessBoard->CurrentChessboardState);
@@ -55,14 +72,16 @@ void UUI_MoveBox::OnButtonClicked()
 
     if (ClickedMoveIdx != INDEX_NONE && CurrentMoveIdx != INDEX_NONE)
     {
+        //if another button was previously clicked, restore tiles color
         GameMode->ChessBoard->RestoreSquaresColor(PreviousColoredTiles);
 
+        //change color to departure tile and destination tile of the move clicked
         Move->To->SetTileColor(5);
         Move->From->SetTileColor(5);
 
         if (ClickedMoveIdx < CurrentMoveIdx)
         {
-            // ClickedMove is placed before CurrentMove in the stack
+            // ClickedMove is placed before CurrentMove in the stack, undo the moves in between
             for (int32 i = CurrentMoveIdx; i > ClickedMoveIdx; i--)
             {
                 GameMode->ChessBoard->MoveStack[i]->UndoMove(GameMode);
@@ -70,13 +89,14 @@ void UUI_MoveBox::OnButtonClicked()
         }
         else
         {
-            // ClickedMove is placed after CurrentMove in the stack
+            // ClickedMove is placed after CurrentMove in the stack, do the moves in between
             for (int32 i = CurrentMoveIdx + 1; i <= ClickedMoveIdx; i++)
             {
                 GameMode->ChessBoard->MoveStack[i]->doMove(GameMode);
             }
         }
 
+        //the last move currently visualized is Move, assign it to CurrentChessboardState
         GameMode->ChessBoard->CurrentChessboardState = Move;
     }
     else

@@ -7,7 +7,9 @@
 //Array of letters to define chessboard files
 TArray<FString> NumberToLetter = { FString("a"), FString("b"), FString("c"), FString("d"), FString("e"), FString("f"), FString("g"), FString("h") };
 
-//function that return the piecenotation of a piece
+/*
+* Return the capital letter of a piece by casting it.
+*/
 EPieceNotation PieceToNotation(AChessPiece* Piece)
 {
 	if (APawnPiece* Pawn = Cast<APawnPiece>(Piece))
@@ -74,7 +76,10 @@ UMove::UMove(int32 Number, ATile* A, ATile* B, AChessPiece* Piece, /*bool file, 
 	bisCheckmate = Checkmate;
 }
 
-//returns as an FString the Long Algebraic Notation of the move
+/*
+* Returns the Long Algebraic Notation of the move.
+* It checks all the attributes of the move to establish its notation.
+*/
 FString UMove::AlgebricMoveNotation()
 {
 	FString MoveNotation = FString();
@@ -91,7 +96,7 @@ FString UMove::AlgebricMoveNotation()
 		case EPieceNotation::Q: MoveNotation.Append("Q"); break;
 		case EPieceNotation::K: MoveNotation.Append("K"); break;
 		default:
-		//pawn has not a capital letter
+		//pawn has not a capital letter in move notation
 			MoveNotation.Append("");
 		}
 		
@@ -146,7 +151,7 @@ FString UMove::AlgebricMoveNotation()
 			}
 		}
 
-		//append check sign if needed
+		//append check sign if needed (king check)
 		if (bisCheck)
 		{
 			MoveNotation.Append("+");
@@ -161,7 +166,9 @@ FString UMove::AlgebricMoveNotation()
 	return MoveNotation;
 }
 
-//update data structures and move actors in order to revert the move
+/*
+* Update data structures and move actors in order to revert the move.
+*/
 void UMove::UndoMove(AChess_GameMode* GameMode)
 {
 	//update chessboard data structures to revert virtually the move
@@ -193,7 +200,7 @@ void UMove::UndoMove(AChess_GameMode* GameMode)
 	FVector NewLocation = Location + FVector(6, 6, 20);
 	PieceMoving->SetActorLocation(NewLocation);
 
-	//if there's a capture, show the piece captured
+	//in case of capture, show the piece captured
 	if (bisCapture)
 	{
 		Location = GameMode->ChessBoard->GetRelativeLocationByXYPosition(PieceCaptured->PlaceAt.X, PieceCaptured->PlaceAt.Y);
@@ -201,7 +208,7 @@ void UMove::UndoMove(AChess_GameMode* GameMode)
 		PieceCaptured->SetActorLocation(NewLocation);
 		PieceCaptured->SetActorHiddenInGame(false);
 	} 
-	//if there's a capture with en passant, show the piece
+	//in case of capture with en passant, show the piece
 	else if (benPassant)
 	{
 		Location = GameMode->ChessBoard->GetRelativeLocationByXYPosition(PieceCaptured->PlaceAt.X, PieceCaptured->PlaceAt.Y);
@@ -210,7 +217,7 @@ void UMove::UndoMove(AChess_GameMode* GameMode)
 		PieceCaptured->SetActorHiddenInGame(false);
 	}
 
-	//if there's a promotion
+	//in case of promotion
 	if (bisPromotion)
 	{
 		//remove the new piece from the pieces on chessboard and add the pawn
@@ -231,7 +238,7 @@ void UMove::UndoMove(AChess_GameMode* GameMode)
 		PieceMoving->SetActorHiddenInGame(false);
 	}
 
-	//in case of checkmate restore the color of tile where king is at
+	//in case of checkmate restore the color of the tile where king is on
 	if (bisCheckmate)
 	{
 		if (PieceMoving->PieceColor == EColor::WHITE)
@@ -247,11 +254,15 @@ void UMove::UndoMove(AChess_GameMode* GameMode)
 	}
 }
 
-//update data structures and move actors in order to confirm the move
+/*
+* Update data structures and move actors in order to confirm the move.
+*/
 void UMove::doMove(AChess_GameMode* GameMode)
 {
+	//update chessboard data structures to execute virtually the move
 	AChessPiece* Captured = PieceMoving->doVirtualMove(PieceMoving, From, To);
 
+	//set boolean flag for pawn first move false if it is its first move
 	APawnPiece* Pawn = Cast<APawnPiece>(PieceMoving);
 	if (IsValid(Pawn))
 	{
@@ -265,29 +276,35 @@ void UMove::doMove(AChess_GameMode* GameMode)
 			PawnStartPosition = (GameMode->ChessBoard->Size - 2);
 		}
 
+		//if departure position is the same as the start position of the pawn, it can be moved through two squares
 		if (From->GetGridPosition().X == PawnStartPosition)
 		{
 			Pawn->bfirstMove = false;
 		}
 	}
 
+	//relocate the piece moved
 	FVector Location = GameMode->ChessBoard->GetRelativeLocationByXYPosition(PieceMoving->PlaceAt.X, PieceMoving->PlaceAt.Y);
 	FVector NewLocation = Location + FVector(6, 6, 20);
 	PieceMoving->SetActorLocation(NewLocation);
 
+	//in case of capture, hide the piece captured and move it out of chessboard
 	if (bisCapture && Captured == PieceCaptured)
 	{
 		GameMode->ChessBoard->MoveOutOfChessBoard(PieceCaptured);
 		PieceCaptured->SetActorHiddenInGame(true);
 	}
+	//in case of capture with en passant, hide the piece captured and move it out of chessboard
 	else if (benPassant && Captured == PieceCaptured)
 	{
 		GameMode->ChessBoard->MoveOutOfChessBoard(PieceCaptured);
 		PieceCaptured->SetActorHiddenInGame(true);
 	}
 
+	//in case of promotion
 	if (bisPromotion)
 	{
+		//remove the pawn from the pieces on chessboard and add the new piece
 		if (PiecePromoted->PieceColor == EColor::WHITE)
 		{
 			GameMode->ChessBoard->WhitePieceOnChessBoard.Remove(PieceMoving);
@@ -299,6 +316,7 @@ void UMove::doMove(AChess_GameMode* GameMode)
 			GameMode->ChessBoard->BlackPieceOnChessBoard.Add(PiecePromoted);
 		}
 
+		//hide the pawn, relocate it out of chessboard and show the new piece
 		PiecePromoted->PlaceAt = PieceMoving->PlaceAt;
 		GameMode->ChessBoard->MoveOutOfChessBoard(PieceMoving);
 		Location = GameMode->ChessBoard->GetRelativeLocationByXYPosition(PiecePromoted->PlaceAt.X, PiecePromoted->PlaceAt.Y);
@@ -306,6 +324,8 @@ void UMove::doMove(AChess_GameMode* GameMode)
 		PiecePromoted->SetActorLocation(NewLocation);
 		PiecePromoted->SetActorHiddenInGame(false);
 	}
+
+	//in case of checkmate change the color of the tile where king is on and turn it red
 	if (bisCheckmate)
 	{
 		if (PieceMoving->PieceColor == EColor::WHITE)
@@ -319,9 +339,11 @@ void UMove::doMove(AChess_GameMode* GameMode)
 	}
 }
 
+/*
+* Copy attributes from OtherMove one by one.
+*/
 void UMove::CopyFrom(const UMove* OtherMove)
 {
-	//Copy attributes one by one
 	MoveNumber = OtherMove->MoveNumber;
 	From = OtherMove->From;
 	To = OtherMove->To;
@@ -337,6 +359,9 @@ void UMove::CopyFrom(const UMove* OtherMove)
 	bisCheckmate = OtherMove->bisCheckmate;
 }
 
+/*
+* Static method to copy attributes one by one in SourceMove in DestinationMove.
+*/
 void UMove::CopyMove(UMove* DestinationMove, const UMove* SourceMove)
 {
 	if (DestinationMove && SourceMove)
@@ -345,9 +370,11 @@ void UMove::CopyMove(UMove* DestinationMove, const UMove* SourceMove)
 	}
 }
 
+/*
+* Static method to clear all move fields
+*/
 void UMove::ClearMove(UMove* Move)
 {
-	//Clear all the move fields
 	Move->MoveNumber = 0;
 	Move->PieceMoving = nullptr;
 	Move->To = nullptr;

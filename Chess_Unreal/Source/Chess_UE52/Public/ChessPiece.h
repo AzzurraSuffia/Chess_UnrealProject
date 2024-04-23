@@ -32,8 +32,10 @@ public:
 
 	virtual bool CanCaptureOpponentPiece(AChessPiece* PieceCaptured);
 
+	//return piece value for minimax evaluation function
 	virtual int32 PieceWeight();
 
+	//return an array of candidate destination tiles from the current position and chessboard state 
 	virtual TArray<ATile*> validMoves();
 
 	virtual bool IsLegal(ATile* to);

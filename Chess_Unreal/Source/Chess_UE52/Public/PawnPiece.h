@@ -18,8 +18,10 @@ public:
 
 	virtual bool CanCaptureOpponentPiece(AChessPiece* PieceCaptured) override;
 
+	//return an array of candidate destination tiles from the current position and chessboard state 
 	virtual TArray<ATile*> validMoves() override;
 
+	//return piece value for minimax evaluation function
 	virtual int32 PieceWeight() override;
 
 	virtual AChessPiece* doVirtualMove(AChessPiece* Piece, ATile* from, ATile* to) override;

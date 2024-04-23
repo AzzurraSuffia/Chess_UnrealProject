@@ -16,6 +16,8 @@ class CHESS_UE52_API UUI_TextBox : public UUserWidget
 	GENERATED_BODY()
 
 public:
+
+	//reference to the text block in the widget
 	UPROPERTY(BlueprintReadWrite,/* meta = (BindWidget),*/ Category = "Widgets Components")
 	UTextBlock* Text;
 
