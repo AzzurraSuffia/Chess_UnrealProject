@@ -73,20 +73,6 @@ void AChess_MinimaxPlayer::OnTurn()
 			else
 			{
 				BestMove->doMove(GameMode);
-				if (!GameMode->ChessBoard->MoveStack.IsEmpty() && GameMode->ChessBoard->MoveStack.Last()->bisCheck)
-				{
-					AKingPiece* King = Cast<AKingPiece>(BestMove->PieceMoving);
-					if (IsValid(King))
-					{
-						ATile* BKingPosition = BestMove->From;
-						GameMode->ChessBoard->RestoreASquareColor(BKingPosition);
-					}
-					else
-					{
-						ATile* BKingPosition = GameMode->ChessBoard->TileMap[GameMode->ChessBoard->BlackKing->PlaceAt];
-						GameMode->ChessBoard->RestoreASquareColor(BKingPosition);
-					}
-				}
 				GameMode->ChessBoard->MoveStack.Add(BestMove);
 
 				bool MoveResult = GameMode->IsGameEnded(BestMove, GameMode->ChessBoard->WhiteKing);
@@ -646,6 +632,7 @@ UMove* AChess_MinimaxPlayer::FindBestMove(AGameField* ChessBoard, int32 Depth)
 				TArray<ATile*> CandidateEnPassant = GameMode->DetectEnPassant(CurrPawn, PreviousMove->PieceMoving, PreviousMove->To, PreviousMove->From);
 				for (ATile* Candidate : CandidateEnPassant)
 				{
+					GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("1 TILE EN PASSANT"));
 					MaxCandidateMoves.Add(Candidate);
 				}
 				if (GameMode->ChessBoard->TileMap[CurrPawn->PlaceAt]->GetGridPosition().X == GameMode->ChessBoard->Size - 2)

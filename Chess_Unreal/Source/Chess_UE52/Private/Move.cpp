@@ -4,8 +4,10 @@
 #include "Move.h"
 #include "Chess_GameMode.h"
 
+//Array of letters to define chessboard files
 TArray<FString> NumberToLetter = { FString("a"), FString("b"), FString("c"), FString("d"), FString("e"), FString("f"), FString("g"), FString("h") };
 
+//function that return the piecenotation of a piece
 EPieceNotation PieceToNotation(AChessPiece* Piece)
 {
 	if (APawnPiece* Pawn = Cast<APawnPiece>(Piece))
@@ -72,13 +74,14 @@ UMove::UMove(int32 Number, ATile* A, ATile* B, AChessPiece* Piece, /*bool file, 
 	bisCheckmate = Checkmate;
 }
 
+//returns as an FString the Long Algebraic Notation of the move
 FString UMove::AlgebricMoveNotation()
 {
 	FString MoveNotation = FString();
 
 	if (PieceMoving != nullptr && From != nullptr && To != nullptr && MoveNumber != 0)
 	{
-
+		//using the piece reference append the piece capital letter to the move notation as first
 		EPieceNotation Letter = PieceToNotation(PieceMoving);
 		switch (Letter)
 		{
@@ -88,21 +91,24 @@ FString UMove::AlgebricMoveNotation()
 		case EPieceNotation::Q: MoveNotation.Append("Q"); break;
 		case EPieceNotation::K: MoveNotation.Append("K"); break;
 		default:
-		//per il pedone non va indicato la lettera rappresentante il pezzo
+		//pawn has not a capital letter
 			MoveNotation.Append("");
 		}
 		
+		//append file of departure tile (with ambiguity if desired)
 		//if (bfileAmbiguity)
 		//{
 			int32 Yfrom = From->GetGridPosition().Y;
 			MoveNotation.Append(NumberToLetter[Yfrom]);
 		//} 
+		//append rank of departure tile (with ambiguity if desired)
 		//else if (brankAmbiguity)
 		//{
 			int32 Xfrom = From->GetGridPosition().X;
 			MoveNotation.Append(FString::FromInt(Xfrom + 1));
 		//}
 
+		//append capture sign if needed (capture or en passant)
 		if (bisCapture || benPassant)
 		{
 			//if (Letter == EPieceNotation::P && !bfileAmbiguity)
@@ -113,16 +119,20 @@ FString UMove::AlgebricMoveNotation()
 
 			MoveNotation.Append("x");
 		}
+		//append dash sign otherwise
 		else
 		{
 			MoveNotation.Append("-");
 		}
 
+		//append file of destination tile 
 		int32 Xposition = To->GetGridPosition().X; 
+		//append rank of destination tile 
 		int32 Yposition = To->GetGridPosition().Y;
 		MoveNotation.Append(NumberToLetter[Yposition]);
 		MoveNotation.Append(FString::FromInt(Xposition + 1));
 
+		//append the capital letter of the piece that replaces the pawn in case of promotion
 		if (bisPromotion)
 		{
 			MoveNotation.Append("=");
@@ -136,10 +146,12 @@ FString UMove::AlgebricMoveNotation()
 			}
 		}
 
+		//append check sign if needed
 		if (bisCheck)
 		{
 			MoveNotation.Append("+");
 		} 
+		//append checkmate sign if needed (end of game)
 		else if (bisCheckmate)
 		{
 			MoveNotation.Append("#");
@@ -149,12 +161,13 @@ FString UMove::AlgebricMoveNotation()
 	return MoveNotation;
 }
 
+//update data structures and move actors in order to revert the move
 void UMove::UndoMove(AChess_GameMode* GameMode)
 {
-	/*funzione che aggiorna tutte le strutture dati, devo solo spostare gli attori */
-	/*grazie all'override aggiorna le strutture dati per l'en passant da sè */
+	//update chessboard data structures to revert virtually the move
 	PieceMoving->undoVirtualMove(PieceMoving, To, From, PieceCaptured);
 
+	//restore boolean flag for pawn first move if needed
 	APawnPiece* Pawn = Cast<APawnPiece>(PieceMoving);
 	if (IsValid(Pawn))
 	{
@@ -168,16 +181,19 @@ void UMove::UndoMove(AChess_GameMode* GameMode)
 			PawnStartPosition = (GameMode->ChessBoard->Size - 2);
 		}
 
+		//if departure position is the same as the start position of the pawn, it can be moved through two squares
 		if (From->GetGridPosition().X == PawnStartPosition)
 		{
 			Pawn->bfirstMove = true;
 		}
 	}
 
+	//relocate the piece moved
 	FVector Location = GameMode->ChessBoard->GetRelativeLocationByXYPosition(PieceMoving->PlaceAt.X, PieceMoving->PlaceAt.Y);
 	FVector NewLocation = Location + FVector(6, 6, 20);
 	PieceMoving->SetActorLocation(NewLocation);
 
+	//if there's a capture, show the piece captured
 	if (bisCapture)
 	{
 		Location = GameMode->ChessBoard->GetRelativeLocationByXYPosition(PieceCaptured->PlaceAt.X, PieceCaptured->PlaceAt.Y);
@@ -185,6 +201,7 @@ void UMove::UndoMove(AChess_GameMode* GameMode)
 		PieceCaptured->SetActorLocation(NewLocation);
 		PieceCaptured->SetActorHiddenInGame(false);
 	} 
+	//if there's a capture with en passant, show the piece
 	else if (benPassant)
 	{
 		Location = GameMode->ChessBoard->GetRelativeLocationByXYPosition(PieceCaptured->PlaceAt.X, PieceCaptured->PlaceAt.Y);
@@ -193,8 +210,10 @@ void UMove::UndoMove(AChess_GameMode* GameMode)
 		PieceCaptured->SetActorHiddenInGame(false);
 	}
 
+	//if there's a promotion
 	if (bisPromotion)
 	{
+		//remove the new piece from the pieces on chessboard and add the pawn
 		if (PiecePromoted->PieceColor == EColor::WHITE)
 		{
 			GameMode->ChessBoard->WhitePieceOnChessBoard.Remove(PiecePromoted);
@@ -206,10 +225,13 @@ void UMove::UndoMove(AChess_GameMode* GameMode)
 			GameMode->ChessBoard->BlackPieceOnChessBoard.Add(PieceMoving);
 		}
 
+		//hide the new piece, relocate it out of chessboard and show the pawn
 		PiecePromoted->SetActorHiddenInGame(true);
 		GameMode->ChessBoard->MoveOutOfChessBoard(PiecePromoted);
 		PieceMoving->SetActorHiddenInGame(false);
 	}
+
+	//in case of checkmate restore the color of tile where king is at
 	if (bisCheckmate)
 	{
 		if (PieceMoving->PieceColor == EColor::WHITE)
@@ -225,9 +247,9 @@ void UMove::UndoMove(AChess_GameMode* GameMode)
 	}
 }
 
+//update data structures and move actors in order to confirm the move
 void UMove::doMove(AChess_GameMode* GameMode)
 {
-	/*grazie all'override aggiorna le strutture dati per l'en passant da sè */
 	AChessPiece* Captured = PieceMoving->doVirtualMove(PieceMoving, From, To);
 
 	APawnPiece* Pawn = Cast<APawnPiece>(PieceMoving);

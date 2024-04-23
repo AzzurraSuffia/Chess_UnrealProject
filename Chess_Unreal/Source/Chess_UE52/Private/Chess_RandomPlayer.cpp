@@ -178,21 +178,6 @@ void AChess_RandomPlayer::OnTurn()
 
 				GameMode->MovePiece(RandomPlayerPiece[RandPieceIdx], From, actualMoves[RandTileIdx]);
 
-				if (!GameMode->ChessBoard->MoveStack.IsEmpty() && GameMode->ChessBoard->MoveStack.Last()->bisCheck)
-				{
-					AKingPiece* King = Cast<AKingPiece>(RandomPlayerPiece[RandPieceIdx]);
-					if (IsValid(King))
-					{
-						ATile* BKingPosition = RandomMove->From;
-						GameMode->ChessBoard->RestoreASquareColor(BKingPosition);
-					}
-					else
-					{
-						ATile* BKingPosition = GameMode->ChessBoard->TileMap[GameMode->ChessBoard->BlackKing->PlaceAt];
-						GameMode->ChessBoard->RestoreASquareColor(BKingPosition);
-					}
-				}
-
 				ChessBoard->MoveStack.Add(RandomMove);
 
 				if (GameMode->CheckForPawnPromotion(RandomPlayerPiece[RandPieceIdx]))
