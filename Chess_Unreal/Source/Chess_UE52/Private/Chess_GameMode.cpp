@@ -408,7 +408,7 @@ TArray<ATile*> AChess_GameMode::DetectEnPassant(APawnPiece* Pawn, AChessPiece* P
 			//if the tile is empty and the very previous move was an opponent's move
 			if (DiagonalSquare->GetTileStatus() == ETileStatus::EMPTY && PreviousPieceMoving->PieceColor == OpponentColor)
 			{
-				//check if the previous piece moved is adjacent to the pawn
+				//check if the piece moved is adjacent to the pawn
 				if ((PreviousTo->GetGridPosition().X + OneStep) == DiagonalSquare->GetGridPosition().X && PreviousTo->GetGridPosition().Y == DiagonalSquare->GetGridPosition().Y)
 				{
 					//check if the adjacent piece is a pawn

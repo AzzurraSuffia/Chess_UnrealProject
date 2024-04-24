@@ -11,7 +11,6 @@ AChess_RandomPlayer::AChess_RandomPlayer()
 	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	/*QUI CI VA ISVALID???*/
 	GameInstance = Cast<UChess_GameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
 }
 
@@ -42,14 +41,12 @@ void AChess_RandomPlayer::OnPawnPromotion()
 	//GameInstance->SetTurnMessage(TEXT("AI (Random) Pawn Promotion"));
 
 	AChess_GameMode* GameMode = (AChess_GameMode*)(GetWorld()->GetAuthGameMode());
-
-	FTimerHandle TimerHandle;
 	int32 RandPieceIdx = -1;
 
-	/*RandPieceIdx assume valori compresi tra 0 e 4-1*/
+	//choose randomly an integer number between 0 and 3
 	RandPieceIdx = FMath::Rand() % 4;
 
-	/*LANCIATA ECCEZIONE SE METTO QUANTO SEGUE NEL CORPO DEL TIMER HANDLE*/
+	//promote the pawn into a differente piece based on the number extracted 
 	switch (RandPieceIdx)
 	{
 	case 0: GameMode->ChessBoard->PromotePawn(EPieceNotation::B); break;
@@ -65,6 +62,7 @@ void AChess_RandomPlayer::OnTurn()
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("AI (Random) Turn"));
 	GameInstance->SetTurnMessage(TEXT("AI (Random) Turn"));
 
+	//disable move buttons and restart button to prevent clicks while AI is thinking
 	AChess_PlayerController* PlayerController = Cast<AChess_PlayerController>(GetWorld()->GetFirstPlayerController());
 	if (IsValid(PlayerController))
 	{
@@ -75,10 +73,9 @@ void AChess_RandomPlayer::OnTurn()
 		PlayerController->HUDChess->ResetButtonWidget->SetIsEnabled(false);
 	}
 
-	//Modo per settare un Timer per simulare il fatto che l'AI si prenda del tempo per pensare
 	FTimerHandle TimerHandle;
 
-	//Lambda function
+	//one second delay
 	GetWorld()->GetTimerManager().SetTimer(TimerHandle, [&]()
 		{
 			AChess_GameMode* GameMode = (AChess_GameMode*)(GetWorld()->GetAuthGameMode());
@@ -88,19 +85,18 @@ void AChess_RandomPlayer::OnTurn()
 			int32 RandPieceIdx = -1;
 			AGameField* ChessBoard = GameMode->ChessBoard;
 			UMove* RandomMove = NewObject<UMove>();
-			
-			if (!GameMode->ChessBoard->MoveStack.IsEmpty())
-			{
-				TArray<ATile*> PreviousTiles = { GameMode->ChessBoard->CurrentChessboardState->To,GameMode->ChessBoard->CurrentChessboardState->From };
-				GameMode->ChessBoard->RestoreSquaresColor(PreviousTiles);
-			}
 
 			if (RandomMove && IsValid(GameMode))
 			{
 				do
 				{
+					//randomly choose a piece from those still on chessboard
 					RandPieceIdx = FMath::Rand() % RandomPlayerPiece.Num();
+
+					//find its candidate destination tiles
 					candidateMoves = RandomPlayerPiece[RandPieceIdx]->validMoves();
+
+					//if it's a pawn, check if en passant is possible
 					APawnPiece* CurrPawn = Cast<APawnPiece>(RandomPlayerPiece[RandPieceIdx]);
 					if (IsValid(CurrPawn))
 					{
@@ -108,12 +104,16 @@ void AChess_RandomPlayer::OnTurn()
 						{
 							UMove* PreviousMove = GameMode->ChessBoard->MoveStack.Last();
 							TArray<ATile*> CandidateEnPassant = GameMode->DetectEnPassant(CurrPawn, PreviousMove->PieceMoving, PreviousMove->To, PreviousMove->From);
+							
+							//add each en passant destination tile found to the other tiles
 							for (ATile* Candidate : CandidateEnPassant)
 							{
 								candidateMoves.Add(Candidate);
 							}
 						}
 					}
+
+					//from candidate destination tiles find the legal ones
 					for (ATile* candidateTile : candidateMoves)
 					{
 						if (RandomPlayerPiece[RandPieceIdx]->IsLegal(candidateTile))
@@ -122,28 +122,35 @@ void AChess_RandomPlayer::OnTurn()
 						}
 					}
 
+				//if that piece has no legal moves, repeat
 				} while (actualMoves.IsEmpty());
 
+				//randomly choose a destination tile
 				int32 RandTileIdx = FMath::Rand() % actualMoves.Num();
 				FVector2D MoveCurrPieceTo = actualMoves[RandTileIdx]->GetGridPosition();
 
+				//update Move UObject with the data of this move
 				RandomMove->MoveNumber = GameMode->MoveCounter;
 				RandomMove->From = ChessBoard->TileMap[RandomPlayerPiece[RandPieceIdx]->PlaceAt];
 				RandomMove->To = actualMoves[RandTileIdx];
 				RandomMove->PieceMoving = RandomPlayerPiece[RandPieceIdx];
 
+				//if the destination tile has above a white piece, it's a standard capture
 				if (actualMoves[RandTileIdx]->GetTileStatus() == ETileStatus::WHITEPIECE)
 				{
-					/*C'E' UNA CATTURA*/
+					//get opponent's piece reference
 					for (AChessPiece* whitePiece : ChessBoard->WhitePieceOnChessBoard)
 					{
 						if (whitePiece->PlaceAt == MoveCurrPieceTo)
 						{
+							//remove the piece captured from chessboard
 							ChessBoard->WhitePieceOnChessBoard.Remove(whitePiece);
-							RandomMove->bisCapture = true;
-							RandomMove->PieceCaptured = whitePiece;
 							whitePiece->SetActorHiddenInGame(true);
 							ChessBoard->MoveOutOfChessBoard(whitePiece);
+
+							//update move fields
+							RandomMove->bisCapture = true;
+							RandomMove->PieceCaptured = whitePiece;
 							break;
 						}
 					}
@@ -152,22 +159,29 @@ void AChess_RandomPlayer::OnTurn()
 				ATile* From = ChessBoard->TileMap[RandomPlayerPiece[RandPieceIdx]->PlaceAt];
 				ATile* To = actualMoves[RandTileIdx];
 
-				/*EN PASSANT*/
+				//if the piece randomly selected is a pawn
 				APawnPiece* CurrPawn = Cast<APawnPiece>(RandomPlayerPiece[RandPieceIdx]);
 				if (IsValid(CurrPawn))
 				{
+					//if a diagonal empty tile is passed, the move has to be managed as an en passant
 					if (To->GetTileStatus() == ETileStatus::EMPTY && To->GetGridPosition().Y != From->GetGridPosition().Y)
 					{
+						//get opponent's pawn position
 						FVector2D OpponentPawnPosition = FVector2D(To->GetGridPosition().X + 1, To->GetGridPosition().Y);
+
+						//get opponent's pawn reference
 						for (AChessPiece* whitePiece : ChessBoard->WhitePieceOnChessBoard)
 						{
 							if (whitePiece->PlaceAt == OpponentPawnPosition)
 							{
+								//remove the piece captured from chessboard
 								ChessBoard->WhitePieceOnChessBoard.Remove(whitePiece);
-								RandomMove->benPassant = true;
-								RandomMove->PieceCaptured = whitePiece;
 								whitePiece->SetActorHiddenInGame(true);
 								ChessBoard->MoveOutOfChessBoard(whitePiece);
+
+								//update move fields
+								RandomMove->benPassant = true;
+								RandomMove->PieceCaptured = whitePiece;
 								break;
 							}
 						}
@@ -176,18 +190,24 @@ void AChess_RandomPlayer::OnTurn()
 					}
 				}
 
+				//move the piece randomly selected
 				GameMode->MovePiece(RandomPlayerPiece[RandPieceIdx], From, actualMoves[RandTileIdx]);
 
+				//add the current move to move stack
 				ChessBoard->MoveStack.Add(RandomMove);
 
+				//check if a pawn promotion is possible and eventually manage it
 				if (GameMode->CheckForPawnPromotion(RandomPlayerPiece[RandPieceIdx]))
 				{
 				}
 
+				//check if game ended with this move
 				bool MoveResult = GameMode->IsGameEnded(RandomMove, ChessBoard->WhiteKing);
 
+				//update the current chessboard state with this move
 				GameMode->ChessBoard->CurrentChessboardState = GameMode->ChessBoard->MoveStack.Last();
 
+				//add the move button of this move to the storyboard
 				AChess_PlayerController* PlayerController = Cast<AChess_PlayerController>(GetWorld()->GetFirstPlayerController());
 				if (IsValid(PlayerController))
 				{
@@ -195,6 +215,7 @@ void AChess_RandomPlayer::OnTurn()
 					MoveBox->Move = RandomMove;
 				}
 
+				//if the game isn't ended yet, it's next player's turn
 				if (!MoveResult)
 				{
 					GameMode->TurnNextPlayer();
@@ -202,7 +223,6 @@ void AChess_RandomPlayer::OnTurn()
 			}
 			else
 			{
-				// Pointer to the UMove object is not valid
 				UE_LOG(LogTemp, Warning, TEXT("RandomMove or GameMode pointer not valid."));
 			}
 		}, 1, false);

@@ -32,15 +32,27 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-	virtual void OnPawnPromotion() override;
+	//minimax player behavior when his turn comes
 	virtual void OnTurn() override;
+
+	//minimax player behavior when he wins
 	virtual void OnWin() override;
+
+	//minimax player behavior when he loses
 	virtual void OnLose() override;
+
+	//minimax player behavior when the game ends in a draw
 	virtual void OnDraw(EResult DrawOrigin) override;
 
-	void DoMinimaxMove(AChessPiece* Piece, ATile* CandidateTile);
+	//evaluation function for minimax
 	int32 EvaluateChessboard(TArray<AChessPiece*>& WhitePieces, TArray<AChessPiece*>& BlackPieces);
+
+	//utility function for minimax
 	int32 Utility(int32 Player);
+
+	//alpha-beta minimax 
 	int32 AlphaBetaMiniMax(int32 Depth, bool bisMax, int32 alpha, int32 beta, AChessPiece* PreviousPiece, ATile* PreviousTo, ATile* PreviousFrom);
+
+	//find best move for minimax player
 	UMove* FindBestMove(AGameField* ChessBoard, int32 Depth);
 };

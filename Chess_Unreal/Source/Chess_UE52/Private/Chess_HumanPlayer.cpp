@@ -44,9 +44,11 @@ bool AChess_HumanPlayer::ManageReplay(UMove* FirstReplayMove)
 	//move clicked in the storyboard was a black move: the human move is valid (confirm the move)
 	if (GameMode->ChessBoard->CurrentChessboardState->PieceMoving->PieceColor == EColor::BLACK)
 	{
+		//restore squares colors of departure and destination tiles of the clicked move
 		GameMode->ChessBoard->RestoreASquareColor(GameMode->ChessBoard->CurrentChessboardState->To);
 		GameMode->ChessBoard->RestoreASquareColor(GameMode->ChessBoard->CurrentChessboardState->From);
 
+		//get move indexes in move stack
 		int32 MoveDoneIdx = GameMode->ChessBoard->MoveStack.Find(GameMode->ChessBoard->MoveStack.Last());
 		int32 ClickedMoveIdx = GameMode->ChessBoard->MoveStack.Find(GameMode->ChessBoard->CurrentChessboardState);
 
@@ -55,9 +57,11 @@ bool AChess_HumanPlayer::ManageReplay(UMove* FirstReplayMove)
 			AChess_PlayerController* PlayerController = Cast<AChess_PlayerController>(GetWorld()->GetFirstPlayerController());
 			if (IsValid(PlayerController))
 			{
+				//update game mode move counter
 				GameMode->MoveCounter = GameMode->ChessBoard->MoveStack[ClickedMoveIdx]->MoveNumber + 1;
 				GameMode->ChessBoard->MoveStack.Last()->MoveNumber = GameMode->MoveCounter;
 
+				//destroy text boxes between last move and clicked move (one text box per move)
 				int32 LastTextBoxToPreserve = ClickedMoveIdx/2;
 				int32 LastTextBoxIdx = PlayerController->HUDChess->OtherNotationComponents.Num() - 1;
 
@@ -65,25 +69,29 @@ bool AChess_HumanPlayer::ManageReplay(UMove* FirstReplayMove)
 				{
 					PlayerController->HUDChess->OtherNotationComponents[i]->ConditionalBeginDestroy();
 				}
+				//remove the references to the text boxes destroyed
 				PlayerController->HUDChess->OtherNotationComponents.SetNum(LastTextBoxToPreserve+1);
 
+				
 				for (int32 i = MoveDoneIdx - 1; i > ClickedMoveIdx; i--)
 				{
 					UMove* Move = GameMode->ChessBoard->MoveStack[i];
 
-					//non devo fare l'undo della mossa perchè è già stato fatto con il click nello storico
-
-					//tornando indietro devo ripristinare i pezzi catturati in quel range di mosse (NON devo distruggere i pezzi catturati)
-					//tornando indietro devo ripristinare i pedoni promossi (DEVO distruggere i pezzi in cui sono stati promossi)
+					//destroy all the new piece from promotion in the moves between last move and clicked move
 					if (Move->bisPromotion)
 					{
 						Move->PiecePromoted->Destroy();
 					}
+					//destroy all the moves between last move and clicked move
 					Move->ConditionalBeginDestroy();
+
+					//remove them from move stack
 					GameMode->ChessBoard->MoveStack.Remove(Move);
 
+					//destroy all the move boxes between last move and clicked move
 					PlayerController->HUDChess->AllMoves[i]->ConditionalBeginDestroy();
 				}
+				//remove the references to the move boxes destroyed
 				PlayerController->HUDChess->AllMoves.SetNum(ClickedMoveIdx+1);
 			}
 		}
@@ -106,11 +114,33 @@ bool AChess_HumanPlayer::ManageReplay(UMove* FirstReplayMove)
 				MoveBox->SetIsEnabled(true);
 			}
 		}
+
+		//set replay color again
 		GameMode->ChessBoard->CurrentChessboardState->To->SetTileColor(5);
 		GameMode->ChessBoard->CurrentChessboardState->From->SetTileColor(5);
 
 		return false;
 	}
+}
+
+TArray<ATile*> AChess_HumanPlayer::GetActualMoves() const
+{
+	return actualMoves;
+}
+
+ATile* AChess_HumanPlayer::GetSelectedTile() const
+{
+	return SelectedTile;
+}
+
+bool AChess_HumanPlayer::GetFirstClick() const
+{
+	return bFirstClick;
+}
+
+void AChess_HumanPlayer::SetFirstClick(const bool flag)
+{
+	bFirstClick = flag;
 }
 
 // Called when the game starts or when spawned
@@ -135,14 +165,14 @@ void AChess_HumanPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 
 /*
 * When bpromotionFlag is false, OnPawnPromotion() set visibile the pieces menu to the user (human pawn promotion start)
-* When bpromotionFlag is true, OnPawnPromotion() checks if game ended and add the move widgetto the storyboard (human pawn promotion end)
+* When bpromotionFlag is true, OnPawnPromotion() checks if game ended and add the move widget to the storyboard (human pawn promotion end)
 */
 void AChess_HumanPlayer::OnPawnPromotion()
 {
 	AChess_GameMode* GameMode = Cast<AChess_GameMode>(GetWorld()->GetAuthGameMode());
 	if (!GameMode->bpromotionFlag)
 	{
-		//To avoid bugs, storyboard and restart buttons are disable during human pawn promotion
+		//To avoid bugs, storyboard and restart buttons are disabled during human pawn promotion
 		AChess_PlayerController* PlayerController = Cast<AChess_PlayerController>(GetWorld()->GetFirstPlayerController());
 		if (IsValid(PlayerController))
 		{
@@ -154,12 +184,16 @@ void AChess_HumanPlayer::OnPawnPromotion()
 		}
 
 		GameMode->bpromotionFlag = true;
+
+		//show pawn promotion menu
 		OnPromotionFlagTrue.Broadcast();
 	}
 	else
 	{
 		GameMode->bpromotionFlag = false;
 		bisMyTurn = false;
+
+		//check if game ended with this move
 		bool MoveResult = GameMode->IsGameEnded(GameMode->ChessBoard->MoveStack.Last(), GameMode->ChessBoard->BlackKing);
 
 		//if the current chessboard state is different from the last move done, the user has clicked a movebutton and replay has to be managed
@@ -169,6 +203,8 @@ void AChess_HumanPlayer::OnPawnPromotion()
 			{
 				if (!ManageReplay(GameMode->ChessBoard->MoveStack.Last()))
 				{
+					//if the current chessboard state is different from the last move done, but replay is not possible
+					//give human player the chance again to click
 					bFirstClick = true;
 					bisMyTurn = true;
 					return;
@@ -176,13 +212,16 @@ void AChess_HumanPlayer::OnPawnPromotion()
 			}
 			else
 			{
+				//if the human player clicked on the last move button, do not execute replay routine, just restore tile colors
 				GameMode->ChessBoard->RestoreASquareColor(GameMode->ChessBoard->CurrentChessboardState->To);
 				GameMode->ChessBoard->RestoreASquareColor(GameMode->ChessBoard->CurrentChessboardState->From);
 			}
 		}
 
+		//update the current chessboard state with this move
 		GameMode->ChessBoard->CurrentChessboardState = GameMode->ChessBoard->MoveStack.Last();
 
+		//add the move button of this move to the storyboard
 		AChess_PlayerController* PlayerController = Cast<AChess_PlayerController>(GetWorld()->GetFirstPlayerController());
 		if (IsValid(PlayerController))
 		{
@@ -190,6 +229,7 @@ void AChess_HumanPlayer::OnPawnPromotion()
 			MoveBox->Move = GameMode->ChessBoard->MoveStack.Last();
 		}
 
+		//if the game isn't ended yet, it's next player's turn
 		if (!MoveResult)
 		{
 			GameMode->TurnNextPlayer();
@@ -201,13 +241,8 @@ void AChess_HumanPlayer::OnTurn()
 {
 	AChess_GameMode* GameMode = Cast<AChess_GameMode>(GetWorld()->GetAuthGameMode());
 	AGameField* ChessBoard = GameMode->ChessBoard;
-	
-	if (!ChessBoard->MoveStack.IsEmpty())
-	{
-		TArray<ATile*> PreviousTiles = { ChessBoard->MoveStack.Last()->To,ChessBoard->MoveStack.Last()->From };
-		ChessBoard->RestoreSquaresColor(PreviousTiles);
-	}
 
+	//enable move buttons and restart button
 	AChess_PlayerController* PlayerController = Cast<AChess_PlayerController>(GetWorld()->GetFirstPlayerController());
 	if (IsValid(PlayerController))
 	{
@@ -251,37 +286,30 @@ void AChess_HumanPlayer::OnDraw(EResult DrawOrigin)
 void AChess_HumanPlayer::OnClick()
 {
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("OnClick"));
+
 	//Structure containing information about one hit of a trace, such as point of impact and surface normal at that point
 	FHitResult Hit = FHitResult(ForceInit);
-	/*VA CONTROLLATO SE IL SEGUENTE CAST VA A BUON FINE*/
-	AChess_GameMode* GameMode = Cast<AChess_GameMode>(GetWorld()->GetAuthGameMode());
-	// GetHitResultUnderCursor function sends a ray from the mouse position and gives the corresponding hit results
 
+	AChess_GameMode* GameMode = Cast<AChess_GameMode>(GetWorld()->GetAuthGameMode());
+
+	// GetHitResultUnderCursor function sends a ray from the mouse position and gives the corresponding hit results
 	GetWorld()->GetFirstPlayerController()->GetHitResultUnderCursor(ECollisionChannel::ECC_Pawn, true, Hit);
 
 	if (IsValid(GameMode) && Hit.bBlockingHit && !Hit.GetActor()->IsHidden() && bisMyTurn && !GameMode->bisGameOver)
 	{
+		//first click
 		if (bFirstClick)
 		{
 			CurrPiece = Cast<AChessPiece>(Hit.GetActor());
 			if (IsValid(CurrPiece) && CurrPiece->PieceColor == EColor::WHITE)
 			{
-				if (SelectedTile != nullptr)
-				{
-					int32 x = SelectedTile->GetGridPosition().X;
-					int32 y = SelectedTile->GetGridPosition().Y;
-					if (((x + y) % 2) == 0)
-					{
-						SelectedTile->SetTileColor(0);
-					}
-					else
-					{
-						SelectedTile->SetTileColor(1);
-					}
-				}
-
+				//get the tile below the selected piece
 				SelectedTile = CurrPiece->ChessBoard->TileMap[CurrPiece->PlaceAt];
+
+				//get the candidate destination tiles for the selected piece
 				TArray<ATile*> candidateMoves = CurrPiece->validMoves();
+
+				//if it's a pawn, check if en passant is possible
 				APawnPiece* CurrPawn = Cast<APawnPiece>(CurrPiece);
 				if (IsValid(CurrPawn))
 				{
@@ -289,6 +317,8 @@ void AChess_HumanPlayer::OnClick()
 					{
 						UMove* PreviousMove = GameMode->ChessBoard->CurrentChessboardState;
 						TArray<ATile*> CandidateEnPassant = GameMode->DetectEnPassant(CurrPawn, PreviousMove->PieceMoving, PreviousMove->To, PreviousMove->From);
+						
+						//add each en passant destination tile found to the other tiles
 						for (ATile* Candidate : CandidateEnPassant)
 						{
 							candidateMoves.Add(Candidate);
@@ -297,6 +327,8 @@ void AChess_HumanPlayer::OnClick()
 				}
 
 				SelectedTile->SetTileColor(2);
+
+				//from candidate destination tiles find the legal ones
 				for (ATile* candidateTile : candidateMoves)
 				{
 					if (CurrPiece->IsLegal(candidateTile))
@@ -306,6 +338,7 @@ void AChess_HumanPlayer::OnClick()
 					}
 				}
 
+				//create and update Move UObject with the data of this move
 				UMove* HumanMove = NewObject<UMove>();
 				if (HumanMove)
 				{
@@ -314,29 +347,40 @@ void AChess_HumanPlayer::OnClick()
 					HumanMove->From = SelectedTile;
 					HumanMove->PieceMoving = CurrPiece;
 				}
+
 				bFirstClick = false;
 			}
 		}
+
+		//second click
 		else
 		{
+			//if a tile is clicked
 			if (ATile* CurrTile = Cast<ATile>(Hit.GetActor()))
 			{
 				if (CurrTile->GetTileStatus() == ETileStatus::EMPTY && actualMoves.Contains(CurrTile))
 				{
-
+					
 					APawnPiece* CurrPawn = Cast<APawnPiece>(CurrPiece);
 					if (IsValid(CurrPawn))
 					{
+						//if it's a pawn and the clicked tile has a different y coordinate, en passant has to be managed 
 						if (CurrTile->GetTileStatus() == ETileStatus::EMPTY && CurrTile->GetGridPosition().Y != SelectedTile->GetGridPosition().Y)
 						{
+							//get opponent's pawn position
 							FVector2D OpponentPawnPosition = FVector2D(CurrTile->GetGridPosition().X - 1, CurrTile->GetGridPosition().Y);
+							
+							//get opponent'spawn reference
 							for (AChessPiece* blackPiece : GameMode->ChessBoard->BlackPieceOnChessBoard)
 							{
 								if (blackPiece->PlaceAt == OpponentPawnPosition)
 								{
-									GameMode->ChessBoard->BlackPieceOnChessBoard.Remove(blackPiece);
+									//update move object
 									GameMode->ChessBoard->MoveStack.Last()->benPassant = true;
 									GameMode->ChessBoard->MoveStack.Last()->PieceCaptured = blackPiece;
+
+									//remove the captured pawn from chessboard and set it hidden
+									GameMode->ChessBoard->BlackPieceOnChessBoard.Remove(blackPiece);
 									blackPiece->SetActorHiddenInGame(true);
 									GameMode->ChessBoard->MoveOutOfChessBoard(blackPiece);
 									break;
@@ -349,23 +393,29 @@ void AChess_HumanPlayer::OnClick()
 
 					GameMode->MovePiece(CurrPiece, SelectedTile, CurrTile);
 
+					//restore suggested tiles color
 					actualMoves.Add(SelectedTile);
 					GameMode->ChessBoard->RestoreSquaresColor(actualMoves);
 
 					GameMode->ChessBoard->MoveStack.Last()->To = CurrTile;
 
+					//if pawn promotion does not occur
 					if (!GameMode->CheckForPawnPromotion(CurrPiece))
 					{
 						bisMyTurn = false;
+
+						//check if game ended with this move
 						bool MoveResult = GameMode->IsGameEnded(GameMode->ChessBoard->MoveStack.Last(), GameMode->ChessBoard->BlackKing);
 
-						//Da questo momento in poi la mossa senza promozione e senza cattura é completa
+						//if the current chessboard state is different from the last move done, the user has clicked a movebutton and replay has to be managed
 						if (GameMode->ChessBoard->MoveStack.Num() > 2)
 						{
 							if (GameMode->ChessBoard->CurrentChessboardState != GameMode->ChessBoard->MoveStack[GameMode->ChessBoard->MoveStack.Num() - 2])
 							{
 								if (!ManageReplay(GameMode->ChessBoard->MoveStack.Last()))
 								{
+									//if the current chessboard state is different from the last move done, but replay is not possible
+									//give human player the chance again to click
 									bFirstClick = true;
 									bisMyTurn = true;
 									return;
@@ -373,13 +423,16 @@ void AChess_HumanPlayer::OnClick()
 							}
 							else
 							{
+								//if the human player clicked on the last move button, do not execute replay routine, just restore tile colors
 								GameMode->ChessBoard->RestoreASquareColor(GameMode->ChessBoard->CurrentChessboardState->To);
 								GameMode->ChessBoard->RestoreASquareColor(GameMode->ChessBoard->CurrentChessboardState->From);
 							}
 						}
 
+						//update the current chessboard state with this move
 						GameMode->ChessBoard->CurrentChessboardState = GameMode->ChessBoard->MoveStack.Last();
 
+						//add the move button of this move to the storyboard
 						AChess_PlayerController* PlayerController = Cast<AChess_PlayerController>(GetWorld()->GetFirstPlayerController());
 						if (IsValid(PlayerController))
 						{
@@ -387,6 +440,7 @@ void AChess_HumanPlayer::OnClick()
 							MoveBox->Move = GameMode->ChessBoard->MoveStack.Last();
 						}
 
+						//if the game isn't ended yet, it's next player's turn
 						if (!MoveResult)
 						{
 							GameMode->TurnNextPlayer();
@@ -394,55 +448,75 @@ void AChess_HumanPlayer::OnClick()
 					}
 					else
 					{
+						//if pawn promotion occurs, update move object
 						GameMode->ChessBoard->MoveStack.Last()->bisPromotion = true;
 					}
 				}
 			}
+
+			
 			if (AChessPiece* DestinationPiece = Cast<AChessPiece>(Hit.GetActor()))
 			{	
+				//if the selected piece is clicked
 				if (DestinationPiece == CurrPiece)
 				{
 					actualMoves.Add(SelectedTile);
 					GameMode->ChessBoard->RestoreSquaresColor(actualMoves);
+
+					//restore first move flag for pawns if needed
 					APawnPiece* PawnInStart = Cast<APawnPiece>(DestinationPiece);
 					if (IsValid(PawnInStart) && PawnInStart->PlaceAt.X == 1)
 					{
 						PawnInStart->bfirstMove = true;
 					}
+
+					//delete the instantiated move
 					UMove* MoveToDelete = GameMode->ChessBoard->MoveStack.Last();
 					GameMode->ChessBoard->MoveStack.Remove(MoveToDelete);
+
 					bFirstClick = true;
 				}
+
+				//if an opponent's piece is clicked
 				if (DestinationPiece->PieceColor == EColor::BLACK)
 				{
 					ATile* CurrTile = DestinationPiece->ChessBoard->TileMap[DestinationPiece->PlaceAt];
-					/*CATTURA DI UN PEZZO*/
+					
+					//if the tile below the opponent's piece is a legal tile
 					if (actualMoves.Contains(CurrTile))
 					{
-						GameMode->ChessBoard->BlackPieceOnChessBoard.Remove(DestinationPiece);
-						DestinationPiece->SetActorHiddenInGame(true);
-						GameMode->ChessBoard->MoveOutOfChessBoard(DestinationPiece);
-						GameMode->MovePiece(CurrPiece, SelectedTile, CurrTile);
-
 						actualMoves.Add(SelectedTile);
 						GameMode->ChessBoard->RestoreSquaresColor(actualMoves);
 
+						//remove the captured piece from chessboard
+						GameMode->ChessBoard->BlackPieceOnChessBoard.Remove(DestinationPiece);
+						DestinationPiece->SetActorHiddenInGame(true);
+						GameMode->ChessBoard->MoveOutOfChessBoard(DestinationPiece);
+
+						GameMode->MovePiece(CurrPiece, SelectedTile, CurrTile);
+
+						//update move object
 						GameMode->ChessBoard->MoveStack.Last()->To = CurrTile;
 						GameMode->ChessBoard->MoveStack.Last()->bisCapture = true;
 						GameMode->ChessBoard->MoveStack.Last()->PieceCaptured = DestinationPiece;
 
+						//if pawn promotion does not occur
 						if (!GameMode->CheckForPawnPromotion(CurrPiece))
 						{
 							bisMyTurn = false;
+
+							//check if game ended with this move
 							bool MoveResult = GameMode->IsGameEnded(GameMode->ChessBoard->MoveStack.Last(), GameMode->ChessBoard->BlackKing);
 							
-							//Da questo momento in poi la mossa senza promozione e con cattura é completa
+							//if the current chessboard state is different from the last move done, the user has clicked a movebutton and replay has to be managed
 							if (GameMode->ChessBoard->MoveStack.Num() > 2)
 							{
 								if (GameMode->ChessBoard->CurrentChessboardState != GameMode->ChessBoard->MoveStack[GameMode->ChessBoard->MoveStack.Num() - 2])
 								{
 									if (!ManageReplay(GameMode->ChessBoard->MoveStack.Last()))
 									{
+										//if the current chessboard state is different from the last move done, but replay is not possible
+										//give human player the chance again to click
 										bFirstClick = true;
 										bisMyTurn = true;
 										return;
@@ -450,13 +524,16 @@ void AChess_HumanPlayer::OnClick()
 								}
 								else
 								{
+									//if the human player clicked on the last move button, do not execute replay routine, just restore tile colors
 									GameMode->ChessBoard->RestoreASquareColor(GameMode->ChessBoard->CurrentChessboardState->To);
 									GameMode->ChessBoard->RestoreASquareColor(GameMode->ChessBoard->CurrentChessboardState->From);
 								}
 							}
 
+							//update the current chessboard state with this move
 							GameMode->ChessBoard->CurrentChessboardState = GameMode->ChessBoard->MoveStack.Last();
 
+							//add the move button of this move to the storyboard
 							AChess_PlayerController* PlayerController = Cast<AChess_PlayerController>(GetWorld()->GetFirstPlayerController());
 							if (IsValid(PlayerController))
 							{
@@ -464,6 +541,7 @@ void AChess_HumanPlayer::OnClick()
 								MoveBox->Move = GameMode->ChessBoard->MoveStack.Last();
 							}
 
+							//if the game isn't ended yet, it's next player's turn
 							if (!MoveResult)
 							{
 								GameMode->TurnNextPlayer();
@@ -471,6 +549,7 @@ void AChess_HumanPlayer::OnClick()
 						}
 						else
 						{
+							//if pawn promotion occurs, update move object
 							GameMode->ChessBoard->MoveStack.Last()->bisPromotion = true;
 						}
 					}

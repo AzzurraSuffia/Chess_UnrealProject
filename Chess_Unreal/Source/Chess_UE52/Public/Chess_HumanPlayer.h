@@ -33,9 +33,15 @@ public:
 	// Game instance reference
 	UChess_GameInstance* GameInstance;
 
-	bool bFirstClick = true;
-	TArray<ATile*> actualMoves = {};
-	ATile* SelectedTile = nullptr;
+	//discriminate among human first or second click on chessboard
+	
+	TArray<ATile*> GetActualMoves() const;
+
+	ATile* GetSelectedTile() const;
+
+	bool GetFirstClick() const;
+
+	void SetFirstClick(const bool flag);
 
 protected:
 	// Called when the game starts or when spawned
@@ -43,8 +49,18 @@ protected:
 
 	// Keeps track of turn
 	bool bisMyTurn = false;
+
+	//current selected piece
 	AChessPiece* CurrPiece = nullptr;
 	
+	//legal moves for the selected piece
+	TArray<ATile*> actualMoves = {};
+
+	//tile below selected piece
+	ATile* SelectedTile = nullptr;
+
+	bool bFirstClick = true;
+
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -52,10 +68,19 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	//human player routine when one of his pawn is promoted
 	virtual void OnPawnPromotion() override; 
+
+	//human player routine when his turn comes
 	virtual void OnTurn() override;
+
+	//human player routine when he wins
 	virtual void OnWin() override;
+
+	//human player routine when he loses
 	virtual void OnLose() override;
+
+	//human player routine when the game ends in a draw
 	virtual void OnDraw(EResult DrawOrigin) override;
 
 	// Called on left mouse click (binding)

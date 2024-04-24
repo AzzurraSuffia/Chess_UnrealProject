@@ -32,9 +32,18 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	//random player behavior when one of his pawn are promoted
 	virtual void OnPawnPromotion() override;
+
+	//random player behavior when his turn comes
 	virtual void OnTurn() override;
+
+	//random player behavior when he wins
 	virtual void OnWin() override;
+
+	//random player behavior when he loses
 	virtual void OnLose() override;
+
+	//random player behavior when the game ends in a draw
 	virtual void OnDraw(EResult DrawOrigin) override;
 };

@@ -40,12 +40,13 @@ void AChessPiece::Tick(float DeltaTime)
 }
 */
 
+//it's valid for all pieces except pawns
 bool AChessPiece::CanCaptureOpponentPiece(AChessPiece* PieceCaptured)
 {
-	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("CanCaptureOpponentPiece"));
-	/*POSSIBLE MOVES NON AVRA' MAI IL PROPRIO RE NELLE MOSSE POSSIBILI*/
-	/*QUESTO VA BENE PER TUTTI TRANNE CHE PER I PAWN CHE POSSONO CATTURARE SOLO IN DIAGONALE*/
+	//get all possible destination tiles
 	TArray<ATile*> possibleMoves = this->validMoves();
+
+	//if above one of those there's the piece to capture, return true
 	for (ATile* validTile : possibleMoves)
 	{
 		if (validTile->GetGridPosition() == PieceCaptured->PlaceAt)
@@ -53,6 +54,7 @@ bool AChessPiece::CanCaptureOpponentPiece(AChessPiece* PieceCaptured)
 			return true;
 		}
 	}
+
 	return false;
 }
 
@@ -66,7 +68,7 @@ TArray<ATile*> AChessPiece::validMoves()
 	return TArray<ATile*>();
 }
 
-/*DEVO SIMULARE LA MOSSA AGGIORNANDO LE STRUTTURE DATI MA SENZA MUOVERE L'ATTORE*/
+//it's valid for all pieces except pawns
 AChessPiece* AChessPiece::doVirtualMove(AChessPiece* Piece, ATile* from, ATile* to)
 {
 	AChess_GameMode* GameMode = Cast<AChess_GameMode>(GetWorld()->GetAuthGameMode());
@@ -77,6 +79,7 @@ AChessPiece* AChessPiece::doVirtualMove(AChessPiece* Piece, ATile* from, ATile* 
 	AChessPiece* CapturedPiece = nullptr;
 	TArray<AChessPiece*> OpponentPieceOnBoard = {};
 
+	//based on the color of the piece, define its opponent and its tile status
 	if (Piece->PieceColor == EColor::BLACK)
 	{
 		MyType = ETileStatus::BLACKPIECE; OpponentType = ETileStatus::WHITEPIECE; OpponentPieceOnBoard = GameMode->ChessBoard->WhitePieceOnChessBoard;
@@ -86,9 +89,10 @@ AChessPiece* AChessPiece::doVirtualMove(AChessPiece* Piece, ATile* from, ATile* 
 		MyType = ETileStatus::WHITEPIECE; OpponentType = ETileStatus::BLACKPIECE; OpponentPieceOnBoard = GameMode->ChessBoard->BlackPieceOnChessBoard;
 	}
 
+	//if the destination tile passed as an argument has above an opponent's piece, it's a standard capture
 	if (to->GetTileStatus() == OpponentType)
 	{
-		/*CATTURA DI UN PEZZO*/
+		//get opponent's piece reference
 		int32 Size = OpponentPieceOnBoard.Num();
 		for (int32 i = 0; i < Size; i++)
 		{
@@ -98,6 +102,8 @@ AChessPiece* AChessPiece::doVirtualMove(AChessPiece* Piece, ATile* from, ATile* 
 				break;
 			}
 		}
+
+		//remove the piece captured from chessboard
 		if (CapturedPiece != nullptr)
 		{
 			if (Piece->PieceColor == EColor::BLACK)
@@ -111,14 +117,17 @@ AChessPiece* AChessPiece::doVirtualMove(AChessPiece* Piece, ATile* from, ATile* 
 		}
 	}
 	
+	//set departure and destionation tiles tile status
 	from->SetTileStatus(ETileStatus::EMPTY);
 	to->SetTileStatus(MyType);
+
+	//set pawn new position
 	Piece->PlaceAt = MoveCurrPieceTo;
 
 	return CapturedPiece;
 }
 
-/*DEVO RIPRISTINARE LA SITUAZIONE ORIGINALE RIPORTANDO ALLO STATO INIZIALE LE STRUTTURE DATI*/
+//it's valid for all pieces except pawns
 void AChessPiece::undoVirtualMove(AChessPiece* Piece, ATile* from, ATile* to, AChessPiece* CapturedPiece)
 {
 	AChess_GameMode* GameMode = Cast<AChess_GameMode>(GetWorld()->GetAuthGameMode());
@@ -126,6 +135,7 @@ void AChessPiece::undoVirtualMove(AChessPiece* Piece, ATile* from, ATile* to, AC
 	ETileStatus MyType = ETileStatus::EMPTY;
 	ETileStatus OpponentType = ETileStatus::EMPTY;
 
+	//based on the color of the pawn, define its opponent's and its tile status
 	if (Piece->PieceColor == EColor::BLACK)
 	{
 		MyType = ETileStatus::BLACKPIECE; OpponentType = ETileStatus::WHITEPIECE; 
@@ -135,14 +145,21 @@ void AChessPiece::undoVirtualMove(AChessPiece* Piece, ATile* from, ATile* to, AC
 		MyType = ETileStatus::WHITEPIECE; OpponentType = ETileStatus::BLACKPIECE;
 	}
 
+	//set departure tile tile status 
 	to->SetTileStatus(MyType);
+
+	//restore the position of the piece
 	Piece->PlaceAt = to->GetGridPosition();
 
+	//if there was a capture
 	if (CapturedPiece != nullptr)
 	{
-		/*DEVO RIPRISTINARE IL PEZZO CATTURATO*/
 		from->SetTileStatus(OpponentType);
+
+		//restore captured piece position
 		CapturedPiece->PlaceAt = from->GetGridPosition();
+
+		//add the piece captured to the chessboard
 		if (Piece->PieceColor == EColor::BLACK)
 		{
 			GameMode->ChessBoard->WhitePieceOnChessBoard.Add(CapturedPiece);
@@ -164,22 +181,20 @@ bool AChessPiece::IsLegal(ATile* to)
 	AChess_GameMode* GameMode = Cast<AChess_GameMode>(GetWorld()->GetAuthGameMode());
 	bool bdoesMyMoveGenerateCheck = false;
 
-	/*DEVO SIMULARE LA MOSSA AGGIORNANDO LE STRUTTURE DATI MA SENZA MUOVERE L'ATTORE*/
+	//update data structures to virtually execute a move
 	AChessPiece* CapturedPiece = doVirtualMove(this, from, to);
 	
-	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("IsLegal"));
+	//based on the color of the piece, find out if the move has generated a check
 	if (this->PieceColor == EColor::WHITE)
 	{
-		//devo controllare se la mia mossa mette in scacco il mio re
 		bdoesMyMoveGenerateCheck = GameMode->IsKingInCheck(0);
 	}
 	else if (this->PieceColor == EColor::BLACK)
 	{
-		//devo controllare se la mia mossa mette in scacco il mio re
 		bdoesMyMoveGenerateCheck= GameMode->IsKingInCheck(1);
 	}
 
-	/*DEVO RIPRISTINARE LA SITUAZIONE ORIGINALE RIPORTANDO ALLO STATO INIZIALE LE STRUTTURE DATI*/
+	//update data structures to virtually revert a move
 	undoVirtualMove(this, to, from, CapturedPiece);
 
 	return !bdoesMyMoveGenerateCheck;

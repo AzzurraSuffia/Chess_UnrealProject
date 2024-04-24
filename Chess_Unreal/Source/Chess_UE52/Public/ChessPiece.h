@@ -26,10 +26,16 @@ public:
 	// Sets default values for this actor's properties
 	AChessPiece();
 
+	//color of the piece
 	EColor PieceColor;
+
+	//piece location
 	FVector2D PlaceAt;
+
+	//reference to the chessboard
 	AGameField* ChessBoard;
 
+	//check if this piece can capture another one based on the current chessboard state
 	virtual bool CanCaptureOpponentPiece(AChessPiece* PieceCaptured);
 
 	//return piece value for minimax evaluation function
@@ -38,10 +44,16 @@ public:
 	//return an array of candidate destination tiles from the current position and chessboard state 
 	virtual TArray<ATile*> validMoves();
 
+	//find out if a move is legal or not
 	virtual bool IsLegal(ATile* to);
+
+	//update data structures to virtually execute a move
 	virtual	AChessPiece* doVirtualMove(AChessPiece* Piece, ATile* from, ATile* to);
+
+	//update data structures to virtually revert a move
 	virtual	void undoVirtualMove(AChessPiece* Piece, ATile* from, ATile* to, AChessPiece* CapturedPiece);
 
+	//set the color of the piece
 	void SetPieceColor(EColor PieceColor);
 
 protected:

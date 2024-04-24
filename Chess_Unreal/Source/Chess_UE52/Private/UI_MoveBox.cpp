@@ -42,14 +42,14 @@ void UUI_MoveBox::OnButtonClicked()
     AChess_HumanPlayer* HumanPlayer = Cast<AChess_HumanPlayer>(GameMode->Players[0]);
     if (IsValid(HumanPlayer) && !GameMode->ChessBoard->MoveStack.Last()->bisCheckmate)
     {   
-        if (!HumanPlayer->bFirstClick)
+        if (!HumanPlayer->GetFirstClick())
         {
             //set bfirstclick true again
-            HumanPlayer->bFirstClick = true;
+            HumanPlayer->SetFirstClick(true);
 
             //restore the color of the suggested tiles and of the tile under the selected piece
-            HumanPlayer->actualMoves.Add(HumanPlayer->SelectedTile);
-            GameMode->ChessBoard->RestoreSquaresColor(HumanPlayer->actualMoves);
+            GameMode->ChessBoard->RestoreSquaresColor(HumanPlayer->GetActualMoves());
+            GameMode->ChessBoard->RestoreASquareColor(HumanPlayer->GetSelectedTile());
 
             //delete the move instantiated
             UMove* firstclickmove = GameMode->ChessBoard->MoveStack.Last();
