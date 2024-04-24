@@ -16,12 +16,12 @@ APawnPiece::APawnPiece()
 
 bool APawnPiece::CanCaptureOpponentPiece(AChessPiece* PieceCaptured)
 {
-	/*POSSIBLE MOVES NON AVRA' MAI IL PROPRIO RE NELLE MOSSE POSSIBILI*/
-	/*QUESTO VA BENE PER I PAWN PERCHE' PRELEVA SOLO LE CELLE DIAGONALI*/
+	//do not alter the flag for pawn first move, store it and reassign it later
 	bool mantainValue = this->bfirstMove;
 	TArray<ATile*> possibleMoves = this->validMoves();
 	for (ATile* validTile : possibleMoves)
-	{
+	{	
+		//keep only diagonal squares and check if one of them is occupied by the piece passed as argument
 		if (validTile->GetGridPosition().X != this->PlaceAt.X && validTile->GetGridPosition() == PieceCaptured->PlaceAt)
 		{
 			return true;
@@ -31,12 +31,10 @@ bool APawnPiece::CanCaptureOpponentPiece(AChessPiece* PieceCaptured)
 	return false;
 }
 
-//AL TERMINA USA validMovesChoices.Empty() PER SVUOTARE L'ARRAY
 TArray<ATile*> APawnPiece::validMoves()
 {
 	AChess_GameMode* GameMode = (AChess_GameMode*)(GetWorld()->GetAuthGameMode());
-	//poco efficiente fare questo calcolo ogni volta 
-	//o lo fai una volta all'inizio o lo metti come attributo
+
 	ETileStatus Enemy;
 	double OneXStep = 0;
 	double TwoXStep = 0;
@@ -45,6 +43,7 @@ TArray<ATile*> APawnPiece::validMoves()
 	int32 OneStep = 0;
 	TArray<ATile*> validMovesChoices;
 
+	//based on the color of the pawn, define its opponent and its direction
 	if (this->PieceColor == EColor::BLACK)
 	{
 		Enemy = ETileStatus::WHITEPIECE;
@@ -60,43 +59,53 @@ TArray<ATile*> APawnPiece::validMoves()
 		OneStep = 1;
 	}
 
+	// check if the searched position is still part of the chessboard
 	if (ChessBoard->TileMap.Contains(FVector2D(OneXStep, Yposition - 1)))
 	{
 		ATile* DiagonalLeftSquare = ChessBoard->TileMap[FVector2D(OneXStep, Yposition - 1)];
+
+		//if the diagonal tile is occupied by an enemy, add the tile
 		if (DiagonalLeftSquare->GetTileStatus() == Enemy)
 		{
 			validMovesChoices.Add(DiagonalLeftSquare);
 		}
 	}
 
+	// check if the searched position is still part of the chessboard
 	if (ChessBoard->TileMap.Contains(FVector2D(OneXStep, Yposition + 1)))
 	{
 		ATile* DiagonalRightSquare = ChessBoard->TileMap[FVector2D(OneXStep, Yposition + 1)];
+
+		//if the diagonal tile is occupied by an enemy, add the tile
 		if (DiagonalRightSquare->GetTileStatus() == Enemy)
 		{
 			validMovesChoices.Add(DiagonalRightSquare);
 		}
 	}
 
+	// check if the searched position is still part of the chessboard
 	if (ChessBoard->TileMap.Contains(FVector2D(OneXStep, Yposition)))
 	{
 		ATile* FirstSquare = ChessBoard->TileMap[FVector2D(OneXStep, Yposition)];
+
+		//if the first square front is empty, add it
 		if (FirstSquare->GetTileStatus() == ETileStatus::EMPTY)
 		{
 			validMovesChoices.Add(FirstSquare);
 
+			//if it's pawn first move
 			if (bfirstMove)
 			{
-			bfirstMove = false;
-			//alla sua prima mossa un pedone ha sempre almeno due caselle davanti
-			//if (ChessBoard->TileMap.Contains(FVector2D(TwoXStep, Yposition)))
-			// {
+				bfirstMove = false;
+
+				// check is not needed: on their first move pawns have always two squares in front of them
 				ATile* SecondSquare = ChessBoard->TileMap[FVector2D(TwoXStep, Yposition)];
+
+				//if the second square front is empty, add it
 				if (SecondSquare->GetTileStatus() == ETileStatus::EMPTY) 
 				{
 					validMovesChoices.Add(SecondSquare);
 				}
-			//}
 			}
 		}
 	}
@@ -120,6 +129,7 @@ AChessPiece* APawnPiece::doVirtualMove(AChessPiece* Piece, ATile* from, ATile* t
 	TArray<AChessPiece*> OpponentPieceOnBoard = {};
 	int32 OneStep = 0;
 
+	//based on the color of the pawn, define its opponent, its direction and its tile status
 	if (Piece->PieceColor == EColor::BLACK)
 	{
 		MyType = ETileStatus::BLACKPIECE; OpponentType = ETileStatus::WHITEPIECE; OpponentPieceOnBoard = GameMode->ChessBoard->WhitePieceOnChessBoard; OneStep = -1;
@@ -129,10 +139,13 @@ AChessPiece* APawnPiece::doVirtualMove(AChessPiece* Piece, ATile* from, ATile* t
 		MyType = ETileStatus::WHITEPIECE; OpponentType = ETileStatus::BLACKPIECE; OpponentPieceOnBoard = GameMode->ChessBoard->BlackPieceOnChessBoard; OneStep = 1;
 	}
 
-	/*EN PASSANT*/
+	//if a diagonal empty tile is passed, the move has to be managed as an en passant
 	if (to->GetTileStatus() == ETileStatus::EMPTY && to->GetGridPosition().Y != from->GetGridPosition().Y)
 	{
+		//get opponent's pawn position
 		FVector2D OpponentPawnPosition = FVector2D(to->GetGridPosition().X - OneStep, to->GetGridPosition().Y);
+
+		//get opponent's pawn reference
 		int32 Size = OpponentPieceOnBoard.Num();
 		for (int32 i = 0; i < Size; i++)
 		{
@@ -143,11 +156,14 @@ AChessPiece* APawnPiece::doVirtualMove(AChessPiece* Piece, ATile* from, ATile* t
 			}
 		}
 
+		//set tile occupied by the opponent's pawn as empty
 		GameMode->ChessBoard->TileMap[OpponentPawnPosition]->SetTileStatus(ETileStatus::EMPTY);
 	}
-	/*CATTURA DI UN PEZZO*/
+
+	//if a diagonal occupied tile is passed, the move has to be managed as a standard capture
 	else if (to->GetTileStatus() == OpponentType)
 	{
+		//get opponent's piece reference
 		int32 Size = OpponentPieceOnBoard.Num();
 		for (int32 i = 0; i < Size; i++)
 		{
@@ -159,6 +175,7 @@ AChessPiece* APawnPiece::doVirtualMove(AChessPiece* Piece, ATile* from, ATile* t
 		}
 	}
 
+	//if there was a capture, remove the piece captured from chessboard
 	if (CapturedPiece != nullptr)
 	{
 		if (Piece->PieceColor == EColor::BLACK)
@@ -171,8 +188,11 @@ AChessPiece* APawnPiece::doVirtualMove(AChessPiece* Piece, ATile* from, ATile* t
 		}
 	}
 
+	//set departure and destionation tiles tile status
 	from->SetTileStatus(ETileStatus::EMPTY);
 	to->SetTileStatus(MyType);
+
+	//set pawn new position
 	Piece->PlaceAt = MoveCurrPieceTo;
 
 	return CapturedPiece;
@@ -186,6 +206,7 @@ void APawnPiece::undoVirtualMove(AChessPiece* Piece, ATile* from, ATile* to, ACh
 	ETileStatus OpponentType = ETileStatus::EMPTY;
 	int32 OneStep = 0;
 
+	//based on the color of the pawn, define its opponent, its direction and its tile status
 	if (Piece->PieceColor == EColor::BLACK)
 	{
 		MyType = ETileStatus::BLACKPIECE; OpponentType = ETileStatus::WHITEPIECE; OneStep = -1;
@@ -195,23 +216,29 @@ void APawnPiece::undoVirtualMove(AChessPiece* Piece, ATile* from, ATile* to, ACh
 		MyType = ETileStatus::WHITEPIECE; OpponentType = ETileStatus::BLACKPIECE; OneStep = 1;
 	}
 
+	//if there was a capture
 	if (CapturedPiece != nullptr)
 	{
-		/*EN PASSANT*/
+		//if captured piece position and pawn position are different, it's an en passant
 		if (CapturedPiece->PlaceAt.X != Piece->PlaceAt.X)
 		{
 			from->SetTileStatus(ETileStatus::EMPTY);
+
+			//get opponent's pawn position and restore it
 			FVector2D OpponentPawnPosition = FVector2D(from->GetGridPosition().X - OneStep, from->GetGridPosition().Y);
 			GameMode->ChessBoard->TileMap[OpponentPawnPosition]->SetTileStatus(OpponentType);
 			CapturedPiece->PlaceAt = OpponentPawnPosition;
 		}
-		/*CATTURA STANDARD*/
+		//if they are the same, it's a standard capture
 		else
 		{
 			from->SetTileStatus(OpponentType);
+
+			//restore captured piece position
 			CapturedPiece->PlaceAt = from->GetGridPosition();
 		}
 
+		//add the piece captured to the chessboard
 		if (Piece->PieceColor == EColor::BLACK)
 		{
 			GameMode->ChessBoard->WhitePieceOnChessBoard.Add(CapturedPiece);
@@ -226,7 +253,10 @@ void APawnPiece::undoVirtualMove(AChessPiece* Piece, ATile* from, ATile* to, ACh
 		from->SetTileStatus(ETileStatus::EMPTY);
 	}	
 
+	//set departure tile tile status
 	to->SetTileStatus(MyType);
+
+	//set pawn previous position
 	Piece->PlaceAt = to->GetGridPosition();
 }
 

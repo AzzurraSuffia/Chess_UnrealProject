@@ -16,6 +16,7 @@ public:
 	// Sets default values for this actor's properties
 	APawnPiece();
 
+	//ovverride since pawns capture only diagonally
 	virtual bool CanCaptureOpponentPiece(AChessPiece* PieceCaptured) override;
 
 	//return an array of candidate destination tiles from the current position and chessboard state 
@@ -24,9 +25,13 @@ public:
 	//return piece value for minimax evaluation function
 	virtual int32 PieceWeight() override;
 
+	//update data structures to virtually execute a move
 	virtual AChessPiece* doVirtualMove(AChessPiece* Piece, ATile* from, ATile* to) override;
+
+	//update data structures to virtually revert a move
 	virtual void undoVirtualMove(AChessPiece* Piece, ATile* from, ATile* to, AChessPiece* CapturedPiece) override;
 
+	//boolean flag for pawn first move
 	bool bfirstMove;
 
 protected:

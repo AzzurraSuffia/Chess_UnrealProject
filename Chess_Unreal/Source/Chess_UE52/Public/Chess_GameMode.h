@@ -38,40 +38,45 @@ class CHESS_UE52_API AChess_GameMode : public AGameModeBase
 
 public:
 
+	//boolean flag to manage human player's pawn promotion
 	UPROPERTY(EditAnywhere)
 	bool bpromotionFlag = false;
-
-	UFUNCTION(BlueprintCallable)
-	bool GetPromotionFlag() const;
-
-	UFUNCTION(BlueprintCallable)
-	int32 GetMoveCounter() const;
 
 	// tracks if the game is over
 	bool bisGameOver;
 
+	// array of player interfaces of all possibile players
 	TArray<IChess_PlayerInterface*> AllPlayers;
 
-	// array of player interfaces
+	// array of player interfaces of the players currently playing
 	TArray<IChess_PlayerInterface*> Players;
 
+	// show the start menu
 	UPROPERTY(BlueprintAssignable)
 	FOnGameStart OnStart;
 
+	// check if player's king is in check
 	bool IsKingInCheck(int32 Player);
 
+	//manage end of game based on the result (checkmate or stalemate)
 	void ManageEndOfGame(int32 Player, EResult GameResult);
 
+	// check if a player has some legal moves left
 	bool PlayerCanMove(int32 Player);
 
+	// check if promotion is possible for CurrPiece
 	bool CheckForPawnPromotion(AChessPiece* CurrPiece);
 
+	// move an actor from the departure tile to destination tile
 	void MovePiece(AChessPiece* Piece, ATile* From, ATile* To);
 
+	// check if game ended
 	bool IsGameEnded(UMove* Move, AKingPiece* King);
 
+	// detect all candidate destination tiles where en passant can be executed
 	TArray<ATile*> DetectEnPassant(APawnPiece* Pawn, AChessPiece* PreviousPieceMoving, ATile* PreviousTo, ATile* PreviousFrom);
 
+	// index of the player in players who 
 	int32 CurrentPlayer;
 
 	// tracks the number of moves

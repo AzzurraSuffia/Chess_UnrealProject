@@ -7,9 +7,10 @@
 
 AChess_PlayerController::AChess_PlayerController()
 { 
-	//non cattura il mouse quando faccio play
+	//show the mouse 
 	bShowMouseCursor = true;
-	//abilito evento click
+
+	//enable click event
 	bEnableClickEvents = true;
 }
 
@@ -34,6 +35,7 @@ void AChess_PlayerController::BeginPlay()
 		Subsystem->AddMappingContext(ChessContext, 0);
 	}
 
+	//create HUDChess and add it to viewport
 	if (HUDWidget)
 	{
 		UUserWidget* HUDChessUserWidget = CreateWidget<UUserWidget>(GetWorld(), HUDWidget);
@@ -43,6 +45,8 @@ void AChess_PlayerController::BeginPlay()
 			if (IsValid(HUDChess))
 			{
 				HUDChess->AddToViewport();
+
+				//show th start menu
 				GameMode->OnStart.Broadcast();
 			}
 		}

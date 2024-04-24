@@ -15,10 +15,10 @@
 #include "GameFramework/Actor.h"
 #include "GameField.generated.h"
 
-// macro declaration for a dynamic multicast delegate
+// Macro declaration for a dynamic multicast delegate
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnReset);
 
-
+// Enum of pieces capital letter
 UENUM()
 enum class EPieceNotation : uint8
 {
@@ -37,35 +37,32 @@ class CHESS_UE52_API AGameField : public AActor
 	GENERATED_BODY()
 
 public:
-	// keeps track of tiles
+	// Keeps track of tiles
 	UPROPERTY(Transient)
 	TArray<ATile*> TileArray;
 
-	//given a position returns a tile
+	// Given a position returns a tile
 	UPROPERTY(Transient)
 	TMap<FVector2D, ATile*> TileMap;
 
+	// Temporally sorted array of game moves
 	UPROPERTY(Transient)
 	TArray<UMove*> MoveStack;
 
-	// array of white piece still on chessboard
+	// Array of white piece still on chessboard
 	TArray<AChessPiece*> WhitePieceOnChessBoard;
 
-	// array of black piece still on chessboard
+	// Array of black piece still on chessboard
 	TArray<AChessPiece*> BlackPieceOnChessBoard;
 
+	// Reference to white king
 	AKingPiece* WhiteKing;
 
+	// Reference to black king
 	AKingPiece* BlackKing;
 
+	// Last move of move stack whose result is currently displayed on chessboard
 	UMove* CurrentChessboardState = nullptr;
-
-	//UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	//float NormalizedCellPadding;
-
-	//tile padding dimension
-	//UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	//float CellPadding
 
 	static const int32 NOT_ASSIGNED = -1;
 
@@ -74,39 +71,39 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FOnReset OnResetEvent;
 
-	// size of field
+	// Size of field
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	int32 Size;
-
-	/*
-	// size of pieces
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	int32 PieceSize;
-	*/
 
 	// TSubclassOf template class that provides UClass type safety
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<ATile> TileClass;
 
+	// TSubclassOf template class King
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<AKingPiece> KingClass;
 
+	// TSubclassOf template class Queen
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<AQueenPiece> QueenClass;
 
+	// TSubclassOf template class Bishop
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<ABishopPiece> BishopClass;
 
+	// TSubclassOf template class Knight
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<AKnightPiece> KnightClass;
 
+	// TSubclassOf template class Rook
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<ARookPiece> RookClass;
 
+	// TSubclassOf template class Pawn
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<APawnPiece> PawnClass;
 
-	// tile size
+	// Tile size
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float TileSize;
 
@@ -119,50 +116,58 @@ public:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-	// remove all signs from the field
+	// Remove all pieces from the field
 	UFUNCTION(BlueprintCallable)
 	void ResetField();
 
-	UFUNCTION(BlueprintCallable)
-	FString GetLastMoveAlgebricNotation();
-
+	// Spawn a rook piece in the indicated position
 	UFUNCTION(BlueprintCallable)
 	ARookPiece* SpawnPieceRook(EColor Color, const double InX, const double InY, const float TileScale);
 
+	// Spawn a knight piece in the indicated position
 	UFUNCTION(BlueprintCallable)
 	AKnightPiece* SpawnPieceKnight(EColor Color, const double InX, const double InY, const float TileScale);
 
+	// Spawn a bishop piece in the indicated position
 	UFUNCTION(BlueprintCallable)
 	ABishopPiece* SpawnPieceBishop(EColor Color, const double InX, const double InY, const float TileScale);
 
+	// Spawn a queen piece in the indicated position
 	UFUNCTION(BlueprintCallable)
 	AQueenPiece* SpawnPieceQueen(EColor Color, const double InX, const double InY, const float TileScale);
 
+	// Spawn a king piece in the indicated position
 	AKingPiece* SpawnPieceKing(EColor Color, const double InX, const double InY, const float TileScale);
+
+	// Spawn a pawn piece in the indicated position
 	APawnPiece* SpawnPiecePawn(EColor Color, const double InX, const double InY, const float TileScale);
 
-	// generate an empty game field
+	// Generate an empty game field
 	void GenerateField();
 
+	// Promote the pawn in the piece passed as an argument
 	UFUNCTION(BlueprintCallable)
 	void PromotePawn(EPieceNotation ToPromote);
 
+	// Move a piece out of chessboard
 	void MoveOutOfChessBoard(AChessPiece* HiddenPiece);
 
+	// Restore tile color of an array
 	void RestoreSquaresColor(TArray<ATile*> Squares);
 
+	// Restore tile color of a single tile
 	void RestoreASquareColor(ATile* Square);
 
-	// return a (x,y) position given a hit (click) on a field tile
+	// Return a (x,y) position given a hit (click) on a field tile
 	FVector2D GetPosition(const FHitResult& Hit);
 
-	// return the array of tile pointers
+	// Return the array of tile pointers
 	TArray<ATile*>& GetTileArray();
 
-	// return a relative position given (x,y) position
+	// Return a relative position given (x,y) position
 	FVector GetRelativeLocationByXYPosition(const int32 InX, const int32 InY) const;
 
-	// return (x,y) position given a relative position
+	// Return (x,y) position given a relative position
 	FVector2D GetXYPositionByRelativeLocation(const FVector& Location) const;
 	
 	//public:	

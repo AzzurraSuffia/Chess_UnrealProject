@@ -23,9 +23,12 @@ class CHESS_UE52_API UHUD_Chess : public UUserWidget
 	GENERATED_BODY()
 	
 public:
+
+	//add in the scroll box a move button
 	UFUNCTION(BlueprintCallable)
 	UUI_MoveBox* AddMoveWidget(UMove* MoveNotation);
 
+	//add in the scroll box a text block 
 	UFUNCTION(BlueprintCallable)
 	void AddTextWidget(FString& String, FVector2D Position, FVector2D Size);
 
@@ -40,12 +43,12 @@ public:
 	UPROPERTY(BlueprintReadWrite,/* meta = (BindWidget),*/ Category = "Widgets Components")
 	UCanvasPanel* VisibleZone;
 
-	UPROPERTY(EditAnywhere, Category = "Child Widgets")
-	TSubclassOf<UUserWidget> ResetWidget;
-
 	UUI_ResetButton* ResetButtonWidget;
 
+	//array of all UI_TextBox currently in the scroll box
 	TArray<UUI_TextBox*> OtherNotationComponents = {};
+
+	//array of all UI_MoveBox currently in the scroll box
 	TArray<UUI_MoveBox*> AllMoves = {};
 
 private:
@@ -55,6 +58,8 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Child Widgets")
 	TSubclassOf<UUserWidget> ChildTextWidget;
 
+	UPROPERTY(EditAnywhere, Category = "Child Widgets")
+	TSubclassOf<UUserWidget> ResetWidget;
 };
 
 

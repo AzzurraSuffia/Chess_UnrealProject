@@ -30,9 +30,11 @@ public:
 	UPROPERTY(EditAnywhere, Category = Input)
 	UInputAction* ClickAction;
 
+	// TSubclassOf template class that provides UClass type safety
 	UPROPERTY(EditAnywhere, Category = "Child Widgets")
 	TSubclassOf<UUserWidget> HUDWidget;
 
+	//reference to the widget
 	UHUD_Chess* HUDChess;
 
 	void ClickOnGrid();
