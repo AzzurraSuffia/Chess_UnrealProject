@@ -323,6 +323,7 @@ void UMove::doMove(AChess_GameMode* GameMode)
 		NewLocation = Location + FVector(6, 6, 20);
 		PiecePromoted->SetActorLocation(NewLocation);
 		PiecePromoted->SetActorHiddenInGame(false);
+		PieceMoving->SetActorHiddenInGame(true);
 	}
 
 	//in case of checkmate change the color of the tile where king is on and turn it red

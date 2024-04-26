@@ -51,6 +51,10 @@ void UUI_MoveBox::OnButtonClicked()
             GameMode->ChessBoard->RestoreSquaresColor(HumanPlayer->GetActualMoves());
             GameMode->ChessBoard->RestoreASquareColor(HumanPlayer->GetSelectedTile());
 
+            //set them null
+            HumanPlayer->SetActualMovesEmpty();
+            HumanPlayer->SetSelectedTileNull();
+
             //delete the move instantiated
             UMove* firstclickmove = GameMode->ChessBoard->MoveStack.Last();
             firstclickmove->ConditionalBeginDestroy();

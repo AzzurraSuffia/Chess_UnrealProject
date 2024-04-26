@@ -178,9 +178,10 @@ int32 AChess_MinimaxPlayer::AlphaBetaMiniMax(int32 Depth, bool bisMax, int32 alp
 
 		//for each black piece on chessboard, analyze every single legal move
 		int32 NumBlackPieces = GameMode->ChessBoard->BlackPieceOnChessBoard.Num();
+		TArray<AChessPiece*> OriginalBlackPiecesOnChessBoard = GameMode->ChessBoard->BlackPieceOnChessBoard;
 		for (int32 i = 0; i < NumBlackPieces; i++)
 		{
-			AChessPiece* MaxPiece = GameMode->ChessBoard->BlackPieceOnChessBoard[i];
+			AChessPiece* MaxPiece = OriginalBlackPiecesOnChessBoard[i];
 			TArray<ATile*> MaxCandidateMoves = MaxPiece->validMoves();
 
 			//if it's a pawn, check if en passant is possible
@@ -407,9 +408,10 @@ int32 AChess_MinimaxPlayer::AlphaBetaMiniMax(int32 Depth, bool bisMax, int32 alp
 
 		// for each white piece on chessboard, analyze every single legal move
 		int32 NumWhitePieces = GameMode->ChessBoard->WhitePieceOnChessBoard.Num();
+		TArray<AChessPiece*> OriginalWhitePiecesOnChessBoard = GameMode->ChessBoard->WhitePieceOnChessBoard;
 		for (int32 i = 0; i < NumWhitePieces; i++)
 		{
-			AChessPiece* MinPiece = GameMode->ChessBoard->WhitePieceOnChessBoard[i];
+			AChessPiece* MinPiece = OriginalWhitePiecesOnChessBoard[i];
 			TArray<ATile*> MinCandidateMoves = MinPiece->validMoves();
 			APawnPiece* CurrPawn = Cast<APawnPiece>(MinPiece);
 
@@ -640,9 +642,10 @@ UMove* AChess_MinimaxPlayer::FindBestMove(AGameField* ChessBoard, int32 Depth)
 	{
 		//for each black piece on chessboard, analyze every single legal move
 		int32 NumBlackPieces = ChessBoard->BlackPieceOnChessBoard.Num();
+		TArray<AChessPiece*> OriginalBlackPiecesOnChessBoard = ChessBoard->BlackPieceOnChessBoard;
 		for (int32 i = 0; i < NumBlackPieces; i++)
 		{
-			AChessPiece* MaxPiece = ChessBoard->BlackPieceOnChessBoard[i];
+			AChessPiece* MaxPiece = OriginalBlackPiecesOnChessBoard[i];
 			TArray<ATile*> MaxCandidateMoves = MaxPiece->validMoves();
 			APawnPiece* CurrPawn = Cast<APawnPiece>(MaxPiece);
 
@@ -656,6 +659,7 @@ UMove* AChess_MinimaxPlayer::FindBestMove(AGameField* ChessBoard, int32 Depth)
 				for (ATile* Candidate : CandidateEnPassant)
 				{
 					MaxCandidateMoves.Add(Candidate);
+					GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Black, TEXT("1 TILE EN PASSANT TROVATA!"));
 				}
 
 				//if it's a pawn do not alter the first turn boolean

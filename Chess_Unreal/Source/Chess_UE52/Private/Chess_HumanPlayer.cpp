@@ -143,6 +143,16 @@ void AChess_HumanPlayer::SetFirstClick(const bool flag)
 	bFirstClick = flag;
 }
 
+void AChess_HumanPlayer::SetActualMovesEmpty()
+{
+	actualMoves.Empty();
+}
+
+void AChess_HumanPlayer::SetSelectedTileNull()
+{
+	SelectedTile = nullptr;
+}
+
 // Called when the game starts or when spawned
 void AChess_HumanPlayer::BeginPlay()
 {
@@ -255,7 +265,9 @@ void AChess_HumanPlayer::OnTurn()
 
 	bisMyTurn = true;
 	bFirstClick = true;
+	SelectedTile = nullptr;
 	actualMoves.Empty();
+
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Your Turn"));
 	GameInstance->SetTurnMessage(TEXT("Human Turn"));
 }
@@ -285,8 +297,7 @@ void AChess_HumanPlayer::OnDraw(EResult DrawOrigin)
 
 void AChess_HumanPlayer::OnClick()
 {
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("OnClick"));
-
+	
 	//Structure containing information about one hit of a trace, such as point of impact and surface normal at that point
 	FHitResult Hit = FHitResult(ForceInit);
 
@@ -475,6 +486,10 @@ void AChess_HumanPlayer::OnClick()
 					GameMode->ChessBoard->MoveStack.Remove(MoveToDelete);
 
 					bFirstClick = true;
+					CurrPiece = nullptr;
+					actualMoves.Empty();
+					SelectedTile = nullptr;
+
 				}
 
 				//if an opponent's piece is clicked

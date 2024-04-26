@@ -43,6 +43,10 @@ public:
 
 	void SetFirstClick(const bool flag);
 
+	void SetActualMovesEmpty();
+
+	void SetSelectedTileNull();
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;

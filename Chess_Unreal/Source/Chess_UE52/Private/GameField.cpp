@@ -182,34 +182,34 @@ void DisplayPiecesStartConfiguration(AGameField* GField)
 	}
 
 	//spawn white rooks and add them to white pieces on chessboard
-	GField->WhitePieceOnChessBoard.Add(GField->SpawnPieceRook(EColor::WHITE, 0, 0, TileScale));
-	GField->WhitePieceOnChessBoard.Add(GField->SpawnPieceRook(EColor::WHITE, 0, GField->Size - 1, TileScale));
+	//GField->WhitePieceOnChessBoard.Add(GField->SpawnPieceRook(EColor::WHITE, 0, 0, TileScale));
+	//GField->WhitePieceOnChessBoard.Add(GField->SpawnPieceRook(EColor::WHITE, 0, GField->Size - 1, TileScale));
 
 	//spawn black rooks and add them to black pieces on chessboard
-	GField->BlackPieceOnChessBoard.Add(GField->SpawnPieceRook(EColor::BLACK, GField->Size - 1, 0, TileScale));
-	GField->BlackPieceOnChessBoard.Add(GField->SpawnPieceRook(EColor::BLACK, GField->Size - 1, GField->Size - 1, TileScale));
+	//GField->BlackPieceOnChessBoard.Add(GField->SpawnPieceRook(EColor::BLACK, GField->Size - 1, 0, TileScale));
+	//GField->BlackPieceOnChessBoard.Add(GField->SpawnPieceRook(EColor::BLACK, GField->Size - 1, GField->Size - 1, TileScale));
 	
 	//spawn white knights and add them to white pieces on chessboard
-	GField->WhitePieceOnChessBoard.Add(GField->SpawnPieceKnight(EColor::WHITE, 0, 1, TileScale));
-	GField->WhitePieceOnChessBoard.Add(GField->SpawnPieceKnight(EColor::WHITE, 0, GField->Size - 2, TileScale));
+	//GField->WhitePieceOnChessBoard.Add(GField->SpawnPieceKnight(EColor::WHITE, 0, 1, TileScale));
+	//GField->WhitePieceOnChessBoard.Add(GField->SpawnPieceKnight(EColor::WHITE, 0, GField->Size - 2, TileScale));
 
 	//spawn black knights and add them to black pieces on chessboard
-	GField->BlackPieceOnChessBoard.Add(GField->SpawnPieceKnight(EColor::BLACK, GField->Size - 1, 1, TileScale));
-	GField->BlackPieceOnChessBoard.Add(GField->SpawnPieceKnight(EColor::BLACK, GField->Size - 1, GField->Size - 2, TileScale));
+	//GField->BlackPieceOnChessBoard.Add(GField->SpawnPieceKnight(EColor::BLACK, GField->Size - 1, 1, TileScale));
+	//GField->BlackPieceOnChessBoard.Add(GField->SpawnPieceKnight(EColor::BLACK, GField->Size - 1, GField->Size - 2, TileScale));
 	
 	//spawn white bishops and add them to white pieces on chessboard
-	GField->WhitePieceOnChessBoard.Add(GField->SpawnPieceBishop(EColor::WHITE, 0, 2, TileScale));
-	GField->WhitePieceOnChessBoard.Add(GField->SpawnPieceBishop(EColor::WHITE, 0, GField->Size - 3, TileScale));
+	//GField->WhitePieceOnChessBoard.Add(GField->SpawnPieceBishop(EColor::WHITE, 0, 2, TileScale));
+	//GField->WhitePieceOnChessBoard.Add(GField->SpawnPieceBishop(EColor::WHITE, 0, GField->Size - 3, TileScale));
 
 	//spawn black bishops and add them to black pieces on chessboard
-	GField->BlackPieceOnChessBoard.Add(GField->SpawnPieceBishop(EColor::BLACK, GField->Size - 1, 2, TileScale));
-	GField->BlackPieceOnChessBoard.Add(GField->SpawnPieceBishop(EColor::BLACK, GField->Size - 1, GField->Size - 3, TileScale));
+	//GField->BlackPieceOnChessBoard.Add(GField->SpawnPieceBishop(EColor::BLACK, GField->Size - 1, 2, TileScale));
+	//GField->BlackPieceOnChessBoard.Add(GField->SpawnPieceBishop(EColor::BLACK, GField->Size - 1, GField->Size - 3, TileScale));
 	
 	//spawn white queen and add it to white pieces on chessboard
-	GField->WhitePieceOnChessBoard.Add(GField->SpawnPieceQueen(EColor::WHITE, 0, 3, TileScale));
+	//GField->WhitePieceOnChessBoard.Add(GField->SpawnPieceQueen(EColor::WHITE, 0, 3, TileScale));
 
 	//spawn black queen and add it to black pieces on chessboard
-	GField->BlackPieceOnChessBoard.Add(GField->SpawnPieceQueen(EColor::BLACK, GField->Size - 1, GField->Size - 5, TileScale));
+	//GField->BlackPieceOnChessBoard.Add(GField->SpawnPieceQueen(EColor::BLACK, GField->Size - 1, GField->Size - 5, TileScale));
 	
 	//spawn white king and add it to white pieces on chessboard
 	AKingPiece* WKing = GField->SpawnPieceKing(EColor::WHITE, 0, 4, TileScale);
