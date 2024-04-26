@@ -67,6 +67,10 @@ void AChess_MinimaxPlayer::OnTurn()
 
 			//set best move movenumber 
 			BestMove->MoveNumber = GameMode->MoveCounter;
+			int32 X = BestMove->To->GetGridPosition().X;
+			int32 Y = BestMove->To->GetGridPosition().Y;
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("AI X POSITION = %d "), X));
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("AI Y POSITION = %d "), Y));
 
 			if (BestMove->PieceMoving != nullptr)
 			{
@@ -850,7 +854,7 @@ UMove* AChess_MinimaxPlayer::FindBestMove(AGameField* ChessBoard, int32 Depth)
 					//if there was a promotion
 					if (bPromotion && Queen != nullptr)
 					{
-						//movethe queen out of chessboard
+						//move the queen out of chessboard
 						Queen->PlaceAt = FVector2D(9, -1);
 
 						//replace the new queen with the pawn

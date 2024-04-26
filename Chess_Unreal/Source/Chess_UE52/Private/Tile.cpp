@@ -28,7 +28,7 @@ ATile::ATile()
 	TextNumberComponent->SetupAttachment(StaticMeshComponent);
 
 	// set text component location, rotation and scale
-	TextNumberComponent->SetRelativeLocation(FVector(20.f, -35.f, 200.f));
+	TextNumberComponent->SetRelativeLocation(FVector(20.f, -35.f, 120.f));
 	TextNumberComponent->SetWorldRotation(FRotator(90.0f, -90.0f, 90.0f));
 	TextNumberComponent->SetWorldScale3D(FVector(3.0f, 1.0f, 5.0f));
 
@@ -41,7 +41,7 @@ ATile::ATile()
 	TextLetterComponent->SetupAttachment(StaticMeshComponent);
 
 	// set text component location, rotation and scale
-	TextLetterComponent->SetRelativeLocation(FVector(-40.f, 20.f, 200.f));
+	TextLetterComponent->SetRelativeLocation(FVector(-40.f, 20.f, 120.f));
 	TextLetterComponent->SetWorldRotation(FRotator(90.0f, -90.0f, 90.0f));
 	TextLetterComponent->SetWorldScale3D(FVector(1.0f, 1.0f, 5.0f));
 
@@ -53,6 +53,15 @@ ATile::ATile()
 void ATile::SetTileStatus(const ETileStatus TileStatus)
 {
 	Status = TileStatus;
+}
+
+void ATile::SetTextColorHex(UTextRenderComponent* TextComponent, FString HexColor)
+{
+	// Convert the hex color string to FColor
+	FColor NewColor = FColor::FromHex(HexColor);
+
+	// Set the new color
+	TextComponent->SetTextRenderColor(NewColor);
 }
 
 ETileStatus ATile::GetTileStatus()
@@ -107,6 +116,16 @@ void ATile::SetTileNumber(int32 number)
 void ATile::SetTileLetter(FString letter)
 {
 	TextLetterComponent->SetText(FText::FromString(letter));
+}
+
+UTextRenderComponent* ATile::GetTextNumber() const
+{
+	return TextNumberComponent;
+}
+
+UTextRenderComponent* ATile::GetTextLetter() const
+{
+	return TextLetterComponent;
 }
 
 // Called when the game starts or when spawned

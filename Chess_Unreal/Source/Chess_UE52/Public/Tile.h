@@ -45,6 +45,15 @@ public:
 	// set a FString as text of tile text letter component 
 	void SetTileLetter(FString letter);
 
+	//get the text number component 
+	UTextRenderComponent* GetTextNumber() const;
+
+	//get the text letter component
+	UTextRenderComponent* GetTextLetter() const;
+
+	//set text component color from hex color
+	void SetTextColorHex(UTextRenderComponent* TextComponent, FString HexColor);
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
