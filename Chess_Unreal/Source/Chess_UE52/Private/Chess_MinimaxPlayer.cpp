@@ -67,10 +67,6 @@ void AChess_MinimaxPlayer::OnTurn()
 
 			//set best move movenumber 
 			BestMove->MoveNumber = GameMode->MoveCounter;
-			int32 X = BestMove->To->GetGridPosition().X;
-			int32 Y = BestMove->To->GetGridPosition().Y;
-			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("AI X POSITION = %d "), X));
-			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("AI Y POSITION = %d "), Y));
 
 			if (BestMove->PieceMoving != nullptr)
 			{
@@ -305,7 +301,6 @@ int32 AChess_MinimaxPlayer::AlphaBetaMiniMax(int32 Depth, bool bisMax, int32 alp
 
 								//move the pawn out of chessboard
 								Queen->PlaceAt = Pawn->PlaceAt;
-								Pawn->PlaceAt = FVector2D(9, -1);
 
 								//replace the pawn with the new queen
 								int32 Index = GameMode->ChessBoard->BlackPieceOnChessBoard.Find(Pawn);
@@ -532,7 +527,6 @@ int32 AChess_MinimaxPlayer::AlphaBetaMiniMax(int32 Depth, bool bisMax, int32 alp
 
 								//move the pawn out of chessboard
 								Queen->PlaceAt = Pawn->PlaceAt;
-								Pawn->PlaceAt = FVector2D(9, -1);
 
 								//replace the pawn with the new queen
 								int32 Index = GameMode->ChessBoard->WhitePieceOnChessBoard.Find(Pawn);
@@ -776,7 +770,6 @@ UMove* AChess_MinimaxPlayer::FindBestMove(AGameField* ChessBoard, int32 Depth)
 
 							//move the pawn out of chessboard
 							Queen->PlaceAt = Pawn->PlaceAt;
-							Pawn->PlaceAt = FVector2D(9, -1);
 
 							//replace the pawn with the new queen
 							int32 Index = GameMode->ChessBoard->BlackPieceOnChessBoard.Find(Pawn);

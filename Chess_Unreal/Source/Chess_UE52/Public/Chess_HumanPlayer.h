@@ -32,20 +32,27 @@ public:
 
 	// Game instance reference
 	UChess_GameInstance* GameInstance;
-
-	//discriminate among human first or second click on chessboard
 	
+	//get actual moves
 	TArray<ATile*> GetActualMoves() const;
 
+	//get selected tile
 	ATile* GetSelectedTile() const;
 
+	//get first click
 	bool GetFirstClick() const;
 
+	//set first click
 	void SetFirstClick(const bool flag);
 
+	//empty actual moves array
 	void SetActualMovesEmpty();
 
+	//set selected tile nullptr
 	void SetSelectedTileNull();
+
+	//get CurrPiece
+	AChessPiece* GetCurrentPiece() const;
 
 protected:
 	// Called when the game starts or when spawned
@@ -63,6 +70,7 @@ protected:
 	//tile below selected piece
 	ATile* SelectedTile = nullptr;
 
+	//discriminate among human first or second click on chessboard
 	bool bFirstClick = true;
 
 public:

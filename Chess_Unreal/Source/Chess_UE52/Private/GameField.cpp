@@ -175,45 +175,41 @@ void DisplayPiecesStartConfiguration(AGameField* GField)
 	for (int32 y = 0; y < GField->Size; y++)
 	{
 		//spawn white pawn and add it to white pieces on chessboard
-		//GField->WhitePieceOnChessBoard.Add(GField->SpawnPiecePawn(EColor::WHITE, 1, y, TileScale));
+		GField->WhitePieceOnChessBoard.Add(GField->SpawnPiecePawn(EColor::WHITE, 1, y, TileScale));
 
 		//spawn black pawn and add it to black pieces on chessboard
-		//GField->BlackPieceOnChessBoard.Add(GField->SpawnPiecePawn(EColor::BLACK, GField->Size - 2, y, TileScale));
+		GField->BlackPieceOnChessBoard.Add(GField->SpawnPiecePawn(EColor::BLACK, GField->Size - 2, y, TileScale));
 	}
 
-	//spawn white pawn and add it to white pieces on chessboard
-	GField->WhitePieceOnChessBoard.Add(GField->SpawnPiecePawn(EColor::WHITE, 5, 7, TileScale));
-	GField->BlackPieceOnChessBoard.Add(GField->SpawnPieceKnight(EColor::BLACK, 7, 6, TileScale));
-	
 	//spawn white rooks and add them to white pieces on chessboard
 	GField->WhitePieceOnChessBoard.Add(GField->SpawnPieceRook(EColor::WHITE, 0, 0, TileScale));
 	GField->WhitePieceOnChessBoard.Add(GField->SpawnPieceRook(EColor::WHITE, 0, GField->Size - 1, TileScale));
 
 	//spawn black rooks and add them to black pieces on chessboard
 	GField->BlackPieceOnChessBoard.Add(GField->SpawnPieceRook(EColor::BLACK, GField->Size - 1, 0, TileScale));
-	//GField->BlackPieceOnChessBoard.Add(GField->SpawnPieceRook(EColor::BLACK, GField->Size - 1, GField->Size - 1, TileScale));
+	GField->BlackPieceOnChessBoard.Add(GField->SpawnPieceRook(EColor::BLACK, GField->Size - 1, GField->Size - 1, TileScale));
 	
 	//spawn white knights and add them to white pieces on chessboard
 	GField->WhitePieceOnChessBoard.Add(GField->SpawnPieceKnight(EColor::WHITE, 0, 1, TileScale));
 	GField->WhitePieceOnChessBoard.Add(GField->SpawnPieceKnight(EColor::WHITE, 0, GField->Size - 2, TileScale));
 
 	//spawn black knights and add them to black pieces on chessboard
-	//GField->BlackPieceOnChessBoard.Add(GField->SpawnPieceKnight(EColor::BLACK, GField->Size - 1, 1, TileScale));
-	//GField->BlackPieceOnChessBoard.Add(GField->SpawnPieceKnight(EColor::BLACK, GField->Size - 1, GField->Size - 2, TileScale));
+	GField->BlackPieceOnChessBoard.Add(GField->SpawnPieceKnight(EColor::BLACK, GField->Size - 1, 1, TileScale));
+	GField->BlackPieceOnChessBoard.Add(GField->SpawnPieceKnight(EColor::BLACK, GField->Size - 1, GField->Size - 2, TileScale));
 	
 	//spawn white bishops and add them to white pieces on chessboard
 	GField->WhitePieceOnChessBoard.Add(GField->SpawnPieceBishop(EColor::WHITE, 0, 2, TileScale));
 	GField->WhitePieceOnChessBoard.Add(GField->SpawnPieceBishop(EColor::WHITE, 0, GField->Size - 3, TileScale));
 
 	//spawn black bishops and add them to black pieces on chessboard
-	//GField->BlackPieceOnChessBoard.Add(GField->SpawnPieceBishop(EColor::BLACK, GField->Size - 1, 2, TileScale));
-	//GField->BlackPieceOnChessBoard.Add(GField->SpawnPieceBishop(EColor::BLACK, GField->Size - 1, GField->Size - 3, TileScale));
+	GField->BlackPieceOnChessBoard.Add(GField->SpawnPieceBishop(EColor::BLACK, GField->Size - 1, 2, TileScale));
+	GField->BlackPieceOnChessBoard.Add(GField->SpawnPieceBishop(EColor::BLACK, GField->Size - 1, GField->Size - 3, TileScale));
 	
 	//spawn white queen and add it to white pieces on chessboard
 	GField->WhitePieceOnChessBoard.Add(GField->SpawnPieceQueen(EColor::WHITE, 0, 3, TileScale));
 
 	//spawn black queen and add it to black pieces on chessboard
-	//GField->BlackPieceOnChessBoard.Add(GField->SpawnPieceQueen(EColor::BLACK, /*GField->Size - 1, GField->Size - 5*/, TileScale));
+	GField->BlackPieceOnChessBoard.Add(GField->SpawnPieceQueen(EColor::BLACK, GField->Size - 1, GField->Size - 5, TileScale));
 	
 	//spawn white king and add it to white pieces on chessboard
 	AKingPiece* WKing = GField->SpawnPieceKing(EColor::WHITE, 0, 4, TileScale);
@@ -221,7 +217,7 @@ void DisplayPiecesStartConfiguration(AGameField* GField)
 	GField->WhiteKing = WKing;
 
 	//spawn black king and add it to black pieces on chessboard
-	AKingPiece* BKing = GField->SpawnPieceKing(EColor::BLACK, /*GField->Size - 1, GField->Size - 4 */ 5, GField->Size - 4, TileScale);
+	AKingPiece* BKing = GField->SpawnPieceKing(EColor::BLACK, GField->Size - 1, GField->Size - 4, TileScale);
 	GField->BlackPieceOnChessBoard.Add(BKing);
 	GField->BlackKing = BKing;
 }
@@ -330,6 +326,9 @@ void AGameField::GenerateField()
 			Obj->SetGridPosition(x, y);
 			if (((x+y) % 2) == 0)
 			{
+				Obj->SetTileColor(0);
+
+				//set text number component and text letter component colors for some tiles
 				if (y == 0)
 				{
 					Obj->SetTextColorHex(Obj->GetTextNumber(), "F5F5DC");
@@ -339,12 +338,12 @@ void AGameField::GenerateField()
 					Obj->SetTextColorHex(Obj->GetTextLetter(), "F5F5DC");
 				}
 
-				Obj->SetTileColor(0);
 			}
 			else
 			{
 				Obj->SetTileColor(1);
 
+				//set text number component and text letter component colors for some tiles
 				if (y == 0)
 				{
 					Obj->SetTextColorHex(Obj->GetTextNumber(), "001a00");

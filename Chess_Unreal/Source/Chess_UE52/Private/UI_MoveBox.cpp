@@ -38,7 +38,7 @@ void UUI_MoveBox::OnButtonClicked()
     int32 CurrentMoveIdx = -1;
     TArray<ATile*> PreviousColoredTiles = {};
 
-    //if the human player has selected a piece and then he has clicked in the storyboard, undo the first action
+    //if the human player has selected a piece and then he has clicked in the move history, undo the first action
     AChess_HumanPlayer* HumanPlayer = Cast<AChess_HumanPlayer>(GameMode->Players[0]);
     if (IsValid(HumanPlayer) && !GameMode->ChessBoard->MoveStack.Last()->bisCheckmate)
     {   
@@ -46,6 +46,17 @@ void UUI_MoveBox::OnButtonClicked()
         {
             //set bfirstclick true again
             HumanPlayer->SetFirstClick(true);
+
+            //restore pawn first move if needed
+            AChessPiece* SelectedPiece = HumanPlayer->GetCurrentPiece();
+            APawnPiece* SelectedPawn = Cast<APawnPiece>(SelectedPiece);
+            if (IsValid(SelectedPawn))
+            {
+                if (SelectedPawn->PlaceAt.X == 1)
+                {
+                    SelectedPawn->bfirstMove = true;
+                }
+            }
 
             //restore the color of the suggested tiles and of the tile under the selected piece
             GameMode->ChessBoard->RestoreSquaresColor(HumanPlayer->GetActualMoves());

@@ -149,7 +149,7 @@ void AChess_GameMode::ManageEndOfGame(int32 Player, EResult GameResult)
 				// after a draw restart automatically the game
 				ChessBoard->ResetField();
 
-			}, 3, false);
+			}, 5, false);
 	}
 }
 

@@ -153,6 +153,11 @@ void AChess_HumanPlayer::SetSelectedTileNull()
 	SelectedTile = nullptr;
 }
 
+AChessPiece* AChess_HumanPlayer::GetCurrentPiece() const
+{
+	return CurrPiece;
+}
+
 // Called when the game starts or when spawned
 void AChess_HumanPlayer::BeginPlay()
 {
